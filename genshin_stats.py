@@ -1,17 +1,21 @@
-"""wrapper for the [https://www.hoyolab.com/genshin/](hoyolab.com) gameRecord api
+"""wrapper for the hoyolab.com gameRecord api
 
 Majority of the endpoints require a cookie and a ds token, look at README.md for more info.
 
 The wrapper is fairly simple, just save the headers in a session and then request an endpoint.
+All functions are decorated with an `endpoint` wrapper. This wrapper simply formats a given url.
+This is to avoid having to type something multiple times while still keeping docstrings and annotations.
 """
 import os
 import sys
 from configparser import ConfigParser
-from typing import TypeVar
+from inspect import getcallargs
+from typing import Callable, TypeVar
 
 from requests import Session
-from seleniumwire import webdriver
 from selenium.webdriver import FirefoxOptions
+from seleniumwire import webdriver
+
 
 class GenshinStatsException(Exception):
     """Base error for all Genshin Stats Errors."""
@@ -26,6 +30,7 @@ config = ConfigParser()
 config.file = sys.argv[1] if len(sys.argv)>1 else 'config.ini'
 config.read(config.file)
 config.save = lambda: config.write(open(config.file,'w'),False)
+autorenew_ds = config['options'].getboolean('autorenew_ds')
 
 session = Session()
 session.headers = {k:v.strip('"') for k,v in config.items('headers')}
@@ -53,59 +58,59 @@ def fetch_ds(raw_cookie: str) -> str:
         if request.response and request.url.startswith(important_ajax):
             return request.headers['ds']
     
-    raise Exception("DS token could not be fetched.")
+    raise GenshinStatsException("DS token could not be fetched.")
 
 
-T = TypeVar('T')
-def api_getter(func: T) -> T:
+C = TypeVar('C',bound=Callable)
+def endpoint(url: str=''):
     """Basic wrapper for genshin_stats api functions
     
     Includes error handling and ds token renewal.
     """
-    def inside(*args, renew_ds=True, **kwargs):
-        url = func(*args,**kwargs)
-        
-        r = session.get(url)
-        r.raise_for_status()
-        
-        data = r.json()
-        if data['data'] is not None: # success
-            data = data['data']
-            if 'list' in data and len(data)==1:
-                return data['list']
+    def wrapper(func: C) -> C:
+        """internal wrapper"""
+        def inside(*args, renew_ds=True, **kwargs):
+            kwargs = getcallargs(func,*args,**kwargs)
+            
+            r = session.get(url.format(**kwargs))
+            r.raise_for_status()
+            
+            data = r.json()
+            if data['data'] is not None: # success
+                data = data['data']
+                if 'list' in data and len(data)==1:
+                    return data['list']
+                else:
+                    return data
+            
+            retcode = abs(data['retcode'])
+            if retcode == 401: # old ds token
+                if autorenew_ds and renew_ds:
+                    config['headers']['ds'] = fetch_ds(config['headers']['cookie'])
+                    config.save()
+                    session.headers['ds'] = config['headers']['ds']
+                    inside(**kwargs,renew_ds=False)
+                else:
+                    raise InvalidDS('Invalid DS token, please renew it.')
+            elif retcode == 10001:
+                raise MissingCookies('Cookies have not been provided, please add them to the header.')
+            elif retcode == 1 and data['message']=='Invalid schedule type':
+                raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
             else:
-                return data
+                raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{r.url}\"")
         
-        retcode = abs(data['retcode'])
-        if retcode == 401: # old ds token
-            if config['options'].getboolean('autorenew_ds') and renew_ds:
-                config['headers']['ds'] = fetch_ds(config['headers']['cookie'])
-                config.save()
-                session.headers['ds'] = config['headers']['ds']
-                inside(*args,**kwargs,renew_ds=False)
-            else:
-                raise InvalidDS('Invalid DS token, please renew it.')
-        elif retcode == 10001:
-            raise MissingCookies('Cookies have not been provided, please add them to the header.')
-        elif retcode == 1 and data['message']=='Invalid schedule type':
-            raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
-        else:
-            raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{r.url}\"")
-    
-    return inside
-                
+        return inside
+    return wrapper
         
-@api_getter
+@endpoint("https://bbs-api-os.hoyolab.com/community/apihub/wapi/search?keyword={keyword}&size={size}&gids=2")
 def search(keyword: str, size: int=20) -> dict:
     """Searches posts, topics and users.
     
     Takes in a keyword, replaces spaces with + and quotes other characters.
     Can return up to 20 results, based on size.
     """
-    url = "https://bbs-api-os.hoyolab.com/community/apihub/wapi/search"
-    return url+f'?keyword={keyword}&size={size}&gids=2'
 
-@api_getter
+@endpoint("https://bbs-api-os.hoyolab.com/community/user/wapi/getUserFullInfo?uid={uid}")
 def get_community_user_info(uid: int) -> dict:
     """Gets community info of a user based on their uid.
     
@@ -114,10 +119,8 @@ def get_community_user_info(uid: int) -> dict:
     
     Uid in this case is the community id. You can get it with `search`.
     """
-    url = "https://bbs-api-os.hoyolab.com/community/user/wapi/getUserFullInfo"
-    return url+f'?uid={uid}'
 
-@api_getter
+@endpoint("https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard?uid={uid}&gids=2")
 def get_game_record_card(uid: int) -> list:
     """Gets a game record card of a user based on their uid.
     
@@ -127,20 +130,16 @@ def get_game_record_card(uid: int) -> list:
     
     Uid in this case is the community id. You can get it with `search`.
     """
-    url = "https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard"
-    return url+f'?uid={uid}&gids=2'
 
-@api_getter
+@endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/index?server={server}&role_id={uid}")
 def get_user_info(uid: int, server: str) -> dict:
     """Gets game user info of a user based on their uid and server.
     
     Game user info contain the main nformation regarding a user.
     Contains owned characters, stats, city and world explorations and role.
     """
-    url = "https://bbs-api-os.hoyolab.com/game_record/genshin/api/index"
-    return url+f'?server={server}&role_id={uid}'
 
-@api_getter
+@endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/spiralAbyss?server={server}&role_id={uid}&schedule_type={schedule_type}")
 def get_spiral_abyss(uid: int, server: str, schedule_type: int=1) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
@@ -149,5 +148,3 @@ def get_spiral_abyss(uid: int, server: str, schedule_type: int=1) -> dict:
     Every season these stats refresh and you can get older stats by changing the schedule_type.
     1=current, 2=previous
     """
-    url = "https://bbs-api-os.hoyolab.com/game_record/genshin/api/spiralAbyss"
-    return url+f'?server={server}&role_id={uid}&schedule_type={schedule_type}'
