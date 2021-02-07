@@ -6,6 +6,7 @@ Any help is appreciated, currently I'm trying to figure out how the ds token is 
 # how to use
 Paste your hoyolab cookies and temporary ds token into `config.ini`, you can then import the `genshin_stats` module and use it's API.
 All functions are documented and type hinted.
+To autorenew your token with selenium, set `autorenew_ds` to true.
 
 The `ds` token will need to be renewed roughly every day.
 
