@@ -12,8 +12,9 @@ import string
 import sys
 import time
 from configparser import ConfigParser
+from functools import wraps
 from inspect import getcallargs
-from typing import Callable, TypeVar
+from typing import Callable, Optional, TypeVar
 from urllib.parse import quote_plus
 
 from requests import Session
@@ -21,10 +22,14 @@ from requests import Session
 
 class GenshinStatsException(Exception):
     """Base error for all Genshin Stats Errors."""
+class InvalidUID(GenshinStatsException):
+    """UID is not valid."""
 class InvalidDS(GenshinStatsException):
     """Invalid DS token, should be renewed."""
 class NotLoggedIn(GenshinStatsException):
     """Cookies have not been provided."""
+class DataNotPublic(GenshinStatsException):
+    """User has not allowed their data to be seen."""
 class InvalidScheduleType(GenshinStatsException):
     """Invalid Spiral Abyss schedule"""
 
@@ -57,9 +62,15 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
     """
     def wrapper(func: C) -> C:
         """internal wrapper"""
+        @wraps(func)
         def inside(*args, **kwargs):
-            kwargs = getcallargs(func,*args,**kwargs)
-            kwargs = {k:quote_plus(str(v)) for k,v in kwargs.items()}
+            # use function return if possible
+            margs = func(*args,**kwargs)
+            if margs is None:
+                kwargs = getcallargs(func,*args,**kwargs)
+            else:
+                kwargs = getcallargs(func,*margs)
+            kwargs = {k:quote_plus(str(v)) for k,v in kwargs.items()} # quote for proper queries
             
             session.headers['ds'] = get_ds_token(config['api']['ds_salt'])
             r = session.get(url.format(**kwargs))
@@ -73,10 +84,12 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
                     return data['data']
             
             retcode,msg = data['retcode'],data['message']
-            if   retcode == -401  and msg == "请求异常":
+            if   retcode == -401  and msg == '请求异常':
                 raise InvalidDS('Invalid DS token, please pick correct ds salt.')
             elif retcode == 10001 and msg == 'Please login':
                 raise NotLoggedIn('Login cookies have not been provided or are incorrect.')
+            elif retcode == 10102 and msg == 'Data is not public for the user':
+                raise DataNotPublic('User has set their data to be private.')
             elif retcode == 1     and msg == 'Invalid schedule type':
                 raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
             else:
@@ -84,7 +97,16 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
         
         return inside
     return wrapper
-        
+
+def recognize_server(uid: int):
+    """Recognizes which server a UID is from."""
+    uid = str(uid)
+    if   uid[0]=='6': return 'os_ame'
+    elif uid[0]=='7': return 'os_euro'
+    elif uid[0]=='8': return 'os_asia'
+    else:
+        raise InvalidUID("UID isn't associated with any server")
+
 @endpoint("https://bbs-api-os.hoyolab.com/community/apihub/wapi/search?keyword={keyword}&size={size}&gids=2")
 def search(keyword: str, size: int=20) -> dict:
     """Searches posts, topics and users.
@@ -115,15 +137,17 @@ def get_game_record_card(uid: int) -> list:
     """
 
 @endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/index?server={server}&role_id={uid}")
-def get_user_info(uid: int, server: str) -> dict:
+def get_user_info(uid: int, server: str=None) -> dict:
     """Gets game user info of a user based on their uid and server.
     
     Game user info contain the main nformation regarding a user.
     Contains owned characters, stats, city and world explorations and role.
     """
+    if server is None:
+        return uid,recognize_server(uid)
 
 @endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/spiralAbyss?server={server}&role_id={uid}&schedule_type={schedule_type}")
-def get_spiral_abyss(uid: int, server: str, schedule_type: int=1) -> dict:
+def get_spiral_abyss(uid: int, server: str=None, schedule_type: int=1) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
     Spiral abyss info contains their porgress, stats and individual completes.
@@ -131,3 +155,21 @@ def get_spiral_abyss(uid: int, server: str, schedule_type: int=1) -> dict:
     Every season these stats refresh and you can get older stats by changing the schedule_type.
     1=current, 2=previous
     """
+    if server is None:
+        return uid,recognize_server(uid),schedule_type
+
+def get_single_game_record_card(uid: int) -> Optional[dict]:
+    """Gets a game record card of a user based on their uid.
+    
+    A game record contains data regarding the stats of a user for every server.
+    Only the server with the highest level is kept, if no server has been played on, returns None.
+    Their UID for a given server is also included.
+    In case the user has set their profile to be private, the returned list will be empty.
+    
+    Uid in this case is the community id. You can get it with `search`.
+    """
+    card = get_game_record_card(uid)
+    if len(card)==0:
+        return None
+    card.sort(key=lambda x:x['level'], reverse=True)
+    return card[0]
