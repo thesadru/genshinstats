@@ -23,7 +23,7 @@ class GenshinStatsException(Exception):
     """Base error for all Genshin Stats Errors."""
 class InvalidDS(GenshinStatsException):
     """Invalid DS token, should be renewed."""
-class MissingCookies(GenshinStatsException):
+class NotLoggedIn(GenshinStatsException):
     """Cookies have not been provided."""
 class InvalidScheduleType(GenshinStatsException):
     """Invalid Spiral Abyss schedule"""
@@ -76,7 +76,7 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
             if   retcode == -401  and msg == "请求异常":
                 raise InvalidDS('Invalid DS token, please pick correct ds salt.')
             elif retcode == 10001 and msg == 'Please login':
-                raise MissingCookies('Cookies have not been provided, please add them to the header.')
+                raise NotLoggedIn('Login cookies have not been provided or are incorrect.')
             elif retcode == 1     and msg == 'Invalid schedule type':
                 raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
             else:
