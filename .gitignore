@@ -1,3 +1,5 @@
 __pycache__
 myconfig.ini
 test*
+dist
+genshinstats_api.egg-info
