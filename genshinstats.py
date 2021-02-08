@@ -9,9 +9,7 @@ This is to avoid having to type something multiple times while still keeping doc
 import hashlib
 import random
 import string
-import sys
 import time
-from configparser import ConfigParser
 from functools import wraps
 from inspect import getcallargs
 from typing import Callable, Optional, TypeVar
@@ -33,13 +31,20 @@ class DataNotPublic(GenshinStatsException):
 class InvalidScheduleType(GenshinStatsException):
     """Invalid Spiral Abyss schedule"""
 
-config = ConfigParser()
-config.file = sys.argv[1] if len(sys.argv)>1 else 'config.ini'
-config.read(config.file)
-
 session = Session()
-session.headers = {k:v.strip('"') for k,v in config.items('headers')}
+session.headers = {
+    "x-rpc-app_version":"1.5.0",
+    "x-rpc-client_type":"4",
+    "x-rpc-language":"en-us"
+}
 
+def set_cookie(account_id: int=None, cookie_token: str=None, cookie: str=None):
+    """Basic configuration function, required for anything beyond search.
+    
+    You can either set it with `account_id=..., cookie_token=...` or with `cookie=...`.
+    Combinations are not allowed.
+    """
+    session.headers['cookie'] = cookie if cookie else f'account_id={account_id}; cookie_token={cookie_token}'
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
@@ -72,7 +77,7 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
                 kwargs = getcallargs(func,*margs)
             kwargs = {k:quote_plus(str(v)) for k,v in kwargs.items()} # quote for proper queries
             
-            session.headers['ds'] = get_ds_token(config['api']['ds_salt'])
+            session.headers['ds'] = get_ds_token("6cqshh5dhw73bzxn20oexa9k516chk7s")
             r = session.get(url.format(**kwargs))
             r.raise_for_status()
             
@@ -85,7 +90,7 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
             
             retcode,msg = data['retcode'],data['message']
             if   retcode == -401  and msg == '请求异常':
-                raise InvalidDS('Invalid DS token, please pick correct ds salt.')
+                raise InvalidDS('Invalid DS token, might be expired.')
             elif retcode == 10001 and msg == 'Please login':
                 raise NotLoggedIn('Login cookies have not been provided or are incorrect.')
             elif retcode == 10102 and msg == 'Data is not public for the user':
@@ -97,6 +102,7 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
         
         return inside
     return wrapper
+
 
 def recognize_server(uid: int):
     """Recognizes which server a UID is from."""
@@ -169,7 +175,7 @@ def get_single_game_record_card(uid: int) -> Optional[dict]:
     Uid in this case is the community id. You can get it with `search`.
     """
     card = get_game_record_card(uid)
-    if len(card)==0:
+    if card:
+        return min(card, key=lambda x:x['level'])
+    else:
         return None
-    card.sort(key=lambda x:x['level'], reverse=True)
-    return card[0]
