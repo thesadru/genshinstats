@@ -5,6 +5,8 @@ Majority of the endpoints require a cookie and a ds token, look at README.md for
 The wrapper is fairly simple, just save the headers in a session and then request an endpoint.
 All functions are decorated with an `endpoint` wrapper. This wrapper simply formats a given url.
 This is to avoid having to type something multiple times while still keeping docstrings and annotations.
+
+https://github.com/thesadru/genshinstats-api
 """
 import hashlib
 import random
@@ -37,14 +39,14 @@ session.headers = {
     "x-rpc-client_type":"4",
     "x-rpc-language":"en-us"
 }
+DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 
-def set_cookie(account_id: int=None, cookie_token: str=None, cookie: str=None):
+def set_cookie(account_id: int, cookie_token: str):
     """Basic configuration function, required for anything beyond search.
     
-    You can either set it with `account_id=..., cookie_token=...` or with `cookie=...`.
-    Combinations are not allowed.
+    Account id and cookie token must be copied from your browser's cookies.
     """
-    session.headers['cookie'] = cookie if cookie else f'account_id={account_id}; cookie_token={cookie_token}'
+    session.headers['cookie'] = f'account_id={account_id}; cookie_token={cookie_token}'
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
@@ -64,6 +66,10 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
     and sends a request to it, returning the json response.
     When getitem is set, that item of the returned dict is retuned.
     Includes error handling and ds token renewal.
+    
+    Code inside the function should only be for parsing.
+    Anything that is returned will be interpreted as it's args.
+    ie: `func(a,b=None): return a,b or 1` = `func(a,b=1)`
     """
     def wrapper(func: C) -> C:
         """internal wrapper"""
@@ -77,7 +83,7 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
                 kwargs = getcallargs(func,*margs)
             kwargs = {k:quote_plus(str(v)) for k,v in kwargs.items()} # quote for proper queries
             
-            session.headers['ds'] = get_ds_token("6cqshh5dhw73bzxn20oexa9k516chk7s")
+            session.headers['ds'] = get_ds_token(DS_SALT)
             r = session.get(url.format(**kwargs))
             r.raise_for_status()
             
@@ -121,26 +127,49 @@ def search(keyword: str, size: int=20) -> dict:
     Can return up to 20 results, based on size.
     """
 
-@endpoint("https://bbs-api-os.hoyolab.com/community/user/wapi/getUserFullInfo?uid={uid}")
-def get_community_user_info(uid: int) -> dict:
-    """Gets community info of a user based on their uid.
+@endpoint("https://bbs-api-os.hoyolab.com/community/user/wapi/getUserFullInfo?uid={community_uid}")
+def get_community_user_info(community_uid: int) -> dict:
+    """Gets community info of a user based on their community uid.
     
     Community info contains general data regarding the uid, nickname, introduction gender and so.
     It also contains stats for general community actions.
     
-    Uid in this case is the community id. You can get it with `search`.
+    You can get community id with `search`.
     """
 
-@endpoint("https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard?uid={uid}&gids=2",getitem='list')
-def get_game_record_card(uid: int) -> list:
-    """Gets a game record card of a user based on their uid.
+@endpoint("https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard?uid={community_uid}&gids=2",getitem='list')
+def get_record_card(community_uid: int=None) -> list:
+    """Gets a game record card of a user based on their community uid.
+    
+    A recrd card contains data regarding the stats of a user for every server.
+    Their UID for a given server is also included.
+    In case the user has set their profile to be private, the returned list will be empty.
+    
+    You can get community id with `search`.
+    """
+
+def get_single_record_card(community_uid: int) -> Optional[dict]:
+    """Gets a game record card of a user based on their community uid.
     
     A game record contains data regarding the stats of a user for every server.
+    The server with the highest level is returned, if no server has been played on, returns None.
     Their UID for a given server is also included.
     In case the user has set their profile to be private, the returned list will be empty.
     
     Uid in this case is the community id. You can get it with `search`.
     """
+    card = get_record_card(community_uid)
+    if card:
+        return max(card, key=lambda x:x['level'])
+    else:
+        return None
+
+def get_uid_from_community(community_uid: int) -> Optional[int]:
+    """Gets a uid with a community uid.
+    
+    This is so it's possible to search a user and then directly get the uid.
+    """
+    return get_single_record_card(community_uid)['game_role_id']
 
 @endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/index?server={server}&role_id={uid}")
 def get_user_info(uid: int, server: str=None) -> dict:
@@ -152,30 +181,16 @@ def get_user_info(uid: int, server: str=None) -> dict:
     if server is None:
         return uid,recognize_server(uid)
 
-@endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/spiralAbyss?server={server}&role_id={uid}&schedule_type={schedule_type}")
-def get_spiral_abyss(uid: int, server: str=None, schedule_type: int=1) -> dict:
+@endpoint("https://bbs-api-os.hoyolab.com/game_record/genshin/api/spiralAbyss?server={server}&role_id={uid}&schedule_type={previous}")
+def get_spiral_abyss(uid: int, server: str=None, previous: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
     Spiral abyss info contains their porgress, stats and individual completes.
     
-    Every season these stats refresh and you can get older stats by changing the schedule_type.
-    1=current, 2=previous
+    Every season these stats refresh and you can get the previous stats with `previous`.
     """
     if server is None:
-        return uid,recognize_server(uid),schedule_type
+        server = recognize_server(uid)
+    schedule_type = 2 if previous else 1
+    return uid,server,schedule_type
 
-def get_single_game_record_card(uid: int) -> Optional[dict]:
-    """Gets a game record card of a user based on their uid.
-    
-    A game record contains data regarding the stats of a user for every server.
-    Only the server with the highest level is kept, if no server has been played on, returns None.
-    Their UID for a given server is also included.
-    In case the user has set their profile to be private, the returned list will be empty.
-    
-    Uid in this case is the community id. You can get it with `search`.
-    """
-    card = get_game_record_card(uid)
-    if card:
-        return min(card, key=lambda x:x['level'])
-    else:
-        return None
