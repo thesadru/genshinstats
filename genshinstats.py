@@ -95,12 +95,17 @@ def endpoint(url: str, getitem: str=None) -> Callable[[C],C]:
                     return data['data']
             
             retcode,msg = data['retcode'],data['message']
-            if   retcode == -401  and msg == '请求异常':
+            # UID
+            if   retcode == 1009  and msg == "角色信息错误":
+                raise InvalidUID('UID could not be found.')
+            elif retcode == 10102 and msg == 'Data is not public for the user':
+                raise DataNotPublic('User has set their data to be private.')
+            # token
+            elif retcode == -401  and msg == '请求异常':
                 raise InvalidDS('Invalid DS token, might be expired.')
             elif retcode == 10001 and msg == 'Please login':
                 raise NotLoggedIn('Login cookies have not been provided or are incorrect.')
-            elif retcode == 10102 and msg == 'Data is not public for the user':
-                raise DataNotPublic('User has set their data to be private.')
+            # other
             elif retcode == 1     and msg == 'Invalid schedule type':
                 raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
             else:
