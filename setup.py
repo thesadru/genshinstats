@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='genshinstats-api',
-    version='1.0.4',
+    version='1.0.5',
     author='thesadru',
     py_modules=['genshinstats'],
     description='a wrapper for the official hoyolab.com Genshin impact gameRecord API.',

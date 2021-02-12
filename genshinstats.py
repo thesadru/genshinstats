@@ -10,10 +10,10 @@ https://github.com/thesadru/genshinstats-api
 """
 import hashlib
 import random
+import re
 import string
 import time
-from functools import cache
-from typing import Optional, TypeVar, Union
+from typing import Optional, Tuple, TypeVar, Union
 from urllib.parse import quote_plus, urljoin
 
 from requests import Session
@@ -161,7 +161,11 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     This is so it's possible to search a user and then directly get the uid.
     In case the uid is private, returns None.
     """
-    return get_single_record_card(community_uid,{}).get('game_role_id',None)
+    card = get_single_record_card(community_uid)
+    if card:
+        return int(card['game_role_id'])
+    else:
+        return None
 
 def get_user_info(uid: int, server: str=None) -> dict:
     """Gets game user info of a user based on their uid and server.
@@ -182,3 +186,27 @@ def get_spiral_abyss(uid: int, server: str=None, previous: bool=False) -> dict:
     server = server or recognize_server(uid)
     schedule_type = 2 if previous else 1
     return fetch_endpoint("game_record/genshin/api/spiralAbyss",server=server,role_id=uid,schedule_type=schedule_type)
+
+def recognize_uid_type(uid: int, verify: bool=False) -> Tuple[Optional[int],Optional[int]]:
+    """Recognizes the uid and returns game uid and community uid tuple.
+    
+    If the data is private, game uid will be None.
+    If the passed uid was game uid, community uid will be None.
+    
+    """
+    if not re.fullmatch(r'[156789]\d{8}',str(uid)):
+        print(1)
+        return get_uid_from_community(uid),uid # doesn't have game UID pattern
+    
+    if not verify:
+        print(2)
+        return uid,None
+    
+    try:
+        get_user_info(uid) # raise in case it's not game uid
+    except InvalidUID:
+        print(3)
+        return get_uid_from_community(uid),uid # since doesn't exist it's community
+    else:
+        print(4)
+        return uid,None
