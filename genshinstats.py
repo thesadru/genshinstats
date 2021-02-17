@@ -13,7 +13,7 @@ import random
 import re
 import string
 import time
-from typing import Optional, Tuple, TypeVar, Union
+from typing import Optional
 from urllib.parse import quote_plus, urljoin
 
 from requests import Session
@@ -41,9 +41,8 @@ session.headers = {
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 HOYOLABS_URL = "https://bbs-api-os.hoyolab.com/"
 
-_T = TypeVar('_T')
 
-def set_cookie(account_id: int, cookie_token: str):
+def set_cookie(account_id: int, cookie_token: str) -> None:
     """Basic configuration function, required for anything beyond search.
     
     Account id and cookie token must be copied from your browser's cookies.
@@ -61,7 +60,7 @@ def get_ds_token(salt: str) -> str:
     return f'{t},{r},{c}'
 
 
-def fetch_endpoint(endpoint: str, **kwargs):
+def fetch_endpoint(endpoint: str, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
     Takes in an endpoint or a url and kwargs that are later formatted to a query.
@@ -98,17 +97,20 @@ def fetch_endpoint(endpoint: str, **kwargs):
     else:
         raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{r.url}\"")
 
-def recognize_server(uid: int):
+def recognize_server(uid: int) -> Optional[str]:
     """Recognizes which server a UID is from."""
-    s = int(str(uid)[0])
-    if   s==1: return 'cn_gf01'
-    elif s==5: return 'cn_qd01'
-    elif s==6: return 'os_usa'
-    elif s==7: return 'os_euro'
-    elif s==8: return 'os_asia'
-    elif s==9: return 'os_cht'
+    server = {
+        1:'cn_gf01',
+        5:'cn_qd01',
+        6:'os_usa',
+        7:'os_euro',
+        8:'os_asia',
+        9:'os_cht',
+    }.get(int(str(uid)[0]))
+    if server:
+        return server
     else:
-        raise InvalidUID("UID isn't associated with any server") if s else ''
+        raise InvalidUID("UID isn't associated with any server")
 
 def search(keyword: str, size: int=20) -> dict:
     """Searches posts, topics and users.
@@ -128,32 +130,17 @@ def get_community_user_info(community_uid: int) -> dict:
     """
     return fetch_endpoint("community/user/wapi/getUserFullInfo",uid=community_uid)
 
-def get_record_card(community_uid: int) -> list:
+def get_record_card(community_uid: int) -> Optional[dict]:
     """Gets a game record card of a user based on their community uid.
     
     A record card contains data regarding the stats of a user for every server.
     Their UID for a given server is also included.
-    In case the user has set their profile to be private, the returned list will be empty.
+    In case the user has set their profile to be private, returns None.
     
     You can get community id with `search`.
     """
-    return fetch_endpoint("game_record/card/wapi/getGameRecordCard",uid=community_uid,gids=2)['list']
-
-def get_single_record_card(community_uid: int, default: _T=None) -> Union[dict, _T]:
-    """Gets a game record card of a user based on their community uid.
-    
-    A game record contains data regarding the stats of a user for every server.
-    The server with the highest level is returned, if no server has been played on, returns default.
-    Their UID for a given server is also included.
-    In case the user has set their profile to be private, the returned list will be empty.
-    
-    Uid in this case is the community id. You can get it with `search`.
-    """
-    card = get_record_card(community_uid)
-    if card:
-        return max(card, key=lambda x:x['level'])
-    else:
-        return default
+    cards = fetch_endpoint("game_record/card/wapi/getGameRecordCard",uid=community_uid,gids=2)['list']
+    return cards[0] if cards else None
 
 def get_uid_from_community(community_uid: int) -> Optional[int]:
     """Gets a uid with a community uid.
@@ -161,11 +148,8 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     This is so it's possible to search a user and then directly get the uid.
     In case the uid is private, returns None.
     """
-    card = get_single_record_card(community_uid)
-    if card:
-        return int(card['game_role_id'])
-    else:
-        return None
+    card = get_record_card(community_uid)
+    return int(card['game_role_id']) if card else None
 
 def get_user_info(uid: int, server: str=None) -> dict:
     """Gets game user info of a user based on their uid and server.
@@ -187,26 +171,9 @@ def get_spiral_abyss(uid: int, server: str=None, previous: bool=False) -> dict:
     schedule_type = 2 if previous else 1
     return fetch_endpoint("game_record/genshin/api/spiralAbyss",server=server,role_id=uid,schedule_type=schedule_type)
 
-def recognize_uid_type(uid: int, verify: bool=False) -> Tuple[Optional[int],Optional[int]]:
-    """Recognizes the uid and returns game uid and community uid tuple.
+def is_game_uid(uid: int) -> bool:
+    """Recognizes whether the uid is a game uid.
     
-    If the data is private, game uid will be None.
-    If the passed uid was game uid, community uid will be None.
-    
+    Return True if it's a game uid, False if it's a community uid
     """
-    if not re.fullmatch(r'[156789]\d{8}',str(uid)):
-        print(1)
-        return get_uid_from_community(uid),uid # doesn't have game UID pattern
-    
-    if not verify:
-        print(2)
-        return uid,None
-    
-    try:
-        get_user_info(uid) # raise in case it's not game uid
-    except InvalidUID:
-        print(3)
-        return get_uid_from_community(uid),uid # since doesn't exist it's community
-    else:
-        print(4)
-        return uid,None
+    return bool(re.fullmatch(r'[156789]\d{8}',str(uid)))
