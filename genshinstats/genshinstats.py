@@ -2,7 +2,7 @@
 
 Majority of the endpoints require a cookie and a ds token, look at README.md for more info.
 
-https://github.com/thesadru/genshinstats-api
+https://github.com/thesadru/genshinstats
 """
 import hashlib
 import random

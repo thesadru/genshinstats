@@ -1,7 +1,7 @@
 # genshin stats api
 This project is meant to be a wrapper for the [hoyolab.com](https://www.hoyolab.com/genshin/) gameRecord api.
 I have attempted to reverse engineer their API to find out the important tokens and cookies and then to what urls they are sent.
-You can pip install with [PyPI](https://pypi.org/project/genshinstats-api/)
+You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
 
 # how to use
 Import the `genshin_stats` module and do `set_cookie(...)` to login.

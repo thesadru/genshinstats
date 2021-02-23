@@ -4,7 +4,7 @@ with open('README.md', 'r') as f:
     long_description = f.read()
 
 setup(
-    name='genshinstats-api',
+    name='genshinstats',
     version='1.1',
     author='thesadru',
     packages=['genshinstats'],
