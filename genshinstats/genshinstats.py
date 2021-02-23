@@ -2,10 +2,6 @@
 
 Majority of the endpoints require a cookie and a ds token, look at README.md for more info.
 
-The wrapper is fairly simple, just save the headers in a session and then request an endpoint.
-All functions are decorated with an `endpoint` wrapper. This wrapper simply formats a given url.
-This is to avoid having to type something multiple times while still keeping docstrings and annotations.
-
 https://github.com/thesadru/genshinstats-api
 """
 import hashlib
@@ -13,24 +9,12 @@ import random
 import re
 import string
 import time
-from typing import Optional
-from urllib.parse import quote_plus, urljoin
+from typing import List, Optional
+from urllib.parse import urljoin
 
 from requests import Session
 
-
-class GenshinStatsException(Exception):
-    """Base error for all Genshin Stats Errors."""
-class InvalidUID(GenshinStatsException):
-    """UID is not valid."""
-class InvalidDS(GenshinStatsException):
-    """Invalid DS token, should be renewed."""
-class NotLoggedIn(GenshinStatsException):
-    """Cookies have not been provided."""
-class DataNotPublic(GenshinStatsException):
-    """User has not allowed their data to be seen."""
-class InvalidScheduleType(GenshinStatsException):
-    """Invalid Spiral Abyss schedule"""
+from .errors import *
 
 session = Session()
 session.headers = {
@@ -60,7 +44,7 @@ def get_ds_token(salt: str) -> str:
     return f'{t},{r},{c}'
 
 
-def fetch_endpoint(endpoint: str, **kwargs) -> dict:
+def fetch_endpoint(endpoint: str, post: bool=False, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
     Takes in an endpoint or a url and kwargs that are later formatted to a query.
@@ -68,11 +52,11 @@ def fetch_endpoint(endpoint: str, **kwargs) -> dict:
     Includes error handling and ds token renewal.
     """
     url = urljoin(HOYOLABS_URL, endpoint) # join with base url
-    query = '&'.join(k+'='+quote_plus(str(v)) for k,v in kwargs.items())
-    url += '?'+query # add quoted query
-    
     session.headers['ds'] = get_ds_token(DS_SALT)
-    r = session.get(url)
+    if post:
+        r = session.post(url,json=kwargs)
+    else:
+        r = session.get(url,params=kwargs)
     r.raise_for_status() # defaut HTTP Errors
     
     data = r.json()
@@ -151,23 +135,41 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     card = get_record_card(community_uid)
     return int(card['game_role_id']) if card else None
 
-def get_user_info(uid: int, server: str=None) -> dict:
-    """Gets game user info of a user based on their uid and server.
+def get_user_info(uid: int) -> dict:
+    """Gets game user info of a user based on their uid.
     
     Game user info contain the main nformation regarding a user.
     Contains owned characters, stats, city and world explorations and role.
     """
-    server = server or recognize_server(uid)
+    server = recognize_server(uid)
     return fetch_endpoint("game_record/genshin/api/index",server=server,role_id=uid)
 
-def get_spiral_abyss(uid: int, server: str=None, previous: bool=False) -> dict:
+def get_characters(uid: int, character_ids: List[int]):
+    """Gets characters of a user set by their ids.
+    
+    Characters contain info about their level, constelation, weapon, and artifacts.
+    Talents are not included.
+    """
+    server = recognize_server(uid)
+    return fetch_endpoint("game_record/genshin/api/character",post=True,character_ids=character_ids,role_id=uid,server=server)["avatars"]
+
+def get_all_characters(uid: int):
+    """Gets all characters of a user.
+    
+    Characters contain info about their level, constelation, weapon, and artifacts.
+    Talents are not included.
+    """
+    characters = get_user_info(uid)['avatars']
+    return get_characters(uid,[i['id'] for i in characters])
+
+def get_spiral_abyss(uid: int, previous: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
     Spiral abyss info contains their porgress, stats and individual completes.
     
     Every season these stats refresh and you can get the previous stats with `previous`.
     """
-    server = server or recognize_server(uid)
+    server = recognize_server(uid)
     schedule_type = 2 if previous else 1
     return fetch_endpoint("game_record/genshin/api/spiralAbyss",server=server,role_id=uid,schedule_type=schedule_type)
 
@@ -177,3 +179,17 @@ def is_game_uid(uid: int) -> bool:
     Return True if it's a game uid, False if it's a community uid
     """
     return bool(re.fullmatch(r'[156789]\d{8}',str(uid)))
+
+def recognize_character_icon(url: str) -> Optional[str]:
+    """Recognizes a character's icon url and returns its name."""
+    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_(?:.*)_(\w+)(?:@2x|@3x)?.png'
+    match = re.fullmatch(exp,url)
+    if match is None:
+        return None
+    character = match.group(1)
+    if character.startswith("Player"):
+        return "Traveler"
+    elif character.startswith("Qin"):
+        return "Traveler"
+    
+    return character
