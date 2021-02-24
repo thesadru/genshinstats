@@ -11,3 +11,5 @@ class DataNotPublic(GenshinStatsException):
     """User has not allowed their data to be seen."""
 class InvalidScheduleType(GenshinStatsException):
     """Invalid Spiral Abyss schedule"""
+class InvalidItemID(GenshinStatsException):
+    """Item does not exist."""

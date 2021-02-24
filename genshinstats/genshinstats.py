@@ -78,6 +78,9 @@ def fetch_endpoint(endpoint: str, post: bool=False, **kwargs) -> dict:
     # other
     elif retcode == 1     and msg == 'Invalid schedule type':
         raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
+    elif retcode == -1    and msg.endswith(' is not exists'):
+        t,n = msg.split(':')
+        raise InvalidItemID(f'{t} "{n.split()[0]}" does not exist.')
     else:
         raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{r.url}\"")
 

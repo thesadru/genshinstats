@@ -131,7 +131,10 @@ def prettify_character(data: dict):
             "level": a["level"],
             "set": {
                 "name": a["set"]["name"],
-                "effects": a["set"]["affixes"],
+                "effects": [{
+                    "activation":e["activation_number"],
+                    "effect":e["effect"],
+                } for e in a["set"]["affixes"]],
                 "id": a["set"]["id"],
             },
             "icon": a["icon"],
