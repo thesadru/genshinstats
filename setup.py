@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='genshinstats',
-    version='1.1.1',
+    version='1.1.2',
     author='thesadru',
     packages=['genshinstats'],
     description='a wrapper for the official hoyolab.com Genshin impact gameRecord API.',

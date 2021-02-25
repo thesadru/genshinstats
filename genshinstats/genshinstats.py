@@ -193,6 +193,6 @@ def recognize_character_icon(url: str) -> Optional[str]:
     if character.startswith("Player"):
         return "Traveler"
     elif character.startswith("Qin"):
-        return "Traveler"
+        return "Jean"
     
     return character

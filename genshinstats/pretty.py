@@ -62,20 +62,19 @@ def prettify_spiral_abyss(data: dict):
             "max_floor": data["max_floor"],
             "total_stars": data["total_star"],
         },
-        "ranks": {
-            "played": fchars(data["reveal_rank"]),
-            "defats": fchars(data["defeat_rank"]),
-            "damage": fchars(data["damage_rank"]),
-            "taken_damage": fchars(data["take_damage_rank"]),
-            "bursts": fchars(data["normal_skill_rank"]),
-            "skills": fchars(data["energy_skill_rank"]),
+        "character_ranks": {
+            "most_chambers_won": fchars(data["reveal_rank"]),
+            "most_chambers_lost": fchars(data["defeat_rank"]),
+            "strongest_hit": fchars(data["damage_rank"]),
+            "most_damage_taken": fchars(data["take_damage_rank"]),
+            "most_bursts_used": fchars(data["normal_skill_rank"]),
+            "most_skills_used": fchars(data["energy_skill_rank"]),
         },
         "floors": [{
             "floor": f["index"],
             "stars": f["star"],
             "max_stars": f["max_star"],
             "start": int(f["levels"][0]["battles"][0]["timestamp"]),
-            "end": int(f["levels"][-1]["battles"][-1]["timestamp"]),
             "icon": f["icon"],
             "levels":[{
                 "chamber": l["index"],
@@ -131,8 +130,9 @@ def prettify_character(data: dict):
             "level": a["level"],
             "set": {
                 "name": a["set"]["name"],
+                "effect_type": ['none','single','classic'][len(a["set"]["affixes"])],
                 "effects": [{
-                    "activation":e["activation_number"],
+                    "pieces":e["activation_number"],
                     "effect":e["effect"],
                 } for e in a["set"]["affixes"]],
                 "id": a["set"]["id"],
@@ -142,7 +142,7 @@ def prettify_character(data: dict):
         } for a in data["reliquaries"]],
         "constellations": [{
             "name":c["name"],
-            "effect":c["effect"],
+            "effect":c["effect"].replace('\\n','\n'),
             "is_activated":c["is_actived"],
             "index":c["pos"],
             "icon":c["icon"],
