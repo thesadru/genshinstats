@@ -1,6 +1,7 @@
 """wrapper for the hoyolab.com gameRecord api
 
 Majority of the endpoints require a cookie and a ds token, look at README.md for more info.
+Some functions may have a raw parameter, this prettifies the output to a readable version.
 
 https://github.com/thesadru/genshinstats
 """
@@ -15,13 +16,15 @@ from urllib.parse import urljoin
 from requests import Session
 
 from .errors import *
+from .pretty import prettify_user_info,prettify_spiral_abyss,prettify_characters
 
 session = Session()
-session.headers = {
+session.headers.update({
     "x-rpc-app_version":"1.5.0",
     "x-rpc-client_type":"4",
-    "x-rpc-language":"en-us"
-}
+    "x-rpc-language":"en-us",
+    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+})
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 HOYOLABS_URL = "https://bbs-api-os.hoyolab.com/"
 
@@ -44,7 +47,7 @@ def get_ds_token(salt: str) -> str:
     return f'{t},{r},{c}'
 
 
-def fetch_endpoint(endpoint: str, post: bool=False, **kwargs) -> dict:
+def fetch_endpoint(endpoint: str, method: str='GET', **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
     Takes in an endpoint or a url and kwargs that are later formatted to a query.
@@ -53,10 +56,12 @@ def fetch_endpoint(endpoint: str, post: bool=False, **kwargs) -> dict:
     """
     url = urljoin(HOYOLABS_URL, endpoint) # join with base url
     session.headers['ds'] = get_ds_token(DS_SALT)
-    if post:
+    if method == 'GET':
+        r = session.get(url,params=kwargs)
+    elif method == 'POST':
         r = session.post(url,json=kwargs)
     else:
-        r = session.get(url,params=kwargs)
+        raise ValueError('Method can only be GET or POST')
     r.raise_for_status() # defaut HTTP Errors
     
     data = r.json()
@@ -78,6 +83,8 @@ def fetch_endpoint(endpoint: str, post: bool=False, **kwargs) -> dict:
     # other
     elif retcode == 1     and msg == 'Invalid schedule type':
         raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
+    elif retcode == 2001  and msg == 'Duplicate operation or update failed':
+        raise CannotCheckIn('Check-in is currently timed out, wait at least a day before checking-in again.')
     elif retcode == -1    and msg.endswith(' is not exists'):
         t,n = msg.split(':')
         raise InvalidItemID(f'{t} "{n.split()[0]}" does not exist.')
@@ -106,6 +113,14 @@ def search(keyword: str, size: int=20) -> dict:
     Can return up to 20 results, based on size.
     """
     return fetch_endpoint("community/apihub/wapi/search",keyword=keyword,size=size,gids=2)
+
+def check_in() -> dict:
+    """Checks in the user who's cookies are currently being used.
+    
+    This will give you points on hoyolab's site and also rewards in genshin.
+    This also makes it possible to create an auto checkin.
+    """
+    fetch_endpoint("community/apihub/api/signIn",'POST',gids=2)
 
 def get_community_user_info(community_uid: int) -> dict:
     """Gets community info of a user based on their community uid.
@@ -138,34 +153,36 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     card = get_record_card(community_uid)
     return int(card['game_role_id']) if card else None
 
-def get_user_info(uid: int) -> dict:
+def get_user_info(uid: int, raw: bool=False) -> dict:
     """Gets game user info of a user based on their uid.
     
     Game user info contain the main nformation regarding a user.
     Contains owned characters, stats, city and world explorations and role.
     """
     server = recognize_server(uid)
-    return fetch_endpoint("game_record/genshin/api/index",server=server,role_id=uid)
+    data = fetch_endpoint("game_record/genshin/api/index",server=server,role_id=uid)
+    return data if raw else prettify_user_info(data)
 
-def get_characters(uid: int, character_ids: List[int]):
+def get_characters(uid: int, character_ids: List[int], raw: bool=False):
     """Gets characters of a user set by their ids.
     
     Characters contain info about their level, constelation, weapon, and artifacts.
     Talents are not included.
     """
     server = recognize_server(uid)
-    return fetch_endpoint("game_record/genshin/api/character",post=True,character_ids=character_ids,role_id=uid,server=server)["avatars"]
+    data = fetch_endpoint("game_record/genshin/api/character",'POST',character_ids=character_ids,role_id=uid,server=server)["avatars"]
+    return data if raw else prettify_characters(data)
 
-def get_all_characters(uid: int):
+def get_all_characters(uid: int, raw: bool=False):
     """Gets all characters of a user.
     
     Characters contain info about their level, constelation, weapon, and artifacts.
     Talents are not included.
     """
-    characters = get_user_info(uid)['avatars']
-    return get_characters(uid,[i['id'] for i in characters])
+    characters = get_user_info(uid)['characters']
+    return get_characters(uid,[i['id'] for i in characters],raw)
 
-def get_spiral_abyss(uid: int, previous: bool=False) -> dict:
+def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
     Spiral abyss info contains their porgress, stats and individual completes.
@@ -174,25 +191,13 @@ def get_spiral_abyss(uid: int, previous: bool=False) -> dict:
     """
     server = recognize_server(uid)
     schedule_type = 2 if previous else 1
-    return fetch_endpoint("game_record/genshin/api/spiralAbyss",server=server,role_id=uid,schedule_type=schedule_type)
+    data = fetch_endpoint("game_record/genshin/api/spiralAbyss",server=server,role_id=uid,schedule_type=schedule_type)
+    return data if raw else prettify_spiral_abyss(data)
 
 def is_game_uid(uid: int) -> bool:
     """Recognizes whether the uid is a game uid.
     
     Return True if it's a game uid, False if it's a community uid
     """
-    return bool(re.fullmatch(r'[156789]\d{8}',str(uid)))
+    return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
 
-def recognize_character_icon(url: str) -> Optional[str]:
-    """Recognizes a character's icon url and returns its name."""
-    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_(?:.*)_(\w+)(?:@2x|@3x)?.png'
-    match = re.fullmatch(exp,url)
-    if match is None:
-        return None
-    character = match.group(1)
-    if character.startswith("Player"):
-        return "Traveler"
-    elif character.startswith("Qin"):
-        return "Jean"
-    
-    return character

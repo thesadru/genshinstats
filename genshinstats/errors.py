@@ -11,5 +11,15 @@ class DataNotPublic(GenshinStatsException):
     """User has not allowed their data to be seen."""
 class InvalidScheduleType(GenshinStatsException):
     """Invalid Spiral Abyss schedule"""
+class CannotCheckIn(GenshinStatsException):
+    """Could not check in."""
 class InvalidItemID(GenshinStatsException):
     """Item does not exist."""
+
+
+class GenshinGachaLogException(GenshinStatsException):
+    """Base GenshinGachaLog Exception."""
+class BadGachaType(GenshinStatsException):
+    """Base GenshinGachaLog Exception."""
+class MissingAuthKey(GenshinStatsException):
+    """No gacha authkey was provided."""

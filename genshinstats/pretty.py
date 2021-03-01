@@ -3,8 +3,24 @@
 Fixes the huge problem of outdated field names in the api,
 that were leftover from during development
 """
-from . import genshinstats as gs
+import re
 from math import ceil
+
+
+def _recognize_character_icon(url: str):
+    """Recognizes a character's icon url and returns its name."""
+    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_(?:.*)_(\w+)(?:@2x|@3x)?.png'
+    match = re.fullmatch(exp,url)
+    if match is None:
+        return None
+    character = match.group(1)
+    if character.startswith("Player"):
+        return "Traveler"
+    elif character.startswith("Qin"):
+        return "Jean"
+    
+    return character
+
 
 def prettify_user_info(data: dict):
     """Returns a prettified version of get_user_info."""
@@ -42,12 +58,11 @@ def prettify_user_info(data: dict):
         } for i in data["world_explorations"]]
     }
 
-
 def prettify_spiral_abyss(data: dict):
     """Returns a prettified version of get_spiral_abyss."""
     fchars = lambda d: [{
         "value": a["value"],
-        "name":gs.recognize_character_icon(a["avatar_icon"]),
+        "name":_recognize_character_icon(a["avatar_icon"]),
         "rarity":a["rarity"],
         "icon":a["avatar_icon"],
         "id":a["avatar_id"],
@@ -85,7 +100,7 @@ def prettify_spiral_abyss(data: dict):
                     "half": b["index"],
                     "start": int(b["timestamp"]),
                     "characters":[{
-                        "name": gs.recognize_character_icon(c["icon"]),
+                        "name": _recognize_character_icon(c["icon"]),
                         "rarity": c["rarity"],
                         "level": c["level"],
                         "icon": c["icon"],
@@ -96,7 +111,6 @@ def prettify_spiral_abyss(data: dict):
             } for l in f["levels"]]
         } for f in data["floors"]]
     }
-
 
 def prettify_character(data: dict):
     """Returns a prettified version of a single item from get_characters."""
@@ -150,7 +164,14 @@ def prettify_character(data: dict):
         } for c in data["constellations"]]
     }
 
-
 def prettify_characters(data: list):
     """Returns a prettified version of get_characters."""
     return [prettify_character(i) for i in data]
+
+def prettify_gacha_log(data: list):
+    return [{
+            'type':i['item_type'],
+            'name':i['name'],
+            'rarity':i['rank_type'],
+            'time':i['time'],
+    } for i in data]

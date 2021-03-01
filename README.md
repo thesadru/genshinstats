@@ -8,28 +8,43 @@ Import the `genshin_stats` module and do `set_cookie(...)` to login.
 You can either use `set_cookie(account_id=..., cookie_token=...)`.
 The cookie is required and will raise an error if missing.
 All functions are documented and type hinted.
-## example
-Simple example of usage:
+## examples
+Simple examples of usage:
 ```py
 import genshinstats as gs # import module
 gs.set_cookie(account_id=8366222, cookie_token="zHbPk8BO3FG4hEOFD2aO6ZlGR1vF75ipuTmFyi2w") # login
-result = gs.search('sadru') # search a community user
-uid = gs.get_uid_from_community(result['users'][1]['uid']) # get the uid fro the results
-user_info = gs.get_user_info(uid) # get user info with the uid
-total_characters = len(user_info['avatars']) # get the list of characters, called avatars in the basic API
+user_info = gs.get_user_info(710785423) # get user info with a uid
+total_characters = len(user_info['characters']) # get the amount of characters
 print('user "sadru" has a total of',total_characters,'characters')
 ```
 > the cookie token in this example is not valid, you must use your own.
-## prettifiers
-There are prettifier functions that turn data into a pretty version.
-This is to rename some fields that don't make sense, like fetters.
-These are highly recommended.
 ```py
-characters = gs.prettify_characters(gs.get_all_characters(uid))
-for char in characters:
-    print(f"{char['rarity']}* {char['name']:10} Level: {char['level']} C{char['constellation']}")
+stats = gs.get_user_info(uid)['stats']
+for field,value in stats.items():
+    print(f'{field.replace("_"," ")}: {value}')
 ```
-
+```py
+characters = gs.get_all_characters(uid)
+for char in characters:
+    print(f"{char['rarity']}* {char['name']:10} Level: {char['level']:2} C{char['constellation']}")
+```
+```py
+spiral_abyss = gs.get_spiral_abyss(uid,previous=True)
+stats = spiral_abyss['stats']
+for field,value in stats.items():
+    print(f'{field.replace("_"," ")}: {value}')
+```
+## gacha log
+You can also get your gacha pull logs.
+For this you must first open the history page in genshin impact.
+The script will then get all required data by itself.
+```py
+types = gs.get_gacha_types() # get the types
+name = types[3]['name'] # name == "Character Event Wish"
+log = gs.get_gacha_log() # get the gacha log
+for i in log:
+    print(f"{i['type']} {i['name']} {i['rarity']}* ({i['time']})")
+```
 # how to get your cookie
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
 2. login to your account
@@ -41,6 +56,7 @@ for char in characters:
 # about this project
 ## contribution
 All contributions are welcome as long as it's in a form of a clean PR.
+Currently looking for people to reverse engineer the new api version.
 ## crediting
 This project can be freely downloaded and distributed.
 Crediting is appreciated.
