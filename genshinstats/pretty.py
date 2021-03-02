@@ -98,7 +98,7 @@ def prettify_spiral_abyss(data: dict):
                 "has_halves":len(l["battles"]) == 2,
                 "battles":[{
                     "half": b["index"],
-                    "start": int(b["timestamp"]),
+                    "timestamp": int(b["timestamp"]),
                     "characters":[{
                         "name": _recognize_character_icon(c["icon"]),
                         "rarity": c["rarity"],
@@ -131,14 +131,21 @@ def prettify_character(data: dict):
             "type": weapon["type_name"],
             "level": weapon["level"],
             "ascension": weapon["promote_level"],
-            "description": weapon["desc"],
             "refinement": weapon["affix_level"],
+            "description": weapon["desc"],
             "icon": weapon["icon"],
             "id": weapon["id"],
         },
         "artifacts": [{
             "name": a["name"],
-            "position": a["pos_name"],
+            "position_name": {
+                "Flower of Life":"flower",
+                "Plume of Death":"feather",
+                "Sands of Eon":"hourglass",
+                "Goblet of Eonothem":"goblet",
+                "Circlet of Logos":"crown",
+            }[a["pos_name"]],
+            "fancy_position_name": a["pos_name"],
             "position_index": a["pos"],
             "rarity": a["rarity"],
             "level": a["level"],
@@ -155,12 +162,12 @@ def prettify_character(data: dict):
             "id": a["id"],
         } for a in data["reliquaries"]],
         "constellations": [{
-            "name":c["name"],
-            "effect":c["effect"].replace('\\n','\n'),
-            "is_activated":c["is_actived"],
-            "index":c["pos"],
-            "icon":c["icon"],
-            "id":c["id"],
+            "name": c["name"],
+            "effect": c["effect"].replace('\\n','\n'),
+            "is_activated": c["is_actived"],
+            "index": c["pos"],
+            "icon": c["icon"],
+            "id": c["id"],
         } for c in data["constellations"]]
     }
 
@@ -170,8 +177,8 @@ def prettify_characters(data: list):
 
 def prettify_gacha_log(data: list):
     return [{
-            'type':i['item_type'],
-            'name':i['name'],
-            'rarity':i['rank_type'],
-            'time':i['time'],
+        "type": i["item_type"],
+        "name": i["name"],
+        "rarity": i["rank_type"],
+        "time": i["time"],
     } for i in data]

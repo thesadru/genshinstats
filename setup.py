@@ -5,10 +5,10 @@ with open('README.md', 'r') as f:
 
 setup(
     name='genshinstats',
-    version='1.1.2',
+    version='1.2.1',
     author='thesadru',
     packages=['genshinstats'],
-    description='a wrapper for the official hoyolab.com Genshin impact gameRecord API.',
+    description='A wrapper for the official hoyolab.com Genshin impact gameRecord API.',
     keywords='wrapper-api genshin'.split(),
     python_requires='>=3.6',
     url='https://github.com/thesadru/genshinstats-api',

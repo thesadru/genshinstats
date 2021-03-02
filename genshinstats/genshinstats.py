@@ -20,10 +20,20 @@ from .pretty import prettify_user_info,prettify_spiral_abyss,prettify_characters
 
 session = Session()
 session.headers.update({
+    # required headers
     "x-rpc-app_version":"1.5.0",
     "x-rpc-client_type":"4",
     "x-rpc-language":"en-us",
-    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    # authentications headers
+    "cookie":"",
+    "ds":"",
+    # recommended headers
+    "accept": "application/json, text/plain, */*",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.9,cs;q=0.8",
+    "origin": "https://webstatic-sea.hoyolab.com",
+    "referer": "https://webstatic-sea.hoyolab.com/",
+    "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
 })
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 HOYOLABS_URL = "https://bbs-api-os.hoyolab.com/"
@@ -200,4 +210,3 @@ def is_game_uid(uid: int) -> bool:
     Return True if it's a game uid, False if it's a community uid
     """
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
-

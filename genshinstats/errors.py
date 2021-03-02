@@ -19,6 +19,10 @@ class InvalidItemID(GenshinStatsException):
 
 class GenshinGachaLogException(GenshinStatsException):
     """Base GenshinGachaLog Exception."""
+class AuthKeyError(GenshinStatsException):
+    """Authkey error."""
+class AuthKeyTimeout(GenshinStatsException):
+    """Authkey timeout."""
 class BadGachaType(GenshinStatsException):
     """Base GenshinGachaLog Exception."""
 class MissingAuthKey(GenshinStatsException):
