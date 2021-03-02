@@ -27,7 +27,7 @@ session.headers.update({
     # authentications headers
     "cookie":"",
     "ds":"",
-    # recommended headers
+    # recommended params
     "accept": "application/json, text/plain, */*",
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "en-US,en;q=0.9,cs;q=0.8",
