@@ -6,6 +6,7 @@ Requires an auth key that can be gotten from an output_log.txt file.
 import os.path
 import re
 import time
+from functools import cache
 from tempfile import gettempdir
 from urllib.parse import unquote, urljoin
 
@@ -19,7 +20,6 @@ GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt')
 GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
 AUTHKEY_DURATION = 60*60*24 # 1 day
-_gacha_types = None
 
 session = requests.Session()
 session.headers.update({
@@ -32,17 +32,6 @@ session.params = {
     "lang":"en",
     # authentications params
     "authkey":"",
-    # recommended headers
-    "authkey_ver": "1",
-    "device_type": "pc",
-    "ext": '{"loc":{"x":1637.727294921875,"y":195.80615234375,"z":-2659.14208984375},"platform":"WinST"}',
-    "gacha_id": "a3101d03239e0eb2a79c4b144c5197b296f087",
-    "game_biz": "hk4e_global",
-    "game_version": "OSRELWin1.3.2_R2079798_S2088824_D2088824",
-    "init_type": "301",
-    "lang": "en",
-    "region": "os_euro",
-    "sign_type": "2",
 }
 
 def get_authkey(logfile: str=None) -> str:
@@ -52,7 +41,7 @@ def get_authkey(logfile: str=None) -> str:
     """
     # first try the log
     log = open(logfile or GENSHIN_LOG).read()
-    match = re.search(r'^OnGetWebViewPageFinish:https://.+authkey=([^&]+).+#/log$',log,re.MULTILINE)
+    match = re.search(r'^OnGetWebViewPageFinish:https://.+authkey=([^&]+).*#/log$',log,re.MULTILINE)
     if match is not None:
         authkey = unquote(match.group(1))
         open(AUTHKEY_FILE,'w').write(authkey)
@@ -98,16 +87,13 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     else:
         raise GenshinGachaLogException(f"{data['retcode']} error: {data['message']}")
 
+@cache
 def get_gacha_types() -> list:
     """Gets possible gacha types.
     
     Returns a list of dicts.
     """
-    global _gacha_types
-    if _gacha_types is not None:
-        return _gacha_types
-    _gacha_types = fetch_gacha_endpoint("getConfigList")['gacha_type_list']
-    return _gacha_types
+    return fetch_gacha_endpoint("getConfigList")['gacha_type_list']
 
 def recognize_gacha_type(gacha_type) -> str:
     """Recognizes the gacha type. Case Sensitive."""
@@ -129,3 +115,22 @@ def get_gacha_log(gacha_type: str, page: int=1, size: int=20, raw: bool=False) -
     gacha_type = recognize_gacha_type(gacha_type)
     data = fetch_gacha_endpoint("getGachaLog",gacha_type=gacha_type,page=page,size=size)['list']
     return data if raw else prettify_gacha_log(data)
+
+def get_all_gacha_ids() -> list:
+    """Gets all gacha ids from a log file.
+    
+    You need to open the details of all banners for this to work.
+    """
+    log = open(GENSHIN_LOG).read()
+    return re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/log',log)
+
+def get_gacha_details(gacha_id: str) -> dict:
+    """Gets details of a specific gacha banner.
+    
+    This requires a specific gacha banner id.
+    These keep rotating so you need to find them yourself or run get_all_gacha_ids().
+    examples standard wish: a37a19624270b092e7250edfabce541a3435c2
+    """
+    r = session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/en-us.json")
+    r.raise_for_status()
+    return r.json()
