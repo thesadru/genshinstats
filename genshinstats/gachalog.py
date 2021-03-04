@@ -6,7 +6,7 @@ Requires an auth key that can be gotten from an output_log.txt file.
 import os.path
 import re
 import time
-from functools import cache
+from functools import lru_cache
 from tempfile import gettempdir
 from urllib.parse import unquote, urljoin
 
@@ -87,7 +87,7 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     else:
         raise GenshinGachaLogException(f"{data['retcode']} error: {data['message']}")
 
-@cache
+@lru_cache()
 def get_gacha_types() -> list:
     """Gets possible gacha types.
     

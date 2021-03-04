@@ -194,7 +194,16 @@ def prettify_gacha_details(data: list):
     fitems = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
-        "element": i["item_attr"],
+        "element": {
+            "風":"Anemo",
+            "火":"Pyro",
+            "水":"Hydro",
+            "雷":"Electro",
+            "冰":"Cryo",
+            "山":"Geo",
+            "？":"Dendro",
+            "":""
+        }[i["item_attr"]],
         "icon": i["item_img"],
     } for i in l]
     return {
