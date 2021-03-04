@@ -51,8 +51,11 @@ for i in log:
 ```py
 ids = gs.get_all_gacha_ids() # get all possible gacha ids (only counts opened details pages)
 for i in ids:
-    details = gs.get_gacha_details(i) # raw details (in beta, no formatter yet)
-    print(details)
+    details = gs.get_gacha_details(i) # 
+    print(f"{details['gacha_type']} - {details['banner']}")
+    print('5 stars:', ', '.join(i['name'] for i in details['r5_up_items']))
+    print('4 stars:', ', '.join(i['name'] for i in details['r4_up_items']))
+    print()
 ```
 View other's history by setting a authkey yourself:
 ```py
@@ -60,15 +63,6 @@ gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/
 gs.set_authkey(logfile='other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.
-## manga
-Scrapes the genshin manga from mihoyo's website.
-```sh
-python -m genshinstats.manga
-```
-Or you can get the data yourself
-```py
-chapters = gs.manga.get_chapters()
-```
 
 # how to get your cookie
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)

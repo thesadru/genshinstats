@@ -27,7 +27,7 @@ session.headers.update({
     # authentications headers
     "cookie":"",
     "ds":"",
-    # recommended params
+    # recommended headers
     "accept": "application/json, text/plain, */*",
     "accept-encoding": "gzip, deflate, br",
     "accept-language": "en-US,en;q=0.9,cs;q=0.8",
@@ -84,7 +84,7 @@ def fetch_endpoint(endpoint: str, method: str='GET', **kwargs) -> dict:
     if   retcode == 1009  and msg == "角色信息错误":
         raise InvalidUID('UID could not be found.')
     elif retcode == 10102 and msg == 'Data is not public for the user':
-        raise DataNotPublic('User has set their data to be private.')
+        raise DataNotPublic('User has set their data to be private. To enable go to https://www.hoyolab.com/genshin/accountCenter/gameRecord')
     # token
     elif retcode == -401  and msg == '请求异常':
         raise InvalidDS('Invalid DS token, might be expired.')

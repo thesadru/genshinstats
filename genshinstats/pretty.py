@@ -182,3 +182,43 @@ def prettify_gacha_log(data: list):
         "rarity": i["rank_type"],
         "time": i["time"],
     } for i in data]
+
+def prettify_gacha_details(data: list):
+    fprobs = lambda l: [{
+        "type": i["item_type"],
+        "name": i["item_name"],
+        "rarity": i["rank"],
+        "is_up": i["is_up"],
+        "order_index": i["order_value"],
+    } for i in l]
+    fitems = lambda l: [{
+        "type": i["item_type"],
+        "name": i["item_name"],
+        "element": i["item_attr"],
+        "icon": i["item_img"],
+    } for i in l]
+    return {
+        "gacha_type": {
+            "100":"Novice Wishes",
+            "200":"Permanent Wish",
+            "301":"Character Event Wish",
+            "302":"Weapon Event Wish"
+        }[data["gacha_type"]],
+        "banner": re.sub(r'<.*?>','',data["title"]).split('"')[1],
+        "title": data["title"],
+        "content": data["content"],
+        "permanent": data["date_range"]=="Permanent",
+        "r5_up_prob": data["r5_up_prob"],
+        "r4_up_prob": data["r4_up_prob"],
+        "r5_prob": data["r5_prob"],
+        "r4_prob": data["r4_prob"],
+        "r3_prob": data["r3_prob"],
+        "r5_pity_prob": data["r5_baodi_prob"],
+        "r4_pity_prob": data["r4_baodi_prob"],
+        "r3_pity_prob": data["r3_baodi_prob"],
+        "r5_up_items": fitems(data["r5_up_items"]),
+        "r4_up_items": fitems(data["r4_up_items"]),
+        "r5_prob_list": fprobs(data["r5_prob_list"]),
+        "r4_prob_list": fprobs(data["r4_prob_list"]),
+        "r3_prob_list": fprobs(data["r3_prob_list"]),
+    }

@@ -13,7 +13,7 @@ from urllib.parse import unquote, urljoin
 import requests
 
 from .errors import *
-from .pretty import prettify_gacha_log
+from .pretty import prettify_gacha_details, prettify_gacha_log
 
 GENSHIN_DIR = os.path.join(os.environ['HOME'],'AppData/LocalLow/miHoYo/Genshin Impact')
 GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt')
@@ -41,7 +41,7 @@ def get_authkey(logfile: str=None) -> str:
     """
     # first try the log
     log = open(logfile or GENSHIN_LOG).read()
-    match = re.search(r'^OnGetWebViewPageFinish:https://.+authkey=([^&]+).*#/log$',log,re.MULTILINE)
+    match = re.search(r'^OnGetWebViewPageFinish:https://.+authkey=([^&]+).*#/(?:log)?$',log,re.MULTILINE)
     if match is not None:
         authkey = unquote(match.group(1))
         open(AUTHKEY_FILE,'w').write(authkey)
@@ -122,9 +122,10 @@ def get_all_gacha_ids() -> list:
     You need to open the details of all banners for this to work.
     """
     log = open(GENSHIN_LOG).read()
-    return re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/log',log)
+    ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
+    return list(set(ids))
 
-def get_gacha_details(gacha_id: str) -> dict:
+def get_gacha_details(gacha_id: str, raw: bool=False) -> dict:
     """Gets details of a specific gacha banner.
     
     This requires a specific gacha banner id.
@@ -133,4 +134,4 @@ def get_gacha_details(gacha_id: str) -> dict:
     """
     r = session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/en-us.json")
     r.raise_for_status()
-    return r.json()
+    return r.json() if raw else prettify_gacha_details(r.json())
