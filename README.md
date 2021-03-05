@@ -76,6 +76,13 @@ gs.set_authkey(logfile='other_output_log.txt')
 5. copy `account_id` and `cookie_token`
 6. use `set_cookie(account_id=..., cookie_token=...)` in your code
 
+# errors
+genshinstats uses its own errors defined in `genshinstats.errors`. 
+
+The most common one you'll probably see is `DataNotPublic`.
+To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin/accountCenter/gameRecord) and make your account public.
+([how to make your account public](https://cdn.discordapp.com/attachments/529573765743509504/817511152179216395/make_account_public.png))
+
 # about this project
 ## contribution
 All contributions are welcome as long as it's in a form of a clean PR.
