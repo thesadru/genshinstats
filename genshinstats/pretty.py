@@ -117,8 +117,18 @@ def prettify_character(data: dict):
     weapon = data["weapon"]
     return {
         "name": data["name"],
+        "alt_name":{
+            "Traveler":"Aether" if "Boy" in data["icon"] else "Lumine",
+            "Venti":"Barbatos",
+            "Zhongli":"Morax",
+            "Albedo":"Kreideprinz",
+            "Tartaglia":"Childe",
+        }.get(data["name"],None),
         "rarity": data["rarity"],
-        "element": data["element"],
+        "element": data["element"] if data["name"]!="Traveler" else {
+            71:"Anemo",
+            91:"Geo"
+        }[data["constellations"][0]["id"]], # player elements
         "level": data["level"],
         "ascension": ceil(data["level"]//10)-1,
         "friendship": data["fetter"],
@@ -156,7 +166,8 @@ def prettify_character(data: dict):
                     "pieces":e["activation_number"],
                     "effect":e["effect"],
                 } for e in a["set"]["affixes"]],
-                "id": a["set"]["id"],
+                "set_id": int(re.search(r'UI_RelicIcon_(\d+)_\d',a["icon"]).group(1)),
+                "id": a["set"]["id"]
             },
             "icon": a["icon"],
             "id": a["id"],
@@ -179,7 +190,7 @@ def prettify_gacha_log(data: list):
     return [{
         "type": i["item_type"],
         "name": i["name"],
-        "rarity": i["rank_type"],
+        "rarity": int(i["rank_type"]),
         "time": i["time"],
     } for i in data]
 
@@ -187,7 +198,7 @@ def prettify_gacha_details(data: list):
     fprobs = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
-        "rarity": i["rank"],
+        "rarity": int(i["rank"]),
         "is_up": i["is_up"],
         "order_index": i["order_value"],
     } for i in l]

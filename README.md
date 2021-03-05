@@ -4,9 +4,11 @@ I have attempted to reverse engineer their API to find out the important tokens 
 You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
 
 # how to use
-Import the `genshinstats` module and do `set_cookie(...)` to login.
-You can either use `set_cookie(account_id=..., cookie_token=...)`.
+Import the `genshinstats` module and set the cookie to login.
+To set the cookie use `set_cookie(account_id=..., cookie_token=...)`.
+Pass your own cookie values in this fields. ([How to get your cookie](#-how-to-get-your-cookie))
 The cookie is required and will raise an error if missing.
+
 All functions are documented and type hinted.
 # examples
 Simple examples of usage:
@@ -23,18 +25,18 @@ print('user "sadru" has a total of',total_characters,'characters')
 ```py
 stats = gs.get_user_info(uid)['stats']
 for field,value in stats.items():
-    print(f'{field.replace("_"," ")}: {value}')
+    print(f"{field.replace('_',' ')}: {value}")
 ```
 ```py
 characters = gs.get_all_characters(uid)
 for char in characters:
-    print(f"{char['rarity']}* {char['name']:10} Level: {char['level']:2} C{char['constellation']}")
+    print(f"{char['rarity']}* {char['name']:10} | lvl {char['level']:2} C{char['constellation']}")
 ```
 ```py
 spiral_abyss = gs.get_spiral_abyss(uid,previous=True)
 stats = spiral_abyss['stats']
 for field,value in stats.items():
-    print(f'{field.replace("_"," ")}: {value}')
+    print(f"{field.replace('_',' ')}: {value}")
 ```
 # submodules
 ## gachalog
@@ -42,7 +44,7 @@ Gets your gacha pull logs.
 For this you must first open the history/details page in genshin impact,
 the script will then get all required data by itself.
 ```py
-types = gs.get_gacha_types() # get the types
+types = gs.get_gacha_types() # get all possible types
 name = types[2]['name'] # name == "Character Event Wish"
 log = gs.get_gacha_log(name) # get the gacha log
 for i in log:
@@ -57,9 +59,11 @@ for i in ids:
     print('4 stars:', ', '.join(i['name'] for i in details['r4_up_items']))
     print()
 ```
-View other's history by setting a authkey yourself:
+View other's history by setting an authkey yourself:
 ```py
+# directly with the token:
 gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/DGs8...")
+# read from a custom file:
 gs.set_authkey(logfile='other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.

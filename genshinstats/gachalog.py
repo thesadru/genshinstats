@@ -10,7 +10,7 @@ from functools import lru_cache
 from tempfile import gettempdir
 from urllib.parse import unquote, urljoin
 
-import requests
+from requests import Session
 
 from .errors import *
 from .pretty import prettify_gacha_details, prettify_gacha_log
@@ -21,7 +21,8 @@ GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
 AUTHKEY_DURATION = 60*60*24 # 1 day
 
-session = requests.Session()
+session = Session()
+gacha_session = Session()
 session.headers.update({
     # recommended header
     "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
@@ -130,8 +131,8 @@ def get_gacha_details(gacha_id: str, raw: bool=False) -> dict:
     
     This requires a specific gacha banner id.
     These keep rotating so you need to find them yourself or run get_all_gacha_ids().
-    examples standard wish: a37a19624270b092e7250edfabce541a3435c2
+    example standard wish: a37a19624270b092e7250edfabce541a3435c2
     """
-    r = session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/en-us.json")
+    r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/en-us.json")
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_details(r.json())
