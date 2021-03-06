@@ -1,6 +1,9 @@
 # genshinstats
-This project is meant to be a wrapper for the [hoyolab.com](https://www.hoyolab.com/genshin/) gameRecord api.
-I have attempted to reverse engineer their API to find out the important tokens and cookies and then to what urls they are sent.
+This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
+The api endpoints used in this project are not publicly known but are free to use for 3rd part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
+
+Additionally 
+
 You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
 
 # how to use
@@ -81,12 +84,12 @@ genshinstats uses its own errors defined in `genshinstats.errors`.
 
 The most common one you'll probably see is `DataNotPublic`.
 To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin/accountCenter/gameRecord) and make your account public.
-([how to make your account public](https://cdn.discordapp.com/attachments/529573765743509504/817511152179216395/make_account_public.png))
+([how to make your account public](https://cdn.discordapp.com/attachments/529573765743509504/817509874417008759/make_account_public.png))
 
 # about this project
 ## contribution
 All contributions are welcome as long as it's in a form of a clean PR.
-Currently looking for people to reverse engineer the new api version.
+Currently looking for people to help me get the ds salt of the new api version.
 ## crediting
 This project can be freely downloaded and distributed.
 Crediting is appreciated.

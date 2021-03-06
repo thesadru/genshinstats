@@ -13,7 +13,7 @@ from urllib.parse import unquote, urljoin
 from requests import Session
 
 from .errors import *
-from .pretty import prettify_gacha_details, prettify_gacha_log
+from .pretty import prettify_gacha_details, prettify_gacha_items, prettify_gacha_log
 
 GENSHIN_DIR = os.path.join(os.environ['HOME'],'AppData/LocalLow/miHoYo/Genshin Impact')
 GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt')
@@ -104,7 +104,7 @@ def recognize_gacha_type(gacha_type) -> str:
         if gacha_type in i.values():
             return i['key']
     
-    raise BadGachaType(f'Gacha type "{gacha_type}" is not valid, must be one of {sum((list(i.values()) for i in gacha_types),[])}')
+    raise BadGachaType(f'Gacha type "{gacha_type}" is not valid, must be one of {[j for i in gacha_types for j in i.values()]}')
 
 def get_gacha_log(gacha_type: str, page: int=1, size: int=20, raw: bool=False) -> list:
     """Gets the gacha pull history log.
@@ -117,12 +117,22 @@ def get_gacha_log(gacha_type: str, page: int=1, size: int=20, raw: bool=False) -
     data = fetch_gacha_endpoint("getGachaLog",gacha_type=gacha_type,page=page,size=size)['list']
     return data if raw else prettify_gacha_log(data)
 
-def get_all_gacha_ids() -> list:
+def get_gacha_items(raw: bool=False) -> dict:
+    """Gets the list of items that can be gotten from the gacha.
+    
+    Returns two a dict with two lists, characters and weapons.
+    To get more info about a specific item use its id.
+    """
+    r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/en-us.json")
+    r.raise_for_status()
+    return r.json() if raw else prettify_gacha_items(r.json())
+
+def get_all_gacha_ids(logfile: str=None) -> list:
     """Gets all gacha ids from a log file.
     
     You need to open the details of all banners for this to work.
     """
-    log = open(GENSHIN_LOG).read()
+    log = open(logfile or GENSHIN_LOG).read()
     ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
     return list(set(ids))
 
@@ -132,6 +142,8 @@ def get_gacha_details(gacha_id: str, raw: bool=False) -> dict:
     This requires a specific gacha banner id.
     These keep rotating so you need to find them yourself or run get_all_gacha_ids().
     example standard wish: a37a19624270b092e7250edfabce541a3435c2
+    
+    The newbie gacha has no json resource tied to it, so you can't get info about it.
     """
     r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/en-us.json")
     r.raise_for_status()

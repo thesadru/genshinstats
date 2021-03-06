@@ -194,6 +194,20 @@ def prettify_gacha_log(data: list):
         "time": i["time"],
     } for i in data]
 
+def prettify_gacha_items(data: list):
+    return {
+        "characters": [{
+            "name": i["name"],
+            "rarity": int(i["rank_type"]),
+            "id": 10000000+int(i["item_id"])-1000,
+        } for i in data if i["item_type"]=="Character"],
+        "weapons": [{
+            "name": i["name"],
+            "rarity": int(i["rank_type"]),
+            "id": int(i["item_id"]),
+        } for i in data if i["item_type"]=="Weapon"],
+    }
+
 def prettify_gacha_details(data: list):
     fprobs = lambda l: [{
         "type": i["item_type"],
