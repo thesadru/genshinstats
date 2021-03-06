@@ -2,14 +2,12 @@
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
 The api endpoints used in this project are not publicly known but are free to use for 3rd part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
 
-Additionally 
-
 You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
 
 # how to use
 Import the `genshinstats` module and set the cookie to login.
 To set the cookie use `set_cookie(account_id=..., cookie_token=...)`.
-Pass your own cookie values in this fields. ([How to get your cookie](#-how-to-get-your-cookie))
+Pass your own cookie values in this fields. ([How to get your cookie](#how-to-get-your-cookie))
 The cookie is required and will raise an error if missing.
 
 All functions are documented and type hinted.
