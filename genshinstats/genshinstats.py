@@ -101,7 +101,7 @@ def fetch_endpoint(endpoint: str, method: str='GET', **kwargs) -> dict:
     else:
         raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{r.url}\"")
 
-def recognize_server(uid: int) -> Optional[str]:
+def recognize_server(uid: int) -> str:
     """Recognizes which server a UID is from."""
     server = {
         1:'cn_gf01',
@@ -124,7 +124,7 @@ def search(keyword: str, size: int=20) -> dict:
     """
     return fetch_endpoint("community/apihub/wapi/search",keyword=keyword,size=size,gids=2)
 
-def check_in() -> dict:
+def check_in():
     """Checks in the user who's cookies are currently being used.
     
     This will give you points on hoyolab's site and also rewards in genshin.

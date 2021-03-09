@@ -3,7 +3,7 @@
 Gets pull data from the current banners in basic json.
 Requires an auth key that can be gotten from an output_log.txt file.
 """
-import os.path
+import os
 import re
 import time
 from functools import lru_cache

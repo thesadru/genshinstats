@@ -91,7 +91,7 @@ def prettify_spiral_abyss(data: dict):
             "max_stars": f["max_star"],
             "start": int(f["levels"][0]["battles"][0]["timestamp"]),
             "icon": f["icon"],
-            "levels":[{
+            "chambers":[{
                 "chamber": l["index"],
                 "stars": l["star"],
                 "max_stars": l["max_star"],
@@ -208,7 +208,7 @@ def prettify_gacha_items(data: list):
         } for i in data if i["item_type"]=="Weapon"],
     }
 
-def prettify_gacha_details(data: list):
+def prettify_gacha_details(data: dict):
     fprobs = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
