@@ -39,6 +39,12 @@ stats = spiral_abyss['stats']
 for field,value in stats.items():
     print(f"{field.replace('_',' ')}: {value}")
 ```
+```py
+with open('users.txt','w',encoding='utf-8',errors='ignore') as file:
+    for player in gs.get_public_players():
+        print(player['uid'])
+        file.write(f"{player['uid']},{player['community_uid']}\n")
+```
 ## submodules
 ### gachalog
 Gets your gacha pull logs.

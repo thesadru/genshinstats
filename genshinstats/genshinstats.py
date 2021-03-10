@@ -11,7 +11,7 @@ import re
 import string
 import time
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Iterable
 from urllib.parse import urljoin
 
 from requests import Session
@@ -226,3 +226,32 @@ def is_game_uid(uid: int) -> bool:
     Return True if it's a game uid, False if it's a community uid
     """
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
+
+
+def get_active_players(page_size: int=20, offset: int=0) -> list:
+    """Gets a list of recommended active players
+    
+    Max page size is 195, you cannot offset beyond that.
+    """
+    return fetch_endpoint("/community/user/wapi/recommendActive",gids=2,page_size=page_size,offset=offset)['list']
+
+def get_public_players() -> Iterable[dict]:
+    """Gets a list of players with public players.
+    
+    Returns a dict of their community uid, game uid and their game card.
+    """
+    out = []
+    
+    players = get_active_players(page_size=0xffffffff)
+    for player in players:
+        community_uid = player['user']['uid']
+        card = get_record_card(community_uid)
+        if card is None:
+            continue
+        
+        yield {
+            'community_uid':community_uid,
+            'uid':card['game_role_id'],
+            'card':card
+        }
+    return out
