@@ -39,8 +39,8 @@ stats = spiral_abyss['stats']
 for field,value in stats.items():
     print(f"{field.replace('_',' ')}: {value}")
 ```
-# submodules
-## gachalog
+## submodules
+### gachalog
 Gets your gacha pull logs.
 For this you must first open the history/details page in genshin impact,
 the script will then get all required data by itself.
@@ -68,6 +68,17 @@ gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/
 gs.set_authkey(logfile='other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.
+
+## change language
+Some api endpoints support changing languages, you can see them listed here:
+```py
+genshinstats.get_all_characters(...,lang='fr-fr')
+
+gachalog.get_gacha_log(...,lang='fr')
+gachalog.get_gacha_types(lang='fr')
+gachalog.get_gacha_details(...,lang='fr-fr')
+gachalog.recognize_gacha_type(lang='fr')
+```
 
 # how to get your cookie
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)

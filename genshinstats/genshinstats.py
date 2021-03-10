@@ -10,13 +10,14 @@ import random
 import re
 import string
 import time
+from functools import lru_cache
 from typing import List, Optional
 from urllib.parse import urljoin
 
 from requests import Session
 
 from .errors import *
-from .pretty import prettify_user_info,prettify_spiral_abyss,prettify_characters
+from .pretty import *
 
 session = Session()
 session.headers.update({
@@ -57,7 +58,7 @@ def get_ds_token(salt: str) -> str:
     return f'{t},{r},{c}'
 
 
-def fetch_endpoint(endpoint: str, method: str='GET', **kwargs) -> dict:
+def fetch_endpoint(endpoint: str, method: str='GET', headers: dict=None, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
     Takes in an endpoint or a url and kwargs that are later formatted to a query.
@@ -67,9 +68,9 @@ def fetch_endpoint(endpoint: str, method: str='GET', **kwargs) -> dict:
     url = urljoin(HOYOLABS_URL, endpoint) # join with base url
     session.headers['ds'] = get_ds_token(DS_SALT)
     if method == 'GET':
-        r = session.get(url,params=kwargs)
+        r = session.get(url,headers=headers,params=kwargs)
     elif method == 'POST':
-        r = session.post(url,json=kwargs)
+        r = session.post(url,headers=headers,json=kwargs)
     else:
         raise ValueError('Method can only be GET or POST')
     r.raise_for_status() # defaut HTTP Errors
@@ -132,6 +133,11 @@ def check_in():
     """
     fetch_endpoint("community/apihub/api/signIn",'POST',gids=2)
 
+@lru_cache()
+def get_langs() -> list:
+    """Gets a list of translations for hoyolabs."""
+    return fetch_endpoint("community/misc/wapi/langs",gids=2)['langs']
+
 def get_community_user_info(community_uid: int) -> dict:
     """Gets community info of a user based on their community uid.
     
@@ -173,24 +179,34 @@ def get_user_info(uid: int, raw: bool=False) -> dict:
     data = fetch_endpoint("game_record/genshin/api/index",server=server,role_id=uid)
     return data if raw else prettify_user_info(data)
 
-def get_characters(uid: int, character_ids: List[int], raw: bool=False):
+def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: bool=False) -> list:
     """Gets characters of a user set by their ids.
     
     Characters contain info about their level, constelation, weapon, and artifacts.
     Talents are not included.
+    
+    Change the language with lang, 
+    possible langs can be found with get_langs() under the value field.
     """
     server = recognize_server(uid)
-    data = fetch_endpoint("game_record/genshin/api/character",'POST',character_ids=character_ids,role_id=uid,server=server)["avatars"]
+    data = fetch_endpoint(
+        "game_record/genshin/api/character",'POST',
+        headers={'x-rpc-language':lang},
+        character_ids=character_ids,role_id=uid,server=server
+    )["avatars"]
     return data if raw else prettify_characters(data)
 
-def get_all_characters(uid: int, raw: bool=False):
+def get_all_characters(uid: int, lang: str='en-us', raw: bool=False) -> list:
     """Gets all characters of a user.
     
     Characters contain info about their level, constelation, weapon, and artifacts.
     Talents are not included.
+    
+    Change the language with lang, 
+    possible langs can be found with get_langs() under the value field.
     """
     characters = get_user_info(uid)['characters']
-    return get_characters(uid,[i['id'] for i in characters],raw)
+    return get_characters(uid,[i['id'] for i in characters],lang,raw)
 
 def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.

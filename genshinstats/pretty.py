@@ -121,6 +121,7 @@ def prettify_character(data: dict):
             "Traveler":"Aether" if "Boy" in data["icon"] else "Lumine",
             "Venti":"Barbatos",
             "Zhongli":"Morax",
+            "Fischl":"Amy",
             "Albedo":"Kreideprinz",
             "Tartaglia":"Childe",
         }.get(data["name"],None),
@@ -148,15 +149,15 @@ def prettify_character(data: dict):
         },
         "artifacts": [{
             "name": a["name"],
-            "position_name": {
-                "Flower of Life":"flower",
-                "Plume of Death":"feather",
-                "Sands of Eon":"hourglass",
-                "Goblet of Eonothem":"goblet",
-                "Circlet of Logos":"crown",
-            }[a["pos_name"]],
-            "fancy_position_name": a["pos_name"],
-            "position_index": a["pos"],
+            "pos_name": {
+                1:"flower",
+                2:"feather",
+                3:"hourglass",
+                4:"goblet",
+                5:"crown",
+            }[a["pos"]],
+            "fancy_pos_name": a["pos_name"],
+            "pos": a["pos"],
             "rarity": a["rarity"],
             "level": a["level"],
             "set": {
@@ -238,7 +239,7 @@ def prettify_gacha_details(data: dict):
             "301":"Character Event Wish",
             "302":"Weapon Event Wish"
         }[data["gacha_type"]],
-        "banner": re.sub(r'<.*?>','',data["title"]).split('"')[1],
+        "banner": re.split(r'["«»]',re.sub(r'<.*?>','',data["title"]))[1].strip(),
         "title": data["title"],
         "content": data["content"],
         "permanent": data["date_range"]=="Permanent",

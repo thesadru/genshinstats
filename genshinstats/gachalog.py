@@ -89,32 +89,33 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
         raise GenshinGachaLogException(f"{data['retcode']} error: {data['message']}")
 
 @lru_cache()
-def get_gacha_types() -> list:
+def get_gacha_types(lang: str='en') -> list:
     """Gets possible gacha types.
     
     Returns a list of dicts.
     """
-    return fetch_gacha_endpoint("getConfigList")['gacha_type_list']
+    return fetch_gacha_endpoint("getConfigList",lang=lang)['gacha_type_list']
 
-def recognize_gacha_type(gacha_type) -> str:
+def recognize_gacha_type(gacha_type, lang: str='en') -> str:
     """Recognizes the gacha type. Case Sensitive."""
     gacha_type = str(gacha_type)
-    gacha_types = get_gacha_types()
+    gacha_types = get_gacha_types(lang)
     for i in gacha_types:
         if gacha_type in i.values():
             return i['key']
     
     raise BadGachaType(f'Gacha type "{gacha_type}" is not valid, must be one of {[j for i in gacha_types for j in i.values()]}')
 
-def get_gacha_log(gacha_type: str, page: int=1, size: int=20, raw: bool=False) -> list:
+def get_gacha_log(gacha_type: str, page: int=1, size: int=20, lang: str='en', raw: bool=False) -> list:
     """Gets the gacha pull history log.
     
     Needs a gacha type, this can either be its name, key or id.
     Possible gacha types can be found in the return of get_gacha_types().
+    
     Returns a list of dicts. 
     """
-    gacha_type = recognize_gacha_type(gacha_type)
-    data = fetch_gacha_endpoint("getGachaLog",gacha_type=gacha_type,page=page,size=size)['list']
+    gacha_type = recognize_gacha_type(gacha_type,lang)
+    data = fetch_gacha_endpoint("getGachaLog",gacha_type=gacha_type,page=page,size=size,lang=lang)['list']
     return data if raw else prettify_gacha_log(data)
 
 def get_gacha_items(raw: bool=False) -> dict:
@@ -136,15 +137,19 @@ def get_all_gacha_ids(logfile: str=None) -> list:
     ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
     return list(set(ids))
 
-def get_gacha_details(gacha_id: str, raw: bool=False) -> dict:
+def get_gacha_details(gacha_id: str, lang: str='en-us', raw: bool=False) -> dict:
     """Gets details of a specific gacha banner.
     
     This requires a specific gacha banner id.
     These keep rotating so you need to find them yourself or run get_all_gacha_ids().
     example standard wish: a37a19624270b092e7250edfabce541a3435c2
     
+    Change the language of the output with lang, 
+    possible langs can be found with get_langs() under the value field.
+    
     The newbie gacha has no json resource tied to it, so you can't get info about it.
     """
-    r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/en-us.json")
+    r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/{lang}.json")
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_details(r.json())
+    
