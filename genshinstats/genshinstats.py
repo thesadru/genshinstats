@@ -240,8 +240,6 @@ def get_public_players() -> Iterable[dict]:
     
     Returns a dict of their community uid, game uid and their game card.
     """
-    out = []
-    
     players = get_active_players(page_size=0xffffffff)
     for player in players:
         community_uid = player['user']['uid']
@@ -254,4 +252,3 @@ def get_public_players() -> Iterable[dict]:
             'uid':card['game_role_id'],
             'card':card
         }
-    return out
