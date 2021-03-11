@@ -96,17 +96,7 @@ def get_gacha_types(lang: str='en') -> list:
     """
     return fetch_gacha_endpoint("getConfigList",lang=lang)['gacha_type_list']
 
-def recognize_gacha_type(gacha_type, lang: str='en') -> str:
-    """Recognizes the gacha type. Case Sensitive."""
-    gacha_type = str(gacha_type)
-    gacha_types = get_gacha_types(lang)
-    for i in gacha_types:
-        if gacha_type in i.values():
-            return i['key']
-    
-    raise BadGachaType(f'Gacha type "{gacha_type}" is not valid, must be one of {[j for i in gacha_types for j in i.values()]}')
-
-def get_gacha_log(gacha_type: str, page: int=1, size: int=20, lang: str='en', raw: bool=False) -> list:
+def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', raw: bool=False) -> list:
     """Gets the gacha pull history log.
     
     Needs a gacha type, this can either be its name, key or id.
@@ -114,7 +104,6 @@ def get_gacha_log(gacha_type: str, page: int=1, size: int=20, lang: str='en', ra
     
     Returns a list of dicts. 
     """
-    gacha_type = recognize_gacha_type(gacha_type,lang)
     data = fetch_gacha_endpoint("getGachaLog",gacha_type=gacha_type,page=page,size=size,lang=lang)['list']
     return data if raw else prettify_gacha_log(data)
 

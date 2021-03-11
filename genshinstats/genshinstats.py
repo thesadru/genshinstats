@@ -1,17 +1,13 @@
-"""wrapper for the hoyolab.com gameRecord api
+"""Wrapper for the hoyolab.com gameRecord api.
 
-Majority of the endpoints require a cookie and a ds token, look at README.md for more info.
-Some functions may have a raw parameter, this prettifies the output to a readable version.
-
-https://github.com/thesadru/genshinstats
+Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
 import random
 import re
 import string
 import time
-from functools import lru_cache
-from typing import List, Optional, Iterable
+from typing import List
 from urllib.parse import urljoin
 
 from requests import Session
@@ -29,9 +25,6 @@ session.headers.update({
     "cookie":"",
     "ds":"",
     # recommended headers
-    "accept": "application/json, text/plain, */*",
-    "accept-encoding": "gzip, deflate, br",
-    "accept-language": "en-US,en;q=0.9,cs;q=0.8",
     "origin": "https://webstatic-sea.hoyolab.com",
     "referer": "https://webstatic-sea.hoyolab.com/",
     "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
@@ -117,58 +110,6 @@ def recognize_server(uid: int) -> str:
     else:
         raise InvalidUID("UID isn't associated with any server")
 
-def search(keyword: str, size: int=20) -> dict:
-    """Searches posts, topics and users.
-    
-    Takes in a keyword, replaces spaces with + and quotes other characters.
-    Can return up to 20 results, based on size.
-    """
-    return fetch_endpoint("community/apihub/wapi/search",keyword=keyword,size=size,gids=2)
-
-def check_in():
-    """Checks in the user who's cookies are currently being used.
-    
-    This will give you points on hoyolab's site and also rewards in genshin.
-    This also makes it possible to create an auto checkin.
-    """
-    fetch_endpoint("community/apihub/api/signIn",'POST',gids=2)
-
-@lru_cache()
-def get_langs() -> list:
-    """Gets a list of translations for hoyolabs."""
-    return fetch_endpoint("community/misc/wapi/langs",gids=2)['langs']
-
-def get_community_user_info(community_uid: int) -> dict:
-    """Gets community info of a user based on their community uid.
-    
-    Community info contains general data regarding the uid, nickname, introduction gender and so.
-    It also contains stats for general community actions.
-    
-    You can get community id with `search`.
-    """
-    return fetch_endpoint("community/user/wapi/getUserFullInfo",uid=community_uid)
-
-def get_record_card(community_uid: int) -> Optional[dict]:
-    """Gets a game record card of a user based on their community uid.
-    
-    A record card contains data regarding the stats of a user for every server.
-    Their UID for a given server is also included.
-    In case the user has set their profile to be private, returns None.
-    
-    You can get community id with `search`.
-    """
-    cards = fetch_endpoint("game_record/card/wapi/getGameRecordCard",uid=community_uid,gids=2)['list']
-    return cards[0] if cards else None
-
-def get_uid_from_community(community_uid: int) -> Optional[int]:
-    """Gets a uid with a community uid.
-    
-    This is so it's possible to search a user and then directly get the uid.
-    In case the uid is private, returns None.
-    """
-    card = get_record_card(community_uid)
-    return int(card['game_role_id']) if card else None
-
 def get_user_info(uid: int, raw: bool=False) -> dict:
     """Gets game user info of a user based on their uid.
     
@@ -226,29 +167,3 @@ def is_game_uid(uid: int) -> bool:
     Return True if it's a game uid, False if it's a community uid
     """
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
-
-
-def get_active_players(page_size: int=20, offset: int=0) -> list:
-    """Gets a list of recommended active players
-    
-    Max page size is 195, you cannot offset beyond that.
-    """
-    return fetch_endpoint("/community/user/wapi/recommendActive",gids=2,page_size=page_size,offset=offset)['list']
-
-def get_public_players() -> Iterable[dict]:
-    """Gets a list of players with public players.
-    
-    Returns a dict of their community uid, game uid and their game card.
-    """
-    players = get_active_players(page_size=0xffffffff)
-    for player in players:
-        community_uid = player['user']['uid']
-        card = get_record_card(community_uid)
-        if card is None:
-            continue
-        
-        yield {
-            'community_uid':community_uid,
-            'uid':card['game_role_id'],
-            'card':card
-        }

@@ -40,10 +40,8 @@ for field,value in stats.items():
     print(f"{field.replace('_',' ')}: {value}")
 ```
 ```py
-with open('users.txt','w',encoding='utf-8',errors='ignore') as file:
-    for player in gs.get_public_players():
-        print(player['uid'])
-        file.write(f"{player['uid']},{player['community_uid']}\n")
+for player in gs.get_public_players():
+    print(f"{player['uid']},{player['community_uid']}\n")
 ```
 ## submodules
 ### gachalog
@@ -52,8 +50,8 @@ For this you must first open the history/details page in genshin impact,
 the script will then get all required data by itself.
 ```py
 types = gs.get_gacha_types() # get all possible types
-name = types[2]['name'] # name == "Character Event Wish"
-log = gs.get_gacha_log(name) # get the gacha log
+key = types[2]['key'] # name == "Character Event Wish", key == '301'
+log = gs.get_gacha_log(key) # get the gacha log
 for i in log:
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 ```
@@ -100,6 +98,14 @@ genshinstats uses its own errors defined in `genshinstats.errors`.
 The most common one you'll probably see is `DataNotPublic`.
 To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin/accountCenter/gameRecord) and make your account public.
 ([how to make your account public](https://cdn.discordapp.com/attachments/529573765743509504/817509874417008759/make_account_public.png))
+
+# project layout
+```
+genshinstats.py    user stats and characters
+hoyolab.py         user hoyolab community info
+gachalog.py        gacha history
+errors.py          errors used by genshinstats
+```
 
 # about this project
 ## contribution
