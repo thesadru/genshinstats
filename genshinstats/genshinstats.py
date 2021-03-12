@@ -22,7 +22,6 @@ session.headers.update({
     "x-rpc-client_type":"4",
     "x-rpc-language":"en-us",
     # authentications headers
-    "cookie":"",
     "ds":"",
     # recommended headers
     "origin": "https://webstatic-sea.hoyolab.com",
@@ -38,7 +37,8 @@ def set_cookie(account_id: int, cookie_token: str) -> None:
     
     Account id and cookie token must be copied from your browser's cookies.
     """
-    session.headers['cookie'] = f'account_id={account_id}; cookie_token={cookie_token}'
+    session.cookies.set('account_id',str(account_id))
+    session.cookies.set('cookie_token',cookie_token)
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.

@@ -15,7 +15,7 @@ from requests import Session
 from .errors import *
 from .pretty import prettify_gacha_details, prettify_gacha_items, prettify_gacha_log
 
-GENSHIN_DIR = os.path.join(os.environ['HOME'],'AppData/LocalLow/miHoYo/Genshin Impact')
+GENSHIN_DIR = os.path.expanduser('~/AppData/LocalLow/miHoYo/Genshin Impact')
 GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt')
 GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
