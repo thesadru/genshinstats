@@ -27,3 +27,10 @@ class BadGachaType(GenshinStatsException):
     """Base GenshinGachaLog Exception."""
 class MissingAuthKey(GenshinStatsException):
     """No gacha authkey was provided."""
+
+class AlreadySignedIn(GenshinStatsException):
+    """Already signed in dailies"""
+class FirstSignIn(GenshinStatsException):
+    """First sign in must be done manually."""
+class NoGameAccount(GenshinStatsException):
+    """Tried to get info without an account"""

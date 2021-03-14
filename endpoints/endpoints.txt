@@ -20,7 +20,9 @@ https://bbs-api-os.hoyolab.com/game_record/genshin/api/index?server=os_euro&role
 https://bbs-api-os.hoyolab.com/game_record/genshin/api/spiralAbyss?server=os_euro&role_id=710785423&schedule_type=1
 https://bbs-api-os.hoyolab.com/game_record/genshin/api/tool
 https://genshin.mihoyo.com/content/yuanshen/getContentList?pageSize=4&pageNum=1&channelId=96
-https://hk4e-api-os.hoyolab.com/event/sol/info?act_id=e202102251931481&gids=2
+https://hk4e-api-os.hoyolab.com/event/sol/info?act_id=e202102251931481
+https://hk4e-api-os.mihoyo.com/event/sol/award?act_id=e202102251931481
+https://hk4e-api-os.mihoyo.com/event/sol/sign?act_id=e202102251931481&uid=710785423&region=os_euro
 https://hk4e-api-os.mihoyo.com/common/apicdkey/api/getRoleByAidAndRegion?lang=en&region=os_euro&game_biz=hk4e_global
 https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey?uid=710785423&region=os_euro&lang=en&cdkey=a&game_biz=hk4e_global
 https://hk4e-api-os.mihoyo.com/event/sol/award?current_page=1&lang=en-us&page_size=10&act_id=e202102251931481

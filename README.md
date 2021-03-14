@@ -68,10 +68,19 @@ View other's history by setting an authkey yourself:
 ```py
 # directly with the token:
 gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/DGs8...")
+# get from a url:
+gs.set_authkey("https://webstatic-sea.mihoyo.com/ys/event/im-service/index.html?...")
 # read from a custom file:
 gs.set_authkey(logfile='other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.
+### signin
+Automatically get daily sign in rewards for the currently logged-in user.
+```py
+info = gs.get_daiy_reward_info()
+print('total rewards claimed:',info['total_sign_day'])
+gs.sign_in() # signed you in, returns a bool whether it succeeded
+```
 
 ## change language
 Some api endpoints support changing languages, you can see them listed here:

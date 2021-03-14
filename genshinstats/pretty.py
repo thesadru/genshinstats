@@ -129,7 +129,7 @@ def prettify_character(data: dict):
         "element": data["element"] if data["name"]!="Traveler" else {
             71:"Anemo",
             91:"Geo"
-        }[data["constellations"][0]["id"]], # player elements
+        }[data["constellations"][0]["id"]], # traveler elements
         "level": data["level"],
         "ascension": ceil(data["level"]//10)-1,
         "friendship": data["fetter"],
@@ -156,7 +156,7 @@ def prettify_character(data: dict):
                 4:"goblet",
                 5:"crown",
             }[a["pos"]],
-            "fancy_pos_name": a["pos_name"],
+            "full_pos_name": a["pos_name"],
             "pos": a["pos"],
             "rarity": a["rarity"],
             "level": a["level"],

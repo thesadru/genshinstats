@@ -12,3 +12,4 @@ from .errors import *
 from .gachalog import *
 from .genshinstats import *
 from .hoyolab import *
+from .signin import *

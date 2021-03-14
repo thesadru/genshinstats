@@ -18,7 +18,7 @@ from .pretty import *
 session = Session()
 session.headers.update({
     # required headers
-    "x-rpc-app_version":"1.5.0",
+    "x-rpc-app_version":"1.5.0", # chinese api uses 2.x.x, global api uses 1.x.x
     "x-rpc-client_type":"4",
     "x-rpc-language":"en-us",
     # authentications headers
@@ -89,6 +89,10 @@ def fetch_endpoint(endpoint: str, method: str='GET', headers: dict=None, **kwarg
         raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
     elif retcode == 2001  and msg == 'Duplicate operation or update failed':
         raise CannotCheckIn('Check-in is currently timed out, wait at least a day before checking-in again.')
+    elif retcode == -5003 and msg == "Traveler, you've already checked in today~":
+        raise AlreadySignedIn('Already claimed daily reward, try again tommorow.')
+    elif retcode ==-10002 and msg == 'No character created yet':
+        raise NoGameAccount('Cannot get rewards info. Account has no game account binded to it.')
     elif retcode == -1    and msg.endswith(' is not exists'):
         t,n = msg.split(':')
         raise InvalidItemID(f'{t} "{n.split()[0]}" does not exist.')

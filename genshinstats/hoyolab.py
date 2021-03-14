@@ -19,8 +19,7 @@ def search(keyword: str, size: int=20) -> dict:
 def check_in():
     """Checks in the user who's cookies are currently being used.
     
-    This will give you points on hoyolab's site and also rewards in genshin.
-    This also makes it possible to create an auto checkin.
+    This will give you points on hoyolab's site.
     """
     fetch_endpoint("community/apihub/api/signIn",'POST',gids=2)
 
@@ -28,6 +27,13 @@ def check_in():
 def get_langs() -> list:
     """Gets a list of translations for hoyolabs."""
     return fetch_endpoint("community/misc/wapi/langs",gids=2)['langs']
+
+def get_game_uids(server: str=None) -> list:
+    """Gets all game uids of the currently signed in player.
+    
+    Can filter by server.
+    """
+    return fetch_endpoint("https://api-os-takumi.hoyolab.com/binding/api/getUserGameRolesByCookie",region=server or '')['list']
 
 def get_community_user_info(community_uid: int) -> dict:
     """Gets community info of a user based on their community uid.
@@ -65,7 +71,7 @@ def get_active_players(page_size: int=20, offset: int=0) -> list:
     
     Max page size is 195, you cannot offset beyond that.
     """
-    return fetch_endpoint("community/user/wapi/recommendActive",gids=2,page_size=page_size,offset=offset)['list']
+    return fetch_endpoint("community/user/wapi/recommendActive",page_size=page_size,offset=offset,gids=2)['list']
 
 def get_public_players() -> Iterable[dict]:
     """Gets a list of players with public players.

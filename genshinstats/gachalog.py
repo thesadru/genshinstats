@@ -35,34 +35,47 @@ session.params = {
     "authkey":"",
 }
 
+_authkey_re = r'https://.+authkey=([^&]+).*#/(?:log)?$'
 def get_authkey(logfile: str=None) -> str:
     """Gets the query for log requests.
     
     This will either be done from the logs or from a tempfile.
     """
     # first try the log
-    log = open(logfile or GENSHIN_LOG).read()
-    match = re.search(r'^OnGetWebViewPageFinish:https://.+authkey=([^&]+).*#/(?:log)?$',log,re.MULTILINE)
+    with open(AUTHKEY_FILE) as file:
+        log = file.read()
+    match = re.search(_authkey_re,log,re.MULTILINE)
     if match is not None:
         authkey = unquote(match.group(1))
-        open(AUTHKEY_FILE,'w').write(authkey)
+        with open(AUTHKEY_FILE,'w') as file:
+            file.write(authkey)
         return authkey
     
     # otherwise try the tempfile
     if (os.path.isfile(AUTHKEY_FILE) and 
         time.time()-os.path.getmtime(AUTHKEY_FILE) <= AUTHKEY_DURATION):
-        return open(AUTHKEY_FILE).read()
+        with open(AUTHKEY_FILE,) as file:
+            return file.read()
     
     raise MissingAuthKey('No authkey could be found in the params, logs or in a tempfile. '
                          'Open the history in-game first before attempting to request it.')
 
-def set_authkey(authkey: str=None, logfile: str=None):
+def set_authkey(authkey: str=None, url: str=None, logfile: str=None):
     """Sets an authkey for log requests.
     
-    Passing in authkey will simply save it, otherwise passing in a logfile will search it.
-    If nothing is passed in, uses get_authkey.
+    passing in authkey will simply save it, 
+    passing in a url will take the authkey out of it,
+    passing in a logfile will search it,
+    otherwise uses get_authkey
     """
-    if authkey is None:
+    if authkey is not None:
+        pass
+    elif url is not None:
+        match = re.match(_authkey_re,url)
+        if match is None:
+            raise ValueError("url does not have an authkey parameter")
+        authkey = unquote(match.group(1))
+    else:
         authkey = get_authkey(logfile)
     session.params['authkey'] = authkey
 
@@ -122,7 +135,8 @@ def get_all_gacha_ids(logfile: str=None) -> list:
     
     You need to open the details of all banners for this to work.
     """
-    log = open(logfile or GENSHIN_LOG).read()
+    with open(logfile or GENSHIN_LOG) as file:
+        log = file.read()
     ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
     return list(set(ids))
 
