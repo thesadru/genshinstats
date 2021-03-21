@@ -3,14 +3,17 @@
 Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
+from http.cookiejar import Cookie
 import random
 import re
 import string
 import time
 from typing import List
+from http.cookies import SimpleCookie
 from urllib.parse import urljoin
 
 from requests import Session
+from requests.cookies import cookiejar_from_dict
 
 from .errors import *
 from .pretty import *
@@ -24,13 +27,11 @@ session.headers.update({
     # authentications headers
     "ds":"",
     # recommended headers
-    "origin": "https://webstatic-sea.hoyolab.com",
-    "referer": "https://webstatic-sea.hoyolab.com/",
     "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
 })
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
-HOYOLABS_URL = "https://bbs-api-os.hoyolab.com/"
-
+HOYOLABS_URL = "https://bbs-api-os.hoyolab.com/" # global
+TAKUMI_URL = "https://api-takumi.mihoyo.com" # chinese
 
 def set_cookie(account_id: int, cookie_token: str) -> None:
     """Basic configuration function, required for anything beyond search.
@@ -40,33 +41,38 @@ def set_cookie(account_id: int, cookie_token: str) -> None:
     session.cookies.set('account_id',str(account_id))
     session.cookies.set('cookie_token',cookie_token)
 
+def set_cookie_header(header: str) -> None:
+    """Like set_cookie, but you can set the header directly."""
+    c = SimpleCookie()
+    c.load(header)
+    session.cookies = cookiejar_from_dict({k:v.value for k,v in c.items()},session.cookies)
+
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
     
     Uses an MD5 hash with a unique salt.
     """
     t = int(time.time()) # current seconds
-    r = ''.join(random.sample(string.ascii_lowercase+string.digits, 6)) # 6 random chars
+    r = ''.join(random.sample(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
     c = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest() # hash and get hex
     return f'{t},{r},{c}'
 
-
-def fetch_endpoint(endpoint: str, method: str='GET', headers: dict=None, **kwargs) -> dict:
+def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
-    Takes in an endpoint or a url and kwargs that are later formatted to a query.
+    Takes in a url and an optional specifc endpoint which are joined.
+    Can specifically use the chinese base url.
     A request is then sent and returns a parsed response.
     Includes error handling and ds token renewal.
+    
+    Can specifically request data for chinese users, but that requires being logged in.
     """
-    url = urljoin(HOYOLABS_URL, endpoint) # join with base url
     session.headers['ds'] = get_ds_token(DS_SALT)
-    if method == 'GET':
-        r = session.get(url,headers=headers,params=kwargs)
-    elif method == 'POST':
-        r = session.post(url,headers=headers,json=kwargs)
-    else:
-        raise ValueError('Method can only be GET or POST')
-    r.raise_for_status() # defaut HTTP Errors
+    method = kwargs.pop('method','get')
+    url = urljoin(TAKUMI_URL if chinese else HOYOLABS_URL,endpoint)
+    
+    r = session.request(method,url,**kwargs)
+    r.raise_for_status()
     
     data = r.json()
     if data['data'] is not None: # success
@@ -82,7 +88,7 @@ def fetch_endpoint(endpoint: str, method: str='GET', headers: dict=None, **kwarg
     # token
     elif retcode == -401  and msg == '请求异常':
         raise InvalidDS('Invalid DS token, might be expired.')
-    elif retcode == 10001 and msg == 'Please login':
+    elif retcode == -100 or retcode == 10001 and msg == 'Please login':
         raise NotLoggedIn('Login cookies have not been provided or are incorrect.')
     # other
     elif retcode == 1     and msg == 'Invalid schedule type':
@@ -121,7 +127,11 @@ def get_user_info(uid: int, raw: bool=False) -> dict:
     Contains owned characters, stats, city and world explorations and role.
     """
     server = recognize_server(uid)
-    data = fetch_endpoint("game_record/genshin/api/index",server=server,role_id=uid)
+    data = fetch_endpoint(
+        "game_record/genshin/api/index",
+        chinese=is_chinese(uid),
+        params=dict(server=server,role_id=uid)
+    )
     return data if raw else prettify_user_info(data)
 
 def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: bool=False) -> list:
@@ -135,9 +145,11 @@ def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: b
     """
     server = recognize_server(uid)
     data = fetch_endpoint(
-        "game_record/genshin/api/character",'POST',
+        "game_record/genshin/api/character",
+        chinese=is_chinese(uid),
+        method='POST',
+        json={'character_ids':character_ids,'role_id':uid,'server':server},
         headers={'x-rpc-language':lang},
-        character_ids=character_ids,role_id=uid,server=server
     )["avatars"]
     return data if raw else prettify_characters(data)
 
@@ -151,7 +163,7 @@ def get_all_characters(uid: int, lang: str='en-us', raw: bool=False) -> list:
     possible langs can be found with get_langs() under the value field.
     """
     characters = get_user_info(uid)['characters']
-    return get_characters(uid,[i['id'] for i in characters],lang,raw)
+    return get_characters(uid,[i['id'] for i in characters], lang, raw)
 
 def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
@@ -162,7 +174,11 @@ def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     """
     server = recognize_server(uid)
     schedule_type = 2 if previous else 1
-    data = fetch_endpoint("game_record/genshin/api/spiralAbyss",server=server,role_id=uid,schedule_type=schedule_type)
+    data = fetch_endpoint(
+        "game_record/genshin/api/spiralAbyss",
+        chinese=is_chinese(uid),
+        params=dict(server=server,role_id=uid,schedule_type=schedule_type)
+    )
     return data if raw else prettify_spiral_abyss(data)
 
 def is_game_uid(uid: int) -> bool:
@@ -171,3 +187,7 @@ def is_game_uid(uid: int) -> bool:
     Return True if it's a game uid, False if it's a community uid
     """
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
+
+def is_chinese(x: str=None) -> bool:
+    """Recognizes whether the server/uid is chinese."""
+    return str(x).startswith(('cn','1','5'))

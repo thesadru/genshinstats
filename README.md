@@ -1,6 +1,6 @@
 # genshinstats
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
-The api endpoints used in this project are not publicly known but are free to use for 3rd part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
+The api endpoints used in this project are not publicly known but are free to use for third part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
 
 You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
 
@@ -12,6 +12,7 @@ The cookie is required and will raise an error if missing.
 
 All functions are documented and type hinted.
 # examples
+![showcase](https://cdn.discordapp.com/attachments/529573765743509504/820739541924446248/genshinstats_showcase_lowres.gif)
 Simple examples of usage:
 ```py
 import genshinstats as gs # import module
@@ -39,9 +40,12 @@ stats = spiral_abyss['stats']
 for field,value in stats.items():
     print(f"{field.replace('_',' ')}: {value}")
 ```
+
+It's possible to set the cookies with a header
 ```py
-for player in gs.get_public_players():
-    print(f"{player['uid']},{player['community_uid']}\n")
+gs.set_cookie_header("""
+_MHYUUID=0110a95f-fbe9-41a3-a26a-5ed1d9e3a8f1; account_id=119480035; cookie_token=hEIIh08ghAIlHY1QQZBnsngVWXzaEMQtrSV0Bowu; ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035; mi18nLang=en-us
+""")
 ```
 ## submodules
 ### gachalog
@@ -77,7 +81,7 @@ gs.set_authkey(logfile='other_output_log.txt')
 ### signin
 Automatically get daily sign in rewards for the currently logged-in user.
 ```py
-info = gs.get_daiy_reward_info()
+info = gs.get_daily_reward_info()
 print('total rewards claimed:',info['total_sign_day'])
 gs.sign_in() # signed you in, returns a bool whether it succeeded
 ```
@@ -113,13 +117,14 @@ To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin
 genshinstats.py    user stats and characters
 hoyolab.py         user hoyolab community info
 gachalog.py        gacha history
+signin.py          automatic sign in for hoyolabs
 errors.py          errors used by genshinstats
 ```
 
 # about this project
 ## contribution
 All contributions are welcome as long as it's in a form of a clean PR.
-Currently looking for people to help me get the ds salt of the new api version.
+Currently looking for literally anyone who has a chinese genshin account to help me make this project work for all chinese endpoints (right now it's mostly guesswork).
 ## crediting
 This project can be freely downloaded and distributed.
 Crediting is appreciated.

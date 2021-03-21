@@ -35,14 +35,14 @@ session.params = {
     "authkey":"",
 }
 
-_authkey_re = r'https://.+authkey=([^&]+).*#/(?:log)?$'
+_authkey_re = r'https://.+authkey=([^&]+).*#/(?:log)?'
 def get_authkey(logfile: str=None) -> str:
     """Gets the query for log requests.
     
     This will either be done from the logs or from a tempfile.
     """
     # first try the log
-    with open(AUTHKEY_FILE) as file:
+    with open(logfile or GENSHIN_LOG) as file:
         log = file.read()
     match = re.search(_authkey_re,log,re.MULTILINE)
     if match is not None:
@@ -79,19 +79,22 @@ def set_authkey(authkey: str=None, url: str=None, logfile: str=None):
         authkey = get_authkey(logfile)
     session.params['authkey'] = authkey
 
-def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
+def fetch_gacha_endpoint(url: str, endpoint: str=None, **kwargs) -> dict:
     """Fetch an enpoint from mihoyo's gacha info.
     
-    Takes in an endpoint or a url and kwargs that are later formatted to a query.
+    Takes in a url and an optional specifc endpoint which are joined.
     A request is then sent and returns a parsed response.
+    Includes error handling and getting the authkey.
     """
     session.params['authkey'] = session.params['authkey'] or get_authkey() # update authkey
-    url = urljoin(GACHA_LOG_URL,endpoint)
-    r = session.get(url,params=kwargs)
+    method = kwargs.pop('method','get')
+    url = urljoin(urljoin(GACHA_LOG_URL, url),endpoint)
+    
+    r = session.request(method,url,**kwargs)
     r.raise_for_status()
     
     data = r.json()
-    if data['data'] is not None:
+    if data['data'] is not None: # success
         return data['data']
     
     if   data['retcode'] == -100 and data['message'] == "authkey error":
@@ -107,7 +110,10 @@ def get_gacha_types(lang: str='en') -> list:
     
     Returns a list of dicts.
     """
-    return fetch_gacha_endpoint("getConfigList",lang=lang)['gacha_type_list']
+    return fetch_gacha_endpoint(
+        "getConfigList",
+        params=dict(lang=lang)
+    )['gacha_type_list']
 
 def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', raw: bool=False) -> list:
     """Gets the gacha pull history log.
@@ -117,7 +123,10 @@ def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', ra
     
     Returns a list of dicts. 
     """
-    data = fetch_gacha_endpoint("getGachaLog",gacha_type=gacha_type,page=page,size=size,lang=lang)['list']
+    data = fetch_gacha_endpoint(
+        "getGachaLog",
+        params=dict(gacha_type=gacha_type,page=page,size=size,lang=lang)
+    )['list']
     return data if raw else prettify_gacha_log(data)
 
 def get_gacha_items(raw: bool=False) -> dict:
@@ -126,7 +135,9 @@ def get_gacha_items(raw: bool=False) -> dict:
     Returns two a dict with two lists, characters and weapons.
     To get more info about a specific item use its id.
     """
-    r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/en-us.json")
+    r = gacha_session.get(
+        f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/en-us.json"
+    )
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_items(r.json())
 
@@ -152,7 +163,9 @@ def get_gacha_details(gacha_id: str, lang: str='en-us', raw: bool=False) -> dict
     
     The newbie gacha has no json resource tied to it, so you can't get info about it.
     """
-    r = gacha_session.get(f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/{lang}.json")
+    r = gacha_session.get(
+        f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{gacha_id}/{lang}.json"
+    )
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_details(r.json())
     

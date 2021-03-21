@@ -9,7 +9,7 @@ from math import ceil
 
 def _recognize_character_icon(url: str):
     """Recognizes a character's icon url and returns its name."""
-    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_(?:.*)_(\w+)(?:@2x|@3x)?.png'
+    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_(?:.*)_(\w+)(?:@\dx)?.png'
     match = re.fullmatch(exp,url)
     if match is None:
         return None
@@ -221,12 +221,12 @@ def prettify_gacha_details(data: dict):
         "type": i["item_type"],
         "name": i["item_name"],
         "element": {
-            "風":"Anemo",
+            "风":"Anemo",
             "火":"Pyro",
             "水":"Hydro",
             "雷":"Electro",
             "冰":"Cryo",
-            "山":"Geo",
+            "岩":"Geo",
             "？":"Dendro",
             "":""
         }[i["item_attr"]],

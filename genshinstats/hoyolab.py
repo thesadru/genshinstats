@@ -3,7 +3,7 @@
 Can search users, get record cards, active players...
 """
 from functools import lru_cache
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from .genshinstats import fetch_endpoint
 
@@ -14,26 +14,37 @@ def search(keyword: str, size: int=20) -> dict:
     Takes in a keyword, replaces spaces with + and quotes other characters.
     Can return up to 20 results, based on size.
     """
-    return fetch_endpoint("community/apihub/wapi/search",keyword=keyword,size=size,gids=2)
+    return fetch_endpoint(
+        "community/apihub/wapi/search",
+        params=dict(keyword=keyword,size=size,gids=2)
+    )
 
 def check_in():
     """Checks in the user who's cookies are currently being used.
     
     This will give you points on hoyolab's site.
     """
-    fetch_endpoint("community/apihub/api/signIn",'POST',gids=2)
+    fetch_endpoint(
+        "community/apihub/api/signIn",
+        method='POST',
+        params=dict(gids=2)
+    )
 
 @lru_cache()
 def get_langs() -> list:
     """Gets a list of translations for hoyolabs."""
-    return fetch_endpoint("community/misc/wapi/langs",gids=2)['langs']
+    return fetch_endpoint(
+        "community/misc/wapi/langs",
+        params=dict(gids=2)
+    )['langs']
 
-def get_game_uids(server: str=None) -> list:
+def get_game_uids(chinese: bool=False) -> list:
     """Gets all game uids of the currently signed in player.
     
-    Can filter by server.
+    Can get uids both for global and china.
     """
-    return fetch_endpoint("https://api-os-takumi.hoyolab.com/binding/api/getUserGameRolesByCookie",region=server or '')['list']
+    url = "https://api-takumi.mihoyo.com/" if chinese else "https://api-os-takumi.mihoyo.com/"
+    return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie")['list']
 
 def get_community_user_info(community_uid: int) -> dict:
     """Gets community info of a user based on their community uid.
@@ -43,7 +54,10 @@ def get_community_user_info(community_uid: int) -> dict:
     
     You can get community id with `search`.
     """
-    return fetch_endpoint("community/user/wapi/getUserFullInfo",uid=community_uid)
+    return fetch_endpoint(
+        "community/user/wapi/getUserFullInfo",
+        params=dict(uid=community_uid)
+    )
 
 def get_record_card(community_uid: int) -> Optional[dict]:
     """Gets a game record card of a user based on their community uid.
@@ -54,7 +68,10 @@ def get_record_card(community_uid: int) -> Optional[dict]:
     
     You can get community id with `search`.
     """
-    cards = fetch_endpoint("game_record/card/wapi/getGameRecordCard",uid=community_uid,gids=2)['list']
+    cards = fetch_endpoint(
+        "game_record/card/wapi/getGameRecordCard",
+        params=dict(uid=community_uid,gids=2)
+    )['list']
     return cards[0] if cards else None
 
 def get_uid_from_community(community_uid: int) -> Optional[int]:
@@ -71,7 +88,10 @@ def get_active_players(page_size: int=20, offset: int=0) -> list:
     
     Max page size is 195, you cannot offset beyond that.
     """
-    return fetch_endpoint("community/user/wapi/recommendActive",page_size=page_size,offset=offset,gids=2)['list']
+    return fetch_endpoint(
+        "community/user/wapi/recommendActive",
+        params=dict(page_size=page_size,offset=offset,gids=2)
+    )['list']
 
 def get_public_players() -> Iterable[dict]:
     """Gets a list of players with public players.
