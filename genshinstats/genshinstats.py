@@ -60,16 +60,16 @@ def get_ds_token(salt: str) -> str:
 def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
-    Takes in a url and an optional specifc endpoint which are joined.
-    Can specifically use the chinese base url.
+    Takes in an endpoint url which is joined with the base url.
     A request is then sent and returns a parsed response.
     Includes error handling and ds token renewal.
     
-    Can specifically request data for chinese users, but that requires being logged in.
+    Can specifically use the chinese base url  and request data for chinese users, 
+    but that requires being logged in as that user.
     """
     session.headers['ds'] = get_ds_token(DS_SALT)
     method = kwargs.pop('method','get')
-    url = urljoin(TAKUMI_URL if chinese else HOYOLABS_URL,endpoint)
+    url = urljoin(TAKUMI_URL if chinese else HOYOLABS_URL, endpoint)
     
     r = session.request(method,url,**kwargs)
     r.raise_for_status()

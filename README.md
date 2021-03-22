@@ -91,11 +91,13 @@ Some api endpoints support changing languages, you can see them listed here:
 ```py
 genshinstats.get_all_characters(...,lang='fr-fr')
 
-gachalog.get_gacha_log(...,lang='fr')
 gachalog.get_gacha_types(lang='fr')
+gachalog.get_gacha_log(...,lang='fr')
+gachalog.get_gacha_items(lang='fr-fr')
 gachalog.get_gacha_details(...,lang='fr-fr')
-gachalog.recognize_gacha_type(lang='fr')
 ```
+> endpoints can use two types of values, long and short. Long is the default value in `gs.get_langs()`, short is only the first part of a lang (`en-us` -> `en`).
+> Chinese has simplified and traditional options, so if you use chinese the short version is the same as the long version (`zh-cn` -> `zh-cn`)
 
 # how to get your cookie
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)

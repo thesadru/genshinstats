@@ -5,6 +5,7 @@ that were leftover from during development
 """
 import re
 from math import ceil
+from datetime import datetime
 
 
 def _recognize_character_icon(url: str):
@@ -67,10 +68,12 @@ def prettify_spiral_abyss(data: dict):
         "icon":a["avatar_icon"],
         "id":a["avatar_id"],
     } for a in d]
+    todate = lambda x: datetime.fromtimestamp(int(x)).strftime("%Y-%m-%d")
+    totime = lambda x: datetime.fromtimestamp(int(x)).isoformat(' ')
     return {
         "season": data["schedule_id"],
-        "season_start_time": int(data["start_time"]),
-        "season_end_time": int(data["end_time"]),
+        "season_start_time": todate(data["start_time"]),
+        "season_end_time":   todate(data["end_time"]),
         "stats": {
             "total_battles": data["total_battle_times"],
             "total_wins": data["total_win_times"],
@@ -89,7 +92,7 @@ def prettify_spiral_abyss(data: dict):
             "floor": f["index"],
             "stars": f["star"],
             "max_stars": f["max_star"],
-            "start": int(f["levels"][0]["battles"][0]["timestamp"]),
+            "start": totime(f["levels"][0]["battles"][0]["timestamp"]),
             "icon": f["icon"],
             "chambers":[{
                 "chamber": l["index"],
@@ -98,7 +101,7 @@ def prettify_spiral_abyss(data: dict):
                 "has_halves":len(l["battles"]) == 2,
                 "battles":[{
                     "half": b["index"],
-                    "timestamp": int(b["timestamp"]),
+                    "timestamp": totime(b["timestamp"]),
                     "characters":[{
                         "name": _recognize_character_icon(c["icon"]),
                         "rarity": c["rarity"],
@@ -196,26 +199,22 @@ def prettify_gacha_log(data: list):
     } for i in data]
 
 def prettify_gacha_items(data: list):
-    return {
-        "characters": [{
-            "name": i["name"],
-            "rarity": int(i["rank_type"]),
-            "id": 10000000+int(i["item_id"])-1000,
-        } for i in data if i["item_type"]=="Character"],
-        "weapons": [{
-            "name": i["name"],
-            "rarity": int(i["rank_type"]),
-            "id": int(i["item_id"]),
-        } for i in data if i["item_type"]=="Weapon"],
-    }
+    return [{
+        "name":i["name"],
+        "type":i["item_type"],
+        "rarity":i["rank_type"],
+        "is_character":len(i["item_id"])==4,
+        "id":10000000+int(i["item_id"])-1000 if len(i["item_id"])==4 else int(i["item_id"]),
+    } for i in data]
 
 def prettify_gacha_details(data: dict):
+    per = lambda p: None if p=='0%' else p[:-1].replace(',','.')
     fprobs = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
         "rarity": int(i["rank"]),
-        "is_up": i["is_up"],
-        "order_index": i["order_value"],
+        "is_up": bool(i["is_up"]),
+        "order_value": i["order_value"],
     } for i in l]
     fitems = lambda l: [{
         "type": i["item_type"],
@@ -228,7 +227,7 @@ def prettify_gacha_details(data: dict):
             "冰":"Cryo",
             "岩":"Geo",
             "？":"Dendro",
-            "":""
+            "":None
         }[i["item_attr"]],
         "icon": i["item_img"],
     } for i in l]
@@ -239,21 +238,28 @@ def prettify_gacha_details(data: dict):
             "301":"Character Event Wish",
             "302":"Weapon Event Wish"
         }[data["gacha_type"]],
-        "banner": re.split(r'["«»]',re.sub(r'<.*?>','',data["title"]))[1].strip(),
+        "gacha_type_id":int(data["gacha_type"]),
+        "banner": re.sub(r'<.*?>','',data["title"]).strip(),
         "title": data["title"],
         "content": data["content"],
-        "permanent": data["date_range"]=="Permanent",
-        "r5_up_prob": data["r5_up_prob"],
-        "r4_up_prob": data["r4_up_prob"],
-        "r5_prob": data["r5_prob"],
-        "r4_prob": data["r4_prob"],
-        "r3_prob": data["r3_prob"],
-        "r5_pity_prob": data["r5_baodi_prob"],
-        "r4_pity_prob": data["r4_baodi_prob"],
-        "r3_pity_prob": data["r3_baodi_prob"],
-        "r5_up_items": fitems(data["r5_up_items"]),
-        "r4_up_items": fitems(data["r4_up_items"]),
-        "r5_prob_list": fprobs(data["r5_prob_list"]),
-        "r4_prob_list": fprobs(data["r4_prob_list"]),
-        "r3_prob_list": fprobs(data["r3_prob_list"]),
+        "date_range":data["date_range"],
+        "permanent": data["gacha_type"]=="200",
+        "r5_up_prob": per(data["r5_up_prob"]), # probability for rate-up 5*
+        "r4_up_prob": per(data["r4_up_prob"]), # probability for rate-up 4*
+        "r5_prob": per(data["r5_prob"]), # probability for 5*
+        "r4_prob": per(data["r4_prob"]), # probability for 4*
+        "r3_prob": per(data["r3_prob"]), # probability for 3*
+        "r5_guarantee_prob": per(data["r5_baodi_prob"]), # probability for 5* incl. guarantee
+        "r4_guarantee_prob": per(data["r4_baodi_prob"]), # probability for 4* incl. guarantee
+        "r3_guarantee_prob": per(data["r3_baodi_prob"]), # probability for 3* incl. guarantee
+        "r5_up_items": fitems(data["r5_up_items"]), # list of 5* rate-up items that you can get from banner
+        "r4_up_items": fitems(data["r4_up_items"]), # list of 4* rate-up items that you can get from banner
+        "r5_items": fprobs(data["r5_prob_list"]), # list 5* of items that you can get from banner
+        "r4_items": fprobs(data["r4_prob_list"]), # list 4* of items that you can get from banner
+        "r3_items": fprobs(data["r3_prob_list"]), # list 3* of items that you can get from banner
+        "items": sorted([
+                *fprobs(data["r5_prob_list"]), 
+                *fprobs(data["r4_prob_list"]), 
+                *fprobs(data["r3_prob_list"])
+            ],key=lambda x: x["order_value"])
     }

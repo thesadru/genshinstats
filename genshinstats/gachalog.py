@@ -22,7 +22,6 @@ AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
 AUTHKEY_DURATION = 60*60*24 # 1 day
 
 session = Session()
-gacha_session = Session()
 session.headers.update({
     # recommended header
     "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
@@ -34,6 +33,7 @@ session.params = {
     # authentications params
     "authkey":"",
 }
+gacha_session = Session() # extra session for static resources
 
 _authkey_re = r'https://.+authkey=([^&]+).*#/(?:log)?'
 def get_authkey(logfile: str=None) -> str:
@@ -60,6 +60,16 @@ def get_authkey(logfile: str=None) -> str:
     raise MissingAuthKey('No authkey could be found in the params, logs or in a tempfile. '
                          'Open the history in-game first before attempting to request it.')
 
+def get_all_gacha_ids(logfile: str=None) -> list:
+    """Gets all gacha ids from a log file.
+    
+    You need to open the details of all banners for this to work.
+    """
+    with open(logfile or GENSHIN_LOG) as file:
+        log = file.read()
+    ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
+    return list(set(ids))
+
 def set_authkey(authkey: str=None, url: str=None, logfile: str=None):
     """Sets an authkey for log requests.
     
@@ -79,16 +89,16 @@ def set_authkey(authkey: str=None, url: str=None, logfile: str=None):
         authkey = get_authkey(logfile)
     session.params['authkey'] = authkey
 
-def fetch_gacha_endpoint(url: str, endpoint: str=None, **kwargs) -> dict:
+def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     """Fetch an enpoint from mihoyo's gacha info.
     
-    Takes in a url and an optional specifc endpoint which are joined.
+    Takes in an endpoint url which is joined with the base url.
     A request is then sent and returns a parsed response.
     Includes error handling and getting the authkey.
     """
     session.params['authkey'] = session.params['authkey'] or get_authkey() # update authkey
     method = kwargs.pop('method','get')
-    url = urljoin(urljoin(GACHA_LOG_URL, url),endpoint)
+    url = urljoin(GACHA_LOG_URL, endpoint)
     
     r = session.request(method,url,**kwargs)
     r.raise_for_status()
@@ -118,7 +128,7 @@ def get_gacha_types(lang: str='en') -> list:
 def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', raw: bool=False) -> list:
     """Gets the gacha pull history log.
     
-    Needs a gacha type, this can either be its name, key or id.
+    Needs a gacha type, this must be the key (for example 301).
     Possible gacha types can be found in the return of get_gacha_types().
     
     Returns a list of dicts. 
@@ -129,27 +139,17 @@ def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', ra
     )['list']
     return data if raw else prettify_gacha_log(data)
 
-def get_gacha_items(raw: bool=False) -> dict:
+def get_gacha_items(lang: str='en-us', raw: bool=False) -> dict:
     """Gets the list of items that can be gotten from the gacha.
     
     Returns two a dict with two lists, characters and weapons.
     To get more info about a specific item use its id.
     """
     r = gacha_session.get(
-        f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/en-us.json"
+        f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/{lang}.json"
     )
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_items(r.json())
-
-def get_all_gacha_ids(logfile: str=None) -> list:
-    """Gets all gacha ids from a log file.
-    
-    You need to open the details of all banners for this to work.
-    """
-    with open(logfile or GENSHIN_LOG) as file:
-        log = file.read()
-    ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
-    return list(set(ids))
 
 def get_gacha_details(gacha_id: str, lang: str='en-us', raw: bool=False) -> dict:
     """Gets details of a specific gacha banner.
