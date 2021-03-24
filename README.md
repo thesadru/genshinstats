@@ -11,6 +11,8 @@ Pass your own cookie values in this fields. ([How to get your cookie](#how-to-ge
 The cookie is required and will raise an error if missing.
 
 All functions are documented and type hinted.
+
+[API documentation](https://thesadru.github.io/pdoc/genshinstats/)
 # examples
 ![showcase](https://cdn.discordapp.com/attachments/529573765743509504/820739541924446248/genshinstats_showcase_lowres.gif)
 Simple examples of usage:
