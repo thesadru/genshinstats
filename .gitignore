@@ -1,5 +1,5 @@
 __pycache__
-myconfig.ini
+.pdoc_templates
 test*
 users.txt
 endpoints

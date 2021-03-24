@@ -2,28 +2,29 @@
 
 Automatically claims the next reward in the daily check-in rewards.
 """
-from .errors import FirstSignIn, NoGameAccount
+from .errors import FirstSignIn
 from .genshinstats import fetch_endpoint
-from .hoyolab import get_game_uids
+from .hoyolab import get_game_accounts
 
-ACT_ID = "e202102251931481"
-SOL_URL = "https://hk4e-api-os.mihoyo.com/event/sol/" # global
-SIGN_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/" # chinese
+OS_URL = "https://hk4e-api-os.mihoyo.com/event/sol/" # global
+OS_ACT_ID = "e202102251931481"
+CN_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/" # chinese
+CN_ACT_ID = "e202009291139501"
 
 def get_daily_reward_info(chinese: bool=False) -> dict:
     """Fetches daily award info for the currently logged-in user."""
-    url = SIGN_URL if chinese else SOL_URL
+    url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
     return fetch_endpoint(
         url+"info",
-        params=dict(act_id=ACT_ID)
+        params=dict(act_id=act_id)
     )
 
 def get_daily_rewards(chinese: bool=False) -> list:
     """Gets claimed awards for the currently logged-in user"""
-    url = SIGN_URL if chinese else SOL_URL
+    url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
     return fetch_endpoint(
         url+"award",
-        params=dict(act_id=ACT_ID) # chinese might need more params? idk yet
+        params=dict(act_id=act_id) # chinese might need more params? idk yet
     )['list']
 
 def sign_in(chinese: bool=False, force: bool=False) -> bool:
@@ -44,10 +45,11 @@ def sign_in(chinese: bool=False, force: bool=False) -> bool:
         if info['is_sign']:
             return False # already signed in
     
-    u = get_game_uids(chinese)[0] # we need just one uid (idk about the chinese version)
+    account = get_game_accounts(chinese)[0] # we need just one uid (idk about the chinese version)
+    url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
     fetch_endpoint(
-        SOL_URL+"sign",
+        url+"sign",
         method='POST',
-        params=dict(act_id=ACT_ID,uid=u['game_uid'],region=u['region'])
+        params=dict(act_id=act_id,uid=account['game_uid'],region=account['region'])
     )
     return True

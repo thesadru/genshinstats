@@ -3,13 +3,12 @@
 Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
-from http.cookiejar import Cookie
 import random
 import re
 import string
 import time
-from typing import List
 from http.cookies import SimpleCookie
+from typing import List
 from urllib.parse import urljoin
 
 from requests import Session
@@ -53,9 +52,9 @@ def get_ds_token(salt: str) -> str:
     Uses an MD5 hash with a unique salt.
     """
     t = int(time.time()) # current seconds
-    r = ''.join(random.sample(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
-    c = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest() # hash and get hex
-    return f'{t},{r},{c}'
+    c = ''.join(random.sample(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
+    h = hashlib.md5(f"salt={salt}&t={t}&r={c}".encode()).hexdigest() # hash and get hex
+    return f'{t},{c},{h}'
 
 def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
@@ -95,6 +94,12 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
         raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
     elif retcode == 2001  and msg == 'Duplicate operation or update failed':
         raise CannotCheckIn('Check-in is currently timed out, wait at least a day before checking-in again.')
+    elif retcode == -2003 and msg == 'Invalid redemption code':
+        raise InvalidCode('Invalid redemption code')
+    elif retcode == -2017 and msg == 'This Redemption Code is already in use':
+        raise CodeAlreadyUsed('Redemption code has been claimed already.')
+    elif retcode == -2021 and msg == 'You do not meet the Adventure Rank requirements. This redemption code is only valid if your Adventure Rank is equal to or above 10':
+        raise TooLowAdventureRank('Cannot claim codes for account with advunture rank lower than 10.')
     elif retcode == -5003 and msg == "Traveler, you've already checked in today~":
         raise AlreadySignedIn('Already claimed daily reward, try again tommorow.')
     elif retcode ==-10002 and msg == 'No character created yet':
@@ -188,6 +193,6 @@ def is_game_uid(uid: int) -> bool:
     """
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
 
-def is_chinese(x: str=None) -> bool:
+def is_chinese(x: str) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(('cn','1','5'))

@@ -5,13 +5,13 @@ Can search users, get record cards, active players...
 from functools import lru_cache
 from typing import Iterable, Optional
 
-from .genshinstats import fetch_endpoint
+from .errors import *
+from .genshinstats import fetch_endpoint, recognize_server
 
 
 def search(keyword: str, size: int=20) -> dict:
     """Searches posts, topics and users.
     
-    Takes in a keyword, replaces spaces with + and quotes other characters.
     Can return up to 20 results, based on size.
     """
     return fetch_endpoint(
@@ -38,10 +38,10 @@ def get_langs() -> list:
         params=dict(gids=2)
     )['langs']
 
-def get_game_uids(chinese: bool=False) -> list:
-    """Gets all game uids of the currently signed in player.
+def get_game_accounts(chinese: bool=False) -> list:
+    """Gets all game accounts of the currently signed in player.
     
-    Can get uids both for global and china.
+    Can get accounts both for global and china.
     """
     url = "https://api-takumi.mihoyo.com/" if chinese else "https://api-os-takumi.mihoyo.com/"
     return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie")['list']
@@ -110,3 +110,33 @@ def get_public_players() -> Iterable[dict]:
             'uid':card['game_role_id'],
             'card':card
         }
+
+def redeem_code(code: str, uid: int=None) -> int:
+    """Redeems a gift code for the currently signed in user.
+    
+    Api endpoint for https://genshin.mihoyo.com/en/gift.
+    
+    The code will be redeemed for every avalible account, 
+    specifying the uid will claim it only for that account.
+    
+    Returns the amount of users it managed to claim codes for.
+    
+    Currently codes can only be claimed for global accounts, not chinese.
+    """
+    if uid is None:
+        accounts = get_game_accounts()
+    else:
+        accounts = [{'game_biz':'hk4e_global','game_uid':uid,'region':recognize_server(uid)}] # create a dummy api return
+    
+    success = 0
+    for account in accounts:
+        try:
+            fetch_endpoint(
+                "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
+                params=dict(uid=account['game_uid'],region=account['region'],cdkey=code,game_biz=account['game_biz'],lang='en')
+            )
+        except InvalidCode: raise
+        except (CodeAlreadyUsed,TooLowAdventureRank): pass
+        else: success += 1
+    
+    return success

@@ -112,7 +112,7 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     elif data['retcode'] == -101 and data['message'] == "authkey timeout":
         raise AuthKeyTimeout('Authkey has timed-out. Update it by opening the history page in Genshin.')
     else:
-        raise GenshinGachaLogException(f"{data['retcode']} error: {data['message']}")
+        raise GachaLogException(f"{data['retcode']} error: {data['message']}")
 
 @lru_cache()
 def get_gacha_types(lang: str='en') -> list:
