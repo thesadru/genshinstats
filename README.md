@@ -49,6 +49,12 @@ gs.set_cookie_header("""
 _MHYUUID=0110a95f-fbe9-41a3-a26a-5ed1d9e3a8f1; account_id=119480035; cookie_token=hEIIh08ghAIlHY1QQZBnsngVWXzaEMQtrSV0Bowu; ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035; mi18nLang=en-us
 """)
 ```
+Or set them automatically by getting them from a browser
+```py
+gs.set_cookie_auto() # search all browsers
+gs.set_cookie_auto('chrome') # search specific browser
+```
+> requires `cookie-browser3`, can take up to 10s
 ## submodules
 ### gachalog
 Gets your gacha pull logs.

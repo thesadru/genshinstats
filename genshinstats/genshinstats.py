@@ -44,7 +44,28 @@ def set_cookie_header(header: str) -> None:
     """Like set_cookie, but you can set the header directly."""
     c = SimpleCookie()
     c.load(header)
-    session.cookies = cookiejar_from_dict({k:v.value for k,v in c.items()},session.cookies)
+    session.cookies = cookiejar_from_dict({k:v.value for k,v in c.items()}, session.cookies)
+
+def set_cookie_auto(browser: str=None):
+    """Like set_cookie, but gets the cookies by itself.
+    
+    Requires the module browser-cookie3
+    Be aware that this process can take up to 10 seconds, 
+    so it should be ran only once.
+    To speed it up select a browser.
+    
+    If a specifc browser is set, gets data from that browser only.
+    Avalible browsers: chrome, chromium, opera, edge, firefox
+    """
+    import browser_cookie3
+    if browser is None:
+        jar = browser_cookie3.load()
+    else:
+        jar = getattr(browser_cookie3,browser)()
+    
+    for c in jar:
+        if 'hoyolab' in c.domain or 'mihoyo' in c.domain:
+            session.cookies.set(c.name,c.value)
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
@@ -52,9 +73,9 @@ def get_ds_token(salt: str) -> str:
     Uses an MD5 hash with a unique salt.
     """
     t = int(time.time()) # current seconds
-    c = ''.join(random.sample(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
-    h = hashlib.md5(f"salt={salt}&t={t}&r={c}".encode()).hexdigest() # hash and get hex
-    return f'{t},{c},{h}'
+    r = ''.join(random.sample(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
+    h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest() # hash and get hex
+    return f'{t},{r},{h}'
 
 def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
@@ -99,7 +120,9 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     elif retcode == -2017 and msg == 'This Redemption Code is already in use':
         raise CodeAlreadyUsed('Redemption code has been claimed already.')
     elif retcode == -2021 and msg == 'You do not meet the Adventure Rank requirements. This redemption code is only valid if your Adventure Rank is equal to or above 10':
-        raise TooLowAdventureRank('Cannot claim codes for account with advunture rank lower than 10.')
+        raise TooLowAdventureRank('Cannot claim codes for account with adventure rank lower than 10.')
+    elif retcode == -1073 and msg == "You haven't created a character on this server. Create a character first and then try redeeming the code.":
+        raise NoGameAccount('Cannot claim code. Account has no game account binded to it.')
     elif retcode == -5003 and msg == "Traveler, you've already checked in today~":
         raise AlreadySignedIn('Already claimed daily reward, try again tommorow.')
     elif retcode ==-10002 and msg == 'No character created yet':
@@ -108,7 +131,7 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
         t,n = msg.split(':')
         raise InvalidItemID(f'{t} "{n.split()[0]}" does not exist.')
     else:
-        raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{r.url}\"")
+        raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{url}\"")
 
 def recognize_server(uid: int) -> str:
     """Recognizes which server a UID is from."""

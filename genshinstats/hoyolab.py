@@ -4,6 +4,7 @@ Can search users, get record cards, active players...
 """
 from functools import lru_cache
 from typing import Iterable, Optional
+import time
 
 from .errors import *
 from .genshinstats import fetch_endpoint, recognize_server
@@ -83,22 +84,66 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     card = get_record_card(community_uid)
     return int(card['game_role_id']) if card else None
 
-def get_active_players(page_size: int=20, offset: int=0) -> list:
+_last_redeem = .0
+def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_global'):
+    """Redeems a single code. Use redeem_code instead."""
+    global _last_redeem
+    t = time.time() - _last_redeem
+    if t < 5: time.sleep(5-t)
+    
+    region = region or recognize_server(uid)
+    try:
+        return fetch_endpoint(
+            "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
+            params=dict(uid=uid,region=region,cdkey=code,game_biz=game_biz,lang='en')
+        )
+    finally:
+        _last_redeem = time.time()
+
+def redeem_code(code: str, uid: int=None) -> int:
+    """Redeems a gift code for the currently signed in user.
+    
+    Api endpoint for https://genshin.mihoyo.com/en/gift.
+    
+    The code will be redeemed for every avalible account, 
+    specifying the uid will claim it only for that account.
+    Returns the amount of users it managed to claim codes for.
+    
+    Claiming code for every account will take 5s per account because of cooldowns.
+    
+    Currently codes can only be claimed for global accounts, not chinese.
+    """
+    if uid is not None:
+        _redeem_code(code,uid)
+        return 1
+    
+    success = 0
+    for account in get_game_accounts():
+        try: 
+            _redeem_code(code,account['game_uid'],account['region'],account['game_biz'])
+        except (CodeAlreadyUsed,TooLowAdventureRank): 
+            pass
+        else: 
+            success += 1
+    
+    return success
+
+def get_active_players(page_size: int=None, offset: int=0) -> list:
     """Gets a list of recommended active players
     
-    Max page size is 195, you cannot offset beyond that.
+    When page size is None, gets all avalible active players.
     """
     return fetch_endpoint(
         "community/user/wapi/recommendActive",
-        params=dict(page_size=page_size,offset=offset,gids=2)
+        params=dict(page_size=page_size or 0xffff,offset=offset,gids=2)
     )['list']
 
 def get_public_players() -> Iterable[dict]:
-    """Gets a list of players with public players.
+    """Gets a list of players with public accounts.
     
     Returns a dict of their community uid, game uid and their game card.
     """
-    players = get_active_players(page_size=0xffffffff)
+    players = get_active_players()
     for player in players:
         community_uid = player['user']['uid']
         card = get_record_card(community_uid)
@@ -110,33 +155,3 @@ def get_public_players() -> Iterable[dict]:
             'uid':card['game_role_id'],
             'card':card
         }
-
-def redeem_code(code: str, uid: int=None) -> int:
-    """Redeems a gift code for the currently signed in user.
-    
-    Api endpoint for https://genshin.mihoyo.com/en/gift.
-    
-    The code will be redeemed for every avalible account, 
-    specifying the uid will claim it only for that account.
-    
-    Returns the amount of users it managed to claim codes for.
-    
-    Currently codes can only be claimed for global accounts, not chinese.
-    """
-    if uid is None:
-        accounts = get_game_accounts()
-    else:
-        accounts = [{'game_biz':'hk4e_global','game_uid':uid,'region':recognize_server(uid)}] # create a dummy api return
-    
-    success = 0
-    for account in accounts:
-        try:
-            fetch_endpoint(
-                "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
-                params=dict(uid=account['game_uid'],region=account['region'],cdkey=code,game_biz=account['game_biz'],lang='en')
-            )
-        except InvalidCode: raise
-        except (CodeAlreadyUsed,TooLowAdventureRank): pass
-        else: success += 1
-    
-    return success

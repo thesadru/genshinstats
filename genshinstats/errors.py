@@ -15,6 +15,8 @@ class DataNotPublic(GenshinStatsException):
     """User has not allowed their data to be seen."""
 class InvalidScheduleType(GenshinStatsException):
     """Invalid Spiral Abyss schedule"""
+class NoGameAccount(GenshinStatsException):
+    """Tried to get info without an account"""
 class CannotCheckIn(GenshinStatsException):
     """Could not check in."""
 
@@ -42,5 +44,3 @@ class AlreadySignedIn(SignInException):
     """Already signed in dailies"""
 class FirstSignIn(SignInException):
     """First sign in must be done manually."""
-class NoGameAccount(SignInException):
-    """Tried to get info without an account"""
