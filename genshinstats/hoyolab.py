@@ -2,12 +2,13 @@
 
 Can search users, get record cards, active players...
 """
+import time
 from functools import lru_cache
 from typing import Iterable, Optional
-import time
 
-from .errors import *
-from .genshinstats import fetch_endpoint, recognize_server
+from .errors import CodeAlreadyUsed, TooLowAdventureRank
+from .genshinstats import fetch_endpoint
+from .utils import recognize_server
 
 
 def search(keyword: str, size: int=20) -> dict:

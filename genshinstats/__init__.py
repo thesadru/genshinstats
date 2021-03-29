@@ -13,3 +13,4 @@ from .gachalog import *
 from .genshinstats import *
 from .hoyolab import *
 from .signin import *
+from .utils import *

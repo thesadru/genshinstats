@@ -2,12 +2,12 @@ from setuptools import setup
 
 setup(
     name='genshinstats',
-    version='1.3.3',
+    version='1.3.3.1',
     author='thesadru',
     packages=['genshinstats'],
     description="A python library that can get the stats of your or others' Genshin Impact account using Mihoyo's API.",
     keywords='wrapper-api genshin'.split(),
-    python_requires='>=3.8',
+    python_requires='>=3.6',
     url='https://github.com/thesadru/genshinstats',
     install_requires=['requests'],
     author_email='dan0.suman@gmail.com',

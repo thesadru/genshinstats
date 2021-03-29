@@ -4,7 +4,6 @@ Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
 import random
-import re
 import string
 import time
 from http.cookies import SimpleCookie
@@ -14,13 +13,13 @@ from urllib.parse import urljoin
 from requests import Session
 from requests.cookies import cookiejar_from_dict
 
-from .errors import *
 from .pretty import *
+from .utils import is_chinese, raise_for_error, recognize_server
 
 session = Session()
 session.headers.update({
     # required headers
-    "x-rpc-app_version":"1.5.0", # chinese api uses 2.x.x, global api uses 1.x.x
+    "x-rpc-app_version":"1.5.0", # global api uses 1.x.x, chinese api uses 2.x.x
     "x-rpc-client_type":"4",
     "x-rpc-language":"en-us",
     # authentications headers
@@ -29,8 +28,8 @@ session.headers.update({
     "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
 })
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
-HOYOLABS_URL = "https://bbs-api-os.hoyolab.com/" # global
-TAKUMI_URL = "https://api-takumi.mihoyo.com" # chinese
+OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"
+CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"
 
 def set_cookie(account_id: int, cookie_token: str) -> None:
     """Basic configuration function, required for anything beyond search.
@@ -44,7 +43,7 @@ def set_cookie_header(header: str) -> None:
     """Like set_cookie, but you can set the header directly."""
     c = SimpleCookie()
     c.load(header)
-    session.cookies = cookiejar_from_dict({k:v.value for k,v in c.items()}, session.cookies)
+    session.cookies.update(c)
 
 def set_cookie_auto(browser: str=None):
     """Like set_cookie, but gets the cookies by itself.
@@ -89,64 +88,16 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     """
     session.headers['ds'] = get_ds_token(DS_SALT)
     method = kwargs.pop('method','get')
-    url = urljoin(TAKUMI_URL if chinese else HOYOLABS_URL, endpoint)
+    url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
     
     r = session.request(method,url,**kwargs)
     r.raise_for_status()
     
     data = r.json()
-    if data['data'] is not None: # success
+    if data['retcode'] == 0:
         return data['data']
     
-    # Custom HTTP Errors
-    retcode,msg = data['retcode'],data['message']
-    # UID
-    if   retcode == 1009  and msg == "角色信息错误":
-        raise InvalidUID('UID could not be found.')
-    elif retcode == 10102 and msg == 'Data is not public for the user':
-        raise DataNotPublic('User has set their data to be private. To enable go to https://www.hoyolab.com/genshin/accountCenter/gameRecord')
-    # token
-    elif retcode == -401  and msg == '请求异常':
-        raise InvalidDS('Invalid DS token, might be expired.')
-    elif retcode == -100 or retcode == 10001 and msg == 'Please login':
-        raise NotLoggedIn('Login cookies have not been provided or are incorrect.')
-    # other
-    elif retcode == 1     and msg == 'Invalid schedule type':
-        raise InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.')
-    elif retcode == 2001  and msg == 'Duplicate operation or update failed':
-        raise CannotCheckIn('Check-in is currently timed out, wait at least a day before checking-in again.')
-    elif retcode == -2003 and msg == 'Invalid redemption code':
-        raise InvalidCode('Invalid redemption code')
-    elif retcode == -2017 and msg == 'This Redemption Code is already in use':
-        raise CodeAlreadyUsed('Redemption code has been claimed already.')
-    elif retcode == -2021 and msg == 'You do not meet the Adventure Rank requirements. This redemption code is only valid if your Adventure Rank is equal to or above 10':
-        raise TooLowAdventureRank('Cannot claim codes for account with adventure rank lower than 10.')
-    elif retcode == -1073 and msg == "You haven't created a character on this server. Create a character first and then try redeeming the code.":
-        raise NoGameAccount('Cannot claim code. Account has no game account binded to it.')
-    elif retcode == -5003 and msg == "Traveler, you've already checked in today~":
-        raise AlreadySignedIn('Already claimed daily reward, try again tommorow.')
-    elif retcode ==-10002 and msg == 'No character created yet':
-        raise NoGameAccount('Cannot get rewards info. Account has no game account binded to it.')
-    elif retcode == -1    and msg.endswith(' is not exists'):
-        t,n = msg.split(':')
-        raise InvalidItemID(f'{t} "{n.split()[0]}" does not exist.')
-    else:
-        raise GenshinStatsException(f"{retcode} Error ({data['message']}) for url: \"{url}\"")
-
-def recognize_server(uid: int) -> str:
-    """Recognizes which server a UID is from."""
-    server = {
-        1:'cn_gf01',
-        5:'cn_qd01',
-        6:'os_usa',
-        7:'os_euro',
-        8:'os_asia',
-        9:'os_cht',
-    }.get(int(str(uid)[0]))
-    if server:
-        return server
-    else:
-        raise InvalidUID("UID isn't associated with any server")
+    raise_for_error(data)
 
 def get_user_info(uid: int, raw: bool=False) -> dict:
     """Gets game user info of a user based on their uid.
@@ -209,13 +160,3 @@ def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     )
     return data if raw else prettify_spiral_abyss(data)
 
-def is_game_uid(uid: int) -> bool:
-    """Recognizes whether the uid is a game uid.
-    
-    Return True if it's a game uid, False if it's a community uid
-    """
-    return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
-
-def is_chinese(x: str) -> bool:
-    """Recognizes whether the server/uid is chinese."""
-    return str(x).startswith(('cn','1','5'))

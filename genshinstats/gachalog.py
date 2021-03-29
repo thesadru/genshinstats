@@ -12,8 +12,9 @@ from urllib.parse import unquote, urljoin
 
 from requests import Session
 
-from .errors import *
+from .errors import MissingAuthKey
 from .pretty import prettify_gacha_details, prettify_gacha_items, prettify_gacha_log
+from .utils import raise_for_error
 
 GENSHIN_DIR = os.path.expanduser('~/AppData/LocalLow/miHoYo/Genshin Impact')
 GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt')
@@ -104,15 +105,10 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     r.raise_for_status()
     
     data = r.json()
-    if data['data'] is not None: # success
+    if data['retcode'] == 0:
         return data['data']
     
-    if   data['retcode'] == -100 and data['message'] == "authkey error":
-        raise AuthKeyError('Authkey is not valid.')
-    elif data['retcode'] == -101 and data['message'] == "authkey timeout":
-        raise AuthKeyTimeout('Authkey has timed-out. Update it by opening the history page in Genshin.')
-    else:
-        raise GachaLogException(f"{data['retcode']} error: {data['message']}")
+    raise_for_error()
 
 @lru_cache()
 def get_gacha_types(lang: str='en') -> list:

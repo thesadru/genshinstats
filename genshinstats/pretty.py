@@ -4,8 +4,8 @@ Fixes the huge problem of outdated field names in the api,
 that were leftover from during development
 """
 import re
-from math import ceil
 from datetime import datetime
+from math import ceil
 
 
 def _recognize_character_icon(url: str):
@@ -257,9 +257,7 @@ def prettify_gacha_details(data: dict):
         "r5_items": fprobs(data["r5_prob_list"]), # list 5* of items that you can get from banner
         "r4_items": fprobs(data["r4_prob_list"]), # list 4* of items that you can get from banner
         "r3_items": fprobs(data["r3_prob_list"]), # list 3* of items that you can get from banner
-        "items": sorted([
-                *fprobs(data["r5_prob_list"]), 
-                *fprobs(data["r4_prob_list"]), 
-                *fprobs(data["r3_prob_list"])
-            ],key=lambda x: x["order_value"])
+        "items": sorted(
+            fprobs(data["r5_prob_list"])+fprobs(data["r4_prob_list"])+fprobs(data["r3_prob_list"]),
+            key=lambda x: x["order_value"])
     }
