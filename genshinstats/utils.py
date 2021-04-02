@@ -1,8 +1,11 @@
+"""Various utility functions for genshinstats."""
+import os.path
 import re
 from typing import NoReturn
 
 from .errors import *
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 
 def raise_for_error(response: dict) -> NoReturn:
     """Raises a custom genshinstats error from a response."""
@@ -23,8 +26,8 @@ def raise_for_error(response: dict) -> NoReturn:
     elif retcode ==-10002 and msg == 'No character created yet':
         raise NoGameAccount('Cannot get rewards info. Account has no game account binded to it.')
     elif retcode == -1    and msg.endswith(' is not exists'):
-        t,n = msg.split(':')
-        raise InvalidItemID(f'{t} "{n.split()[0]}" does not exist.')
+        t,n = re.match(r'(.+?):(\d+)',msg).groups()
+        raise InvalidItemID(f'{t} "{n}" does not exist.')
     # code redemption
     elif retcode == -2003 and msg == 'Invalid redemption code':
         raise InvalidCode('Invalid redemption code')
@@ -39,6 +42,9 @@ def raise_for_error(response: dict) -> NoReturn:
         raise AlreadySignedIn('Already claimed daily reward, try again tommorow.')
     elif retcode == 2001  and msg == 'Duplicate operation or update failed':
         raise CannotCheckIn('Check-in is currently timed out, wait at least a day before checking-in again.')
+    elif retcode == -2016 and msg.startswith('Redemption in cooldown.'):
+        t = re.search(r'\d+',msg)
+        raise RedeemCooldown(f'Redemption in cooldown. Please try again in {t} second(s).')
     # gacha log
     elif retcode == -100  and msg == "authkey error":
         raise AuthKeyError('Authkey is not valid.')
@@ -50,6 +56,7 @@ def raise_for_error(response: dict) -> NoReturn:
 
 def recognize_server(uid: int) -> str:
     """Recognizes which server a UID is from."""
+    x = int(str(uid)[0])
     server = {
         1:'cn_gf01',
         5:'cn_qd01',
@@ -57,7 +64,7 @@ def recognize_server(uid: int) -> str:
         7:'os_euro',
         8:'os_asia',
         9:'os_cht',
-    }.get(int(str(uid)[0]))
+    }.get(x)
     if server:
         return server
     else:
@@ -73,3 +80,12 @@ def is_game_uid(uid: int) -> bool:
 def is_chinese(x: str) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(('cn','1','5'))
+
+def get_genshin_dir() -> str:
+    """Find and return the Genshin Impact directory. None if not found."""
+    mihoyo_dir = os.path.expanduser('~/AppData/LocalLow/miHoYo/')
+    for name in ["Genshin Impact","原神","YuanShen"]:
+        directory = os.path.join(mihoyo_dir,name)
+        if os.path.exists(directory):
+            return directory
+    return None # no genshin installation

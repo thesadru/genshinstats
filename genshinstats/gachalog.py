@@ -3,6 +3,7 @@
 Gets pull data from the current banners in basic json.
 Requires an auth key that can be gotten from an output_log.txt file.
 """
+import logging
 import os
 import re
 import time
@@ -13,11 +14,12 @@ from urllib.parse import unquote, urljoin
 from requests import Session
 
 from .errors import MissingAuthKey
-from .pretty import prettify_gacha_details, prettify_gacha_items, prettify_gacha_log
-from .utils import raise_for_error
+from .pretty import *
+from .utils import USER_AGENT, raise_for_error, get_genshin_dir
 
-GENSHIN_DIR = os.path.expanduser('~/AppData/LocalLow/miHoYo/Genshin Impact')
-GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt')
+logger = logging.getLogger('genshinstats')
+GENSHIN_DIR = get_genshin_dir()
+GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt') if GENSHIN_DIR else None
 GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
 AUTHKEY_DURATION = 60*60*24 # 1 day
@@ -25,7 +27,7 @@ AUTHKEY_DURATION = 60*60*24 # 1 day
 session = Session()
 session.headers.update({
     # recommended header
-    "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    "user-agent":USER_AGENT
 })
 session.params = {
     # required params
@@ -42,6 +44,7 @@ def get_authkey(logfile: str=None) -> str:
     
     This will either be done from the logs or from a tempfile.
     """
+    logger.debug('Getting an authkey from log files.')
     # first try the log
     with open(logfile or GENSHIN_LOG) as file:
         log = file.read()
@@ -101,6 +104,7 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     method = kwargs.pop('method','get')
     url = urljoin(GACHA_LOG_URL, endpoint)
     
+    logger.debug(f'Fetching gacha endpoint "{url}"')
     r = session.request(method,url,**kwargs)
     r.raise_for_status()
     

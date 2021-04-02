@@ -81,7 +81,7 @@ View other's history by setting an authkey yourself:
 # directly with the token:
 gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/DGs8...")
 # get from a url:
-gs.set_authkey("https://webstatic-sea.mihoyo.com/ys/event/im-service/index.html?...")
+gs.set_authkey(url="https://webstatic-sea.mihoyo.com/ys/event/im-service/index.html?...")
 # read from a custom file:
 gs.set_authkey(logfile='other_output_log.txt')
 ```

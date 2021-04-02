@@ -2,6 +2,7 @@
 
 Can search users, get record cards, active players...
 """
+import logging
 import time
 from functools import lru_cache
 from typing import Iterable, Optional
@@ -10,6 +11,7 @@ from .errors import CodeAlreadyUsed, TooLowAdventureRank
 from .genshinstats import fetch_endpoint
 from .utils import recognize_server
 
+logger = logging.getLogger('genshinstats')
 
 def search(keyword: str, size: int=20) -> dict:
     """Searches posts, topics and users.
@@ -29,7 +31,7 @@ def check_in():
     fetch_endpoint(
         "community/apihub/api/signIn",
         method='POST',
-        params=dict(gids=2)
+        json=dict(gids=2)
     )
 
 @lru_cache()
@@ -86,22 +88,25 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     return int(card['game_role_id']) if card else None
 
 _last_redeem = .0
-def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_global'):
+def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_global', sleep: bool=True):
     """Redeems a single code. Use redeem_code instead."""
     global _last_redeem
-    t = time.time() - _last_redeem
-    if t < 5: time.sleep(5-t)
+    
+    t = 5 - (time.time() - _last_redeem)
+    if t > 0 and sleep:
+        logger.debug(f'Sleeping {t}s for code redemption.')
+        time.sleep(t)
     
     region = region or recognize_server(uid)
     try:
-        return fetch_endpoint(
+        fetch_endpoint(
             "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
             params=dict(uid=uid,region=region,cdkey=code,game_biz=game_biz,lang='en')
         )
     finally:
         _last_redeem = time.time()
 
-def redeem_code(code: str, uid: int=None) -> int:
+def redeem_code(code: str, uid: int=None, sleep: bool=True) -> int:
     """Redeems a gift code for the currently signed in user.
     
     Api endpoint for https://genshin.mihoyo.com/en/gift.
@@ -111,19 +116,21 @@ def redeem_code(code: str, uid: int=None) -> int:
     Returns the amount of users it managed to claim codes for.
     
     Claiming code for every account will take 5s per account because of cooldowns.
+    This can be disable completely by setting sleep to False.
     
     Currently codes can only be claimed for global accounts, not chinese.
     """
     if uid is not None:
-        _redeem_code(code,uid)
+        _redeem_code(code,uid,sleep=sleep)
         return 1
     
     success = 0
     for account in get_game_accounts():
+        logger.debug(f"Redeeming code for {account['nickname']} ({account['game_uid']}).")
         try: 
-            _redeem_code(code,account['game_uid'],account['region'],account['game_biz'])
-        except (CodeAlreadyUsed,TooLowAdventureRank): 
-            pass
+            _redeem_code(code,account['game_uid'],account['region'],account['game_biz'],sleep=sleep)
+        except (CodeAlreadyUsed,TooLowAdventureRank) as e: 
+            logger.debug(f"Redeem for {account['nickname']} ({account['game_uid']}) failed ({e}).")
         else: 
             success += 1
     

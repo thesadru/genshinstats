@@ -2,10 +2,13 @@
 
 Automatically claims the next reward in the daily check-in rewards.
 """
+import logging
+
 from .errors import FirstSignIn
 from .genshinstats import fetch_endpoint
 from .hoyolab import get_game_accounts
 
+logger = logging.getLogger('genshinstats')
 OS_URL = "https://hk4e-api-os.mihoyo.com/event/sol/" # global
 OS_ACT_ID = "e202102251931481"
 CN_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/" # chinese
@@ -46,6 +49,7 @@ def sign_in(chinese: bool=False, force: bool=False) -> bool:
             return False # already signed in
     
     account = get_game_accounts(chinese)[0] # we need just one uid (idk about the chinese version)
+    logger.debug(f"Redeeming daily reward #{info['total_sign_day']}.")
     url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
     fetch_endpoint(
         url+"sign",

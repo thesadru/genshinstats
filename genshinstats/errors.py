@@ -23,6 +23,8 @@ class InvalidCode(GenshinStatsException):
     """Invalid redemption code."""
 class CodeAlreadyUsed(GenshinStatsException):
     """Redemption Code is already in use"""
+class RedeemCooldown(GenshinStatsException):
+    """Can only claim every 5 seaconds."""
 class TooLowAdventureRank(GenshinStatsException):
     """Does not meet adventure rank requirements."""
 

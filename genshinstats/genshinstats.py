@@ -3,6 +3,7 @@
 Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
+import logging
 import random
 import string
 import time
@@ -11,11 +12,11 @@ from typing import List
 from urllib.parse import urljoin
 
 from requests import Session
-from requests.cookies import cookiejar_from_dict
 
 from .pretty import *
-from .utils import is_chinese, raise_for_error, recognize_server
+from .utils import USER_AGENT, is_chinese, raise_for_error, recognize_server
 
+logger = logging.getLogger('genshinstats')
 session = Session()
 session.headers.update({
     # required headers
@@ -25,7 +26,7 @@ session.headers.update({
     # authentications headers
     "ds":"",
     # recommended headers
-    "user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
+    "user-agent":USER_AGENT
 })
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"
@@ -57,6 +58,7 @@ def set_cookie_auto(browser: str=None):
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     import browser_cookie3
+    logger.debug(f'Loading cookies automatically.')
     if browser is None:
         jar = browser_cookie3.load()
     else:
@@ -90,6 +92,7 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     method = kwargs.pop('method','get')
     url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
     
+    logger.debug(f'Fetching endpoint "{url}"')
     r = session.request(method,url,**kwargs)
     r.raise_for_status()
     
