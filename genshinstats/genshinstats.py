@@ -46,7 +46,7 @@ def set_cookie_header(header: str) -> None:
     c.load(header)
     session.cookies.update(c)
 
-def set_cookie_auto(browser: str=None):
+def set_cookie_auto(browser: str=None) -> None:
     """Like set_cookie, but gets the cookies by itself.
     
     Requires the module browser-cookie3
@@ -66,7 +66,7 @@ def set_cookie_auto(browser: str=None):
     
     for c in jar:
         if 'hoyolab' in c.domain or 'mihoyo' in c.domain:
-            session.cookies.set(c.name,c.value)
+            session.cookies.set(c.name,c.value) # do not limit to specific domains
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
@@ -145,7 +145,8 @@ def get_all_characters(uid: int, lang: str='en-us', raw: bool=False) -> list:
     possible langs can be found with get_langs() under the value field.
     """
     characters = get_user_info(uid)['characters']
-    return get_characters(uid,[i['id'] for i in characters], lang, raw)
+    ids = [i['id'] for i in characters]
+    return get_characters(uid,ids,lang,raw)
 
 def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.

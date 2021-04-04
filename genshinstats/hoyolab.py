@@ -7,7 +7,7 @@ import time
 from functools import lru_cache
 from typing import Iterable, Optional
 
-from .errors import CodeAlreadyUsed, TooLowAdventureRank
+from .errors import CodeAlreadyUsed, RedeemCooldown, TooLowAdventureRank
 from .genshinstats import fetch_endpoint
 from .utils import recognize_server
 
@@ -23,7 +23,7 @@ def search(keyword: str, size: int=20) -> dict:
         params=dict(keyword=keyword,size=size,gids=2)
     )
 
-def check_in():
+def check_in() -> None:
     """Checks in the user who's cookies are currently being used.
     
     This will give you points on hoyolab's site.
@@ -87,24 +87,20 @@ def get_uid_from_community(community_uid: int) -> Optional[int]:
     card = get_record_card(community_uid)
     return int(card['game_role_id']) if card else None
 
-_last_redeem = .0
-def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_global', sleep: bool=True):
+def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_global', sleep: bool=True) -> None:
     """Redeems a single code. Use redeem_code instead."""
-    global _last_redeem
-    
-    t = 5 - (time.time() - _last_redeem)
-    if t > 0 and sleep:
-        logger.debug(f'Sleeping {t}s for code redemption.')
-        time.sleep(t)
-    
     region = region or recognize_server(uid)
     try:
         fetch_endpoint(
             "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
             params=dict(uid=uid,region=region,cdkey=code,game_biz=game_biz,lang='en')
         )
-    finally:
-        _last_redeem = time.time()
+    except RedeemCooldown as e:
+        if not sleep:
+            raise
+        logger.debug(f'Sleeping {e.cooldown}s for code redemption.')
+        time.sleep(e.cooldown)
+        _redeem_code(code,uid,region,game_biz,sleep=False)
 
 def redeem_code(code: str, uid: int=None, sleep: bool=True) -> int:
     """Redeems a gift code for the currently signed in user.
@@ -126,11 +122,11 @@ def redeem_code(code: str, uid: int=None, sleep: bool=True) -> int:
     
     success = 0
     for account in get_game_accounts():
-        logger.debug(f"Redeeming code for {account['nickname']} ({account['game_uid']}).")
+        logger.info(f"Redeeming code for {account['nickname']} ({account['game_uid']}).")
         try: 
             _redeem_code(code,account['game_uid'],account['region'],account['game_biz'],sleep=sleep)
         except (CodeAlreadyUsed,TooLowAdventureRank) as e: 
-            logger.debug(f"Redeem for {account['nickname']} ({account['game_uid']}) failed ({e}).")
+            logger.info(f"Redeem for {account['nickname']} ({account['game_uid']}) failed ({e}).")
         else: 
             success += 1
     

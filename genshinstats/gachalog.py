@@ -39,6 +39,12 @@ session.params = {
 gacha_session = Session() # extra session for static resources
 
 _authkey_re = r'https://.+authkey=([^&]+).*#/(?:log)?'
+def _read_logfile(logfile: str=None) -> str:
+    if GENSHIN_LOG is None:
+        raise FileNotFoundError('No Genshin Installation was found, could not get data.')
+    with open(logfile or GENSHIN_LOG) as file:
+        return file.read()
+
 def get_authkey(logfile: str=None) -> str:
     """Gets the query for log requests.
     
@@ -46,8 +52,7 @@ def get_authkey(logfile: str=None) -> str:
     """
     logger.debug('Getting an authkey from log files.')
     # first try the log
-    with open(logfile or GENSHIN_LOG) as file:
-        log = file.read()
+    log = _read_logfile(logfile)
     match = re.search(_authkey_re,log,re.MULTILINE)
     if match is not None:
         authkey = unquote(match.group(1))
@@ -69,12 +74,11 @@ def get_all_gacha_ids(logfile: str=None) -> list:
     
     You need to open the details of all banners for this to work.
     """
-    with open(logfile or GENSHIN_LOG) as file:
-        log = file.read()
+    log = _read_logfile(logfile)
     ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
     return list(set(ids))
 
-def set_authkey(authkey: str=None, url: str=None, logfile: str=None):
+def set_authkey(authkey: str=None, url: str=None, logfile: str=None) -> None:
     """Sets an authkey for log requests.
     
     passing in authkey will simply save it, 
@@ -112,7 +116,7 @@ def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
     if data['retcode'] == 0:
         return data['data']
     
-    raise_for_error()
+    raise_for_error(data)
 
 @lru_cache()
 def get_gacha_types(lang: str='en') -> list:
@@ -139,10 +143,10 @@ def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', ra
     )['list']
     return data if raw else prettify_gacha_log(data)
 
-def get_gacha_items(lang: str='en-us', raw: bool=False) -> dict:
+def get_gacha_items(lang: str='en-us', raw: bool=False) -> list:
     """Gets the list of items that can be gotten from the gacha.
     
-    Returns two a dict with two lists, characters and weapons.
+    Returns a list of avalible characters and weapons.
     To get more info about a specific item use its id.
     """
     r = gacha_session.get(

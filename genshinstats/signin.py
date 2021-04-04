@@ -41,15 +41,14 @@ def sign_in(chinese: bool=False, force: bool=False) -> bool:
     
     Returns whether sign-in was successful
     """
-    info = get_daily_reward_info(chinese)
     if not force:
+        info = get_daily_reward_info(chinese)
         if info['first_bind']:
             raise FirstSignIn('First sign-in must be done manually. Please go to the website and claim your rewards.')
         if info['is_sign']:
             return False # already signed in
     
     account = get_game_accounts(chinese)[0] # we need just one uid (idk about the chinese version)
-    logger.debug(f"Redeeming daily reward #{info['total_sign_day']}.")
     url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
     fetch_endpoint(
         url+"sign",

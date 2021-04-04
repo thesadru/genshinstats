@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='genshinstats',
-    version='1.3.4',
+    version='1.3.5',
     author='thesadru',
     packages=['genshinstats'],
     description="A python library that can get the stats of your or others' Genshin Impact account using Mihoyo's API.",
@@ -10,7 +10,7 @@ setup(
     python_requires='>=3.6',
     url='https://github.com/thesadru/genshinstats',
     install_requires=['requests'],
-    author_email='dan0.suman@gmail.com',
+    author_email='thesadru@gmail.com',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
 )
