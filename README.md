@@ -1,3 +1,5 @@
+English | [简体中文](./README_zh-cn.md)
+
 # genshinstats
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
 The api endpoints used in this project are not publicly known but are free to use for third part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
@@ -14,7 +16,6 @@ All functions are documented and type hinted.
 
 [API documentation](https://thesadru.github.io/pdoc/genshinstats/)
 # examples
-![showcase](https://cdn.discordapp.com/attachments/529573765743509504/820739541924446248/genshinstats_showcase_lowres.gif)
 Simple examples of usage:
 ```py
 import genshinstats as gs # import module
@@ -30,17 +31,32 @@ print('user "sadru" has a total of',total_characters,'characters')
 stats = gs.get_user_info(uid)['stats']
 for field,value in stats.items():
     print(f"{field.replace('_',' ')}: {value}")
+# achievements: 210
+# active days: 121
+# characters: 19
+# ...
 ```
+
 ```py
 characters = gs.get_all_characters(uid)
 for char in characters:
     print(f"{char['rarity']}* {char['name']:10} | lvl {char['level']:2} C{char['constellation']}")
+# 4* Beidou     | lvl 80 C1
+# 4* Fischl     | lvl 80 C1
+# 4* Bennett    | lvl 80 C2
+# 5* Mona       | lvl 80 C0
+# ...
 ```
+
 ```py
 spiral_abyss = gs.get_spiral_abyss(uid,previous=True)
 stats = spiral_abyss['stats']
 for field,value in stats.items():
     print(f"{field.replace('_',' ')}: {value}")
+# total battles: 14
+# total wins: 7
+# max floor: 9-1
+# total stars: 18
 ```
 
 It's possible to set the cookies with a header
@@ -66,15 +82,24 @@ key = types[2]['key'] # name == "Character Event Wish", key == '301'
 log = gs.get_gacha_log(key) # get the gacha log
 for i in log:
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
+# 2021-03-22 09:50:12 - Razor (4* Character)
+# 2021-03-22 09:50:12 - Harbinger of Dawn (3* Weapon)
+# 2021-03-22 09:50:12 - Cool Steel (3* Weapon)
+# 2021-03-22 09:50:12 - Emerald Orb (3* Weapon)
+# ...
 ```
 ```py
 ids = gs.get_all_gacha_ids() # get all possible gacha ids (only counts opened details pages)
 for i in ids:
-    details = gs.get_gacha_details(i) # 
+    details = gs.get_gacha_details(i) 
     print(f"{details['gacha_type']} - {details['banner']}")
     print('5 stars:', ', '.join(i['name'] for i in details['r5_up_items']))
     print('4 stars:', ', '.join(i['name'] for i in details['r4_up_items']))
     print()
+# Weapon Event Wish - Event Wish "Epitome Invocation"
+# 5 stars: Elegy for the End, Skyward Blade
+# 4 stars: The Alley Flash, Wine and Song, Favonius Greatsword, Favonius Warbow, Dragon's Bane
+# ...
 ```
 View other's history by setting an authkey yourself:
 ```py
