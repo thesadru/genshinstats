@@ -178,7 +178,7 @@ def prettify_character(data: dict):
         } for a in data["reliquaries"]],
         "constellations": [{
             "name": c["name"],
-            "effect": c["effect"].replace('\\n','\n'),
+            "effect": c["effect"],
             "is_activated": c["is_actived"],
             "index": c["pos"],
             "icon": c["icon"],
@@ -203,7 +203,6 @@ def prettify_gacha_items(data: list):
         "name":i["name"],
         "type":i["item_type"],
         "rarity":i["rank_type"],
-        "is_character":len(i["item_id"])==4,
         "id":10000000+int(i["item_id"])-1000 if len(i["item_id"])==4 else int(i["item_id"]),
     } for i in data]
 

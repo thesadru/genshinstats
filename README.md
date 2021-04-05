@@ -79,8 +79,7 @@ the script will then get all required data by itself.
 ```py
 types = gs.get_gacha_types() # get all possible types
 key = types[2]['key'] # name == "Character Event Wish", key == '301'
-log = gs.get_gacha_log(key) # get the gacha log
-for i in log:
+for i in gs.get_gacha_log(key): # get the gacha log
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 # 2021-03-22 09:50:12 - Razor (4* Character)
 # 2021-03-22 09:50:12 - Harbinger of Dawn (3* Weapon)

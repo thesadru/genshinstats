@@ -9,13 +9,14 @@ import re
 import time
 from functools import lru_cache
 from tempfile import gettempdir
+from typing import Iterable
 from urllib.parse import unquote, urljoin
 
 from requests import Session
 
 from .errors import MissingAuthKey
 from .pretty import *
-from .utils import USER_AGENT, raise_for_error, get_genshin_dir
+from .utils import USER_AGENT, get_genshin_dir, raise_for_error
 
 logger = logging.getLogger('genshinstats')
 GENSHIN_DIR = get_genshin_dir()
@@ -129,19 +130,35 @@ def get_gacha_types(lang: str='en') -> list:
         params=dict(lang=lang)
     )['gacha_type_list']
 
-def get_gacha_log(gacha_type: int, page: int=1, size: int=20, lang: str='en', raw: bool=False) -> list:
+def get_gacha_log(gacha_type: int, size: int=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
     """Gets the gacha pull history log.
     
     Needs a gacha type, this must be the key (for example 301).
     Possible gacha types can be found in the return of get_gacha_types().
     
-    Returns a list of dicts. 
+    Yields instead of returning, since it's paginated.
+    May return less than size when size is too big.
+    If size is not set it will yield until it runs out of items.
     """
-    data = fetch_gacha_endpoint(
-        "getGachaLog",
-        params=dict(gacha_type=gacha_type,page=page,size=size,lang=lang)
-    )['list']
-    return data if raw else prettify_gacha_log(data)
+    page_size = 20 # max size is 20
+    end_id = 0
+    while True:
+        data = fetch_gacha_endpoint(
+            "getGachaLog",
+            params=dict(gacha_type=gacha_type,size=page_size,end_id=end_id,lang=lang)
+        )['list']
+        
+        yield from data if raw else prettify_gacha_log(data)
+        
+        if len(data) < page_size:
+            return # return if reached the end
+        if size is not None:
+            size -= page_size
+            page_size = min(size,20)
+            if size <= 0:
+                return
+
+        end_id = data[-1]['id']
 
 def get_gacha_items(lang: str='en-us', raw: bool=False) -> list:
     """Gets the list of items that can be gotten from the gacha.

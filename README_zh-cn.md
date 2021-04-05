@@ -81,8 +81,7 @@ gs.set_cookie_auto('chrome') # 搜索特定的浏览器
 ```py
 types = gs.get_gacha_types() # 获取所有可能的类型
 key = types[2]['key'] # name == "Character Event Wish", key == '301'
-log = gs.get_gacha_log(key) # 获取gacha日志
-for i in log:
+for i in gs.get_gacha_log(key): # 获取gacha日志
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 # 2021-03-22 09:50:12 - Razor (4* Character)
 # 2021-03-22 09:50:12 - Harbinger of Dawn (3* Weapon)
@@ -116,12 +115,12 @@ gs.set_authkey(logfile='other_output_log.txt')
 ### 登入
 自动获得当前登录用户的每日登录奖励。
 ```py
-信息= gs.get_daily_reward_info（）
-打印（“要求的总奖励：”，info ['total_sign_day']）
-gs.sign_in（）＃登录您，是否成功则返回布尔值
+info = gs.get_daily_reward_info()
+print('total rewards claimed:',info['total_sign_day'])
+gs.sign_in()
 ```
 
-＃＃ 改变语言
+## 改变语言
 某些api端点支持更改语言，您可以在此处列出它们：
 ```py
 genshinstats.get_all_characters（...，lang ='fr-fr'）

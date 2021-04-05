@@ -99,7 +99,7 @@ def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_glob
         if not sleep:
             raise
         logger.debug(f'Sleeping {e.cooldown}s for code redemption.')
-        time.sleep(e.cooldown)
+        time.sleep(e.cooldown + 0.5)
         _redeem_code(code,uid,region,game_biz,sleep=False)
 
 def redeem_code(code: str, uid: int=None, sleep: bool=True) -> int:
