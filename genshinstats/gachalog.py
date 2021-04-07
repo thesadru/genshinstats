@@ -167,8 +167,11 @@ def get_entire_gacha_log(lang: str='en', raw: bool=False) -> Iterable[dict]:
     Basically same as running get_gacha_log() with every possible key.
     Will yield pulls from most recent to oldest.
     """
-    gens = [({**log, 'gacha_type':t} for log in get_gacha_log(t['key'],lang=lang,raw=raw)) 
-            for t in get_gacha_types()]
+    def _get_gacha_log(t): # get gacha log with a gacha_type
+        for log in get_gacha_log(t['key'],lang=lang,raw=raw):
+            log['gacha_type'] = t
+            yield log
+    gens = [_get_gacha_log(t) for t in get_gacha_types()]
     return heapq.merge(*gens,key=lambda x:x['time'],reverse=True)
 
 def get_gacha_items(lang: str='en-us', raw: bool=False) -> list:
@@ -200,3 +203,7 @@ def get_gacha_details(gacha_id: str, lang: str='en-us', raw: bool=False) -> dict
     )
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_details(r.json())
+
+if __name__ == '__main__':
+    for i in get_entire_gacha_log():
+        print(i)
