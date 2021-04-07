@@ -19,7 +19,7 @@ def raise_for_error(response: dict) -> NoReturn:
         # general errors
         1:     InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.'),
         -10002:NoGameAccount('Cannot get rewards info. Account has no game account binded to it.'),
-        -1:    InvalidItemID('{} "{}" does not exist.'),
+        -1:    InvalidUID('UID does not exist') if response['message']=='Invalid uid' else InvalidItemID('{} "{}" does not exist.'),
         # code redemption
         -2003: InvalidCode('Invalid redemption code'),
         -2017: CodeAlreadyUsed('Redemption code has been claimed already.'),

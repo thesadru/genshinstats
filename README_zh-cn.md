@@ -1,7 +1,5 @@
 [English](./README.md) | 简体中文
 
-# 原神
-
 # genshinstats
 该项目旨在成为原神的[bbs.mihoyo.com](https://bbs.mihoyo.com/ys/) api的包装。
 此项目中使用的api端点尚未公开，但可以免费用于第三方工具，因此，我决定通过为它们进行包装来使其更加公开。
@@ -10,8 +8,8 @@
 
 # 如何使用
 导入`genshinstats`模块，并将cookie设置为登录。
-要设置cookie，请使用`set_cookie（account_id = ...，cookie_token = ...）`。
-在此字段中传递您自己的Cookie值。 （[如何获取您的cookie](#如何获取您的cookie)）
+要设置cookie，请使用`set_cookie(account_id=..., cookie_token=...)`。
+在此字段中传递您自己的Cookie值。（[如何获取您的cookie](#如何获取您的cookie)）
 Cookie是必填项，如果缺少，则会引发错误。
 
 所有功能均已记录在案，并提示了类型。
@@ -90,6 +88,11 @@ for i in gs.get_gacha_log(key): # 获取gacha日志
 # ...
 ```
 ```py
+# 一次获取所有gacha拉动
+for i in gs.get_entire_gacha_log():
+    print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']}) [{i['gacha_type']['name']}]")
+```
+```py
 ids = gs.get_all_gacha_ids() # 获取所有可能的gacha ID（仅统计打开的详细信息页面）
 for i in ids:
     details = gs.get_gacha_details(i) 
@@ -123,12 +126,12 @@ gs.sign_in()
 ## 改变语言
 某些api端点支持更改语言，您可以在此处列出它们：
 ```py
-genshinstats.get_all_characters（...，lang ='fr-fr'）
+genshinstats.get_all_characters(...,lang='fr-fr')
 
-gachalog.get_gacha_types（lang ='fr'）
-gachalog.get_gacha_log（...，lang ='fr'）
-gachalog.get_gacha_items（lang ='fr-fr'）
-gachalog.get_gacha_details（...，lang ='fr-fr'）
+gachalog.get_gacha_types(lang='fr')
+gachalog.get_gacha_log(...,lang='fr')
+gachalog.get_gacha_items(lang='fr-fr')
+gachalog.get_gacha_details(...,lang='fr-fr')
 ```
 >端点可以使用两种类型的值，长和短。长是`gs.get_langs()`中的默认值，短的只是`lang`的第一部分（`en-us`->`en`）。
 >中文有简体和繁体选项，因此如果您使用中文，则短版本与长版本相同（`zh-cn`->`zh-cn`）
@@ -137,9 +140,9 @@ gachalog.get_gacha_details（...，lang ='fr-fr'）
 1. 转到[bbs.mihoyo.com](https://bbs.mihoyo.com/ys/)
 2. 登录到您的帐户
 3. 打开检查模式（开发人员工具）
-4. 转到`应用程序`，`Cookies`，`https://www.hoyolab.com`。
+4. 转到`应用程序`，`Cookies`，`https://bbs.mihoyo.com`。
 5. 复制`account_id`和`cookie_token`
-6. 在代码中使用`set_cookie（account_id = ...，cookie_token = ...）`
+6. 在代码中使用`set_cookie(account_id=..., cookie_token=...)`
 
 # 个错误
 genshinstats使用自己在`genshinstats.errors`中定义的错误。
@@ -150,7 +153,7 @@ genshinstats使用自己在`genshinstats.errors`中定义的错误。
 ```
 genshinstats.py     用户统计信息和字符
 hoyolab.py          用户hoyolab社区信息
-gachalog.py gacha   历史
+gachalog.py         历史gacha
 signin.py           自动登录hoyolabs
 errors.py           错误genshinstats使用的
 ```
