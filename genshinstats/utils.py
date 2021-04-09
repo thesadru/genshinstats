@@ -15,11 +15,11 @@ def raise_for_error(response: dict) -> NoReturn:
         -100:  NotLoggedIn('Login cookies have not been provided or are incorrect.'),
         # UID
         1009:  InvalidUID('UID could not be found.'),
-        10102: DataNotPublic('User has set their data to be private. To enable go to https: //www.hoyolab.com/genshin/accountCenter/gameRecord'),
+        10102: DataNotPublic('User has set their data to be private. If this is your account look at the README.md to see how to make it public.'),
         # general errors
         1:     InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.'),
         -10002:NoGameAccount('Cannot get rewards info. Account has no game account binded to it.'),
-        -1:    InvalidUID('UID does not exist') if response['message']=='Invalid uid' else InvalidItemID('{} "{}" does not exist.'),
+        -1:    InvalidUID('UID is not valid.') if response['message']=='Invalid uid' else InvalidItemID('{} "{}" does not exist.'),
         # code redemption
         -2003: InvalidCode('Invalid redemption code'),
         -2017: CodeAlreadyUsed('Redemption code has been claimed already.'),

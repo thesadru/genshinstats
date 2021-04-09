@@ -99,14 +99,18 @@ def set_authkey(authkey: str=None, url: str=None, logfile: str=None) -> None:
         authkey = get_authkey(logfile)
     session.params['authkey'] = authkey
 
-def fetch_gacha_endpoint(endpoint: str, **kwargs) -> dict:
+def fetch_gacha_endpoint(endpoint: str, authkey: str=None, **kwargs) -> dict:
     """Fetch an enpoint from mihoyo's gacha info.
     
     Takes in an endpoint url which is joined with the base url.
+    If an autheky is provided, it uses that authkey specifically.
     A request is then sent and returns a parsed response.
     Includes error handling and getting the authkey.
     """
-    session.params['authkey'] = session.params['authkey'] or get_authkey() # update authkey
+    if authkey is None:
+        session.params['authkey'] = session.params['authkey'] or get_authkey() # update authkey
+    else:
+        kwargs['params']['authkey'] = authkey
     method = kwargs.pop('method','get')
     url = urljoin(GACHA_LOG_URL, endpoint)
     
@@ -131,7 +135,7 @@ def get_gacha_types(lang: str='en') -> list:
         params=dict(lang=lang)
     )['gacha_type_list']
 
-def get_gacha_log(gacha_type: int, size: int=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
+def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
     """Gets the gacha pull history log.
     
     Needs a gacha type, this must be the key (for example 301).
@@ -146,6 +150,7 @@ def get_gacha_log(gacha_type: int, size: int=None, lang: str='en', raw: bool=Fal
     while True:
         data = fetch_gacha_endpoint(
             "getGachaLog",
+            authkey=authkey,
             params=dict(gacha_type=gacha_type,size=page_size,end_id=end_id,lang=lang)
         )['list']
         
@@ -161,14 +166,14 @@ def get_gacha_log(gacha_type: int, size: int=None, lang: str='en', raw: bool=Fal
 
         end_id = data[-1]['id']
 
-def get_entire_gacha_log(lang: str='en', raw: bool=False) -> Iterable[dict]:
+def get_entire_gacha_log(authkey: str=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
     """Gets the entire gacha pull history log.
     
     Basically same as running get_gacha_log() with every possible key.
     Will yield pulls from most recent to oldest.
     """
     def _get_gacha_log(t): # get gacha log with a gacha_type
-        for log in get_gacha_log(t['key'],lang=lang,raw=raw):
+        for log in get_gacha_log(t['key'],authkey=authkey,lang=lang,raw=raw):
             log['gacha_type'] = t
             yield log
     gens = [_get_gacha_log(t) for t in get_gacha_types()]
@@ -203,7 +208,3 @@ def get_gacha_details(gacha_id: str, lang: str='en-us', raw: bool=False) -> dict
     )
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_details(r.json())
-
-if __name__ == '__main__':
-    for i in get_entire_gacha_log():
-        print(i)

@@ -105,7 +105,12 @@ for i in ids:
 # 4 stars: The Alley Flash, Wine and Song, Favonius Greatsword, Favonius Warbow, Dragon's Bane
 # ...
 ```
-View other's history by setting an authkey yourself:
+View other's history by passing in an authkey:
+```py
+authkey = "t5QMiyrenV50CFbqnB4Z+aG4ltprY1JxM5YoaChr9QH0Lp6rK5855xxa1P55..."
+gs.get_gacha_log(301,20,authkey=authkey)
+```
+Or by directly setting the authkey:
 ```py
 # directly with the token:
 gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/DGs8...")

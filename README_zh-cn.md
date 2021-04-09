@@ -71,7 +71,8 @@ gs.set_cookie_auto() # 搜索所有浏览器
 gs.set_cookie_auto('chrome') # 搜索特定的浏览器
 ```
 >需要`cookie-browser3`，最多可能需要10s
-##子模块
+
+## 子模块
 ### gacha日志
 获取您的gacha拉日志。
 为此，您必须先在原神中打开历史记录/详细信息页面，
@@ -105,7 +106,12 @@ for i in ids:
 # 4 stars: The Alley Flash, Wine and Song, Favonius Greatsword, Favonius Warbow, Dragon's Bane
 # ...
 ```
-您可以通过自己设置authkey来查看其他人的历史记录：
+通过传入authkey查看其他人的历史记录：
+```py
+authkey = "t5QMiyrenV50CFbqnB4Z+aG4ltprY1JxM5YoaChr9QH0Lp6rK5855xxa1P55..."
+gs.get_gacha_log(301,20,authkey=authkey)
+```
+或直接设置authkey：
 ```py
 # 直接使用令牌：
 gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/DGs8...")

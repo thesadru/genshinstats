@@ -5,7 +5,7 @@ It's possible to add retcodes and the original api response message with `.set_r
 """
 import re
 
-class GenshinStatsException(BaseException):
+class GenshinStatsException(Exception):
     """Base error for all Genshin Stats Errors."""
     retcode: int = 0
     orig_msg: str = ''
