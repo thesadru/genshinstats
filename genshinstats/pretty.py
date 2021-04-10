@@ -196,6 +196,7 @@ def prettify_gacha_log(data: list):
         "name": i["name"],
         "rarity": int(i["rank_type"]),
         "time": i["time"],
+        "gacha_type": i["gacha_type"]
     } for i in data]
 
 def prettify_gacha_items(data: list):

@@ -90,7 +90,7 @@ for i in gs.get_gacha_log(key): # get the gacha log
 ```py
 # get all gacha pulls at once
 for i in gs.get_entire_gacha_log():
-    print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']}) [{i['gacha_type']['name']}]")
+    print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 ```
 ```py
 ids = gs.get_all_gacha_ids() # get all possible gacha ids (only counts opened details pages)

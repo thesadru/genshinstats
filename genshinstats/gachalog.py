@@ -7,10 +7,10 @@ import heapq
 import logging
 import os
 import re
-import time
 from functools import lru_cache
+from itertools import islice
 from tempfile import gettempdir
-from typing import Iterable
+from typing import Iterable, Optional
 from urllib.parse import unquote, urljoin
 
 from requests import Session
@@ -40,12 +40,18 @@ session.params = {
 }
 gacha_session = Session() # extra session for static resources
 
-_authkey_re = r'https://.+authkey=([^&]+).*#/(?:log)?'
 def _read_logfile(logfile: str=None) -> str:
     if GENSHIN_LOG is None:
         raise FileNotFoundError('No Genshin Installation was found, could not get data.')
     with open(logfile or GENSHIN_LOG) as file:
         return file.read()
+
+def extract_authkey(string: str) -> Optional[str]:
+    """Extracts an authkey from the provided string. Returns None if not found."""
+    match = re.search(r'https://.+?authkey=([^&]+)',string,re.MULTILINE)
+    if match is not None:
+        return unquote(match.group(1))
+    return None
 
 def get_authkey(logfile: str=None) -> str:
     """Gets the query for log requests.
@@ -54,21 +60,17 @@ def get_authkey(logfile: str=None) -> str:
     """
     logger.debug('Getting an authkey from log files.')
     # first try the log
-    log = _read_logfile(logfile)
-    match = re.search(_authkey_re,log,re.MULTILINE)
-    if match is not None:
-        authkey = unquote(match.group(1))
+    authkey = extract_authkey(_read_logfile(logfile))
+    if authkey is not None:
         with open(AUTHKEY_FILE,'w') as file:
             file.write(authkey)
         return authkey
-    
-    # otherwise try the tempfile
-    if (os.path.isfile(AUTHKEY_FILE) and 
-        time.time()-os.path.getmtime(AUTHKEY_FILE) <= AUTHKEY_DURATION):
-        with open(AUTHKEY_FILE,) as file:
+    # otherwise try the tempfile (may be expired!)
+    if os.path.isfile(AUTHKEY_FILE):
+        with open(AUTHKEY_FILE) as file:
             return file.read()
     
-    raise MissingAuthKey('No authkey could be found in the params, logs or in a tempfile. '
+    raise MissingAuthKey('No authkey could be found in the logs or in a tempfile. '
                          'Open the history in-game first before attempting to request it.')
 
 def get_all_gacha_ids(logfile: str=None) -> list:
@@ -77,7 +79,7 @@ def get_all_gacha_ids(logfile: str=None) -> list:
     You need to open the details of all banners for this to work.
     """
     log = _read_logfile(logfile)
-    ids = re.findall(r'OnGetWebViewPageFinish:https://.+gacha_id=([^&]+).*#/',log)
+    ids = re.findall(r'OnGetWebViewPageFinish:https://.+?gacha_id=([^&]+)',log)
     return list(set(ids))
 
 def set_authkey(authkey: str=None, url: str=None, logfile: str=None) -> None:
@@ -86,15 +88,14 @@ def set_authkey(authkey: str=None, url: str=None, logfile: str=None) -> None:
     passing in authkey will simply save it, 
     passing in a url will take the authkey out of it,
     passing in a logfile will search it,
-    otherwise uses get_authkey
+    otherwise searches the logs and a tempfile.
     """
     if authkey is not None:
         pass
     elif url is not None:
-        match = re.match(_authkey_re,url)
-        if match is None:
+        authkey = extract_authkey(url)
+        if authkey is None:
             raise ValueError("url does not have an authkey parameter")
-        authkey = unquote(match.group(1))
     else:
         authkey = get_authkey(logfile)
     session.params['authkey'] = authkey
@@ -166,18 +167,14 @@ def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, lang: str=
 
         end_id = data[-1]['id']
 
-def get_entire_gacha_log(authkey: str=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
+def get_entire_gacha_log(size: int=None, authkey: str=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
     """Gets the entire gacha pull history log.
     
     Basically same as running get_gacha_log() with every possible key.
     Will yield pulls from most recent to oldest.
     """
-    def _get_gacha_log(t): # get gacha log with a gacha_type
-        for log in get_gacha_log(t['key'],authkey=authkey,lang=lang,raw=raw):
-            log['gacha_type'] = t
-            yield log
-    gens = [_get_gacha_log(t) for t in get_gacha_types()]
-    return heapq.merge(*gens,key=lambda x:x['time'],reverse=True)
+    gens = [get_gacha_log(t['key'],authkey=authkey,lang=lang,raw=raw) for t in get_gacha_types()]
+    return islice(heapq.merge(*gens,key=lambda x:x['time'],reverse=True),size)
 
 def get_gacha_items(lang: str='en-us', raw: bool=False) -> list:
     """Gets the list of items that can be gotten from the gacha.

@@ -91,7 +91,7 @@ for i in gs.get_gacha_log(key): # 获取gacha日志
 ```py
 # 一次获取所有gacha拉动
 for i in gs.get_entire_gacha_log():
-    print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']}) [{i['gacha_type']['name']}]")
+    print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 ```
 ```py
 ids = gs.get_all_gacha_ids() # 获取所有可能的gacha ID（仅统计打开的详细信息页面）
