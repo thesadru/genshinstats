@@ -6,6 +6,9 @@ The api endpoints used in this project are not publicly known but are free to us
 
 You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
 
+Be aware that this project is currently still in development and therefore can change at any moment.
+If you're making your own module that has genshinstats as a dependency, remember to explicitly set the version it should use.
+
 # how to use
 Import the `genshinstats` module and set the cookie to login.
 To set the cookie use `set_cookie(account_id=..., cookie_token=...)`.
@@ -125,7 +128,7 @@ Automatically get daily sign in rewards for the currently logged-in user.
 ```py
 info = gs.get_daily_reward_info()
 print('total rewards claimed:',info['total_sign_day'])
-gs.sign_in() # signed you in, returns a bool whether it succeeded
+gs.sign_in() # signs you in, returns a bool whether it succeeded
 ```
 
 ## change language

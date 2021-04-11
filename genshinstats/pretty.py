@@ -7,6 +7,7 @@ import re
 from datetime import datetime
 from math import ceil
 
+from . import gachalog
 
 def _recognize_character_icon(url: str):
     """Recognizes a character's icon url and returns its name."""
@@ -124,7 +125,6 @@ def prettify_character(data: dict):
             "Traveler":"Aether" if "Boy" in data["icon"] else "Lumine",
             "Venti":"Barbatos",
             "Zhongli":"Morax",
-            "Fischl":"Amy",
             "Albedo":"Kreideprinz",
             "Tartaglia":"Childe",
         }.get(data["name"],None),
@@ -190,13 +190,14 @@ def prettify_characters(data: list):
     """Returns a prettified version of get_characters."""
     return [prettify_character(i) for i in data]
 
-def prettify_gacha_log(data: list):
+def prettify_gacha_log(data: list, lang: str='en'):
     return [{
         "type": i["item_type"],
         "name": i["name"],
         "rarity": int(i["rank_type"]),
         "time": i["time"],
-        "gacha_type": i["gacha_type"]
+        "gacha_type": i["gacha_type"],
+        "gacha_name": gachalog.recognize_gacha_type(i['gacha_type'],lang=lang)['name'],
     } for i in data]
 
 def prettify_gacha_items(data: list):

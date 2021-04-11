@@ -136,6 +136,13 @@ def get_gacha_types(lang: str='en') -> list:
         params=dict(lang=lang)
     )['gacha_type_list']
 
+def recognize_gacha_type(gacha: str, lang: str='en') -> Optional[dict]:
+    """Recognizes a given gacha type by id, key or name."""
+    for t in get_gacha_types(lang):
+        if gacha in t.values():
+            return t
+    return None
+
 def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, lang: str='en', raw: bool=False) -> Iterable[dict]:
     """Gets the gacha pull history log.
     
@@ -155,7 +162,7 @@ def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, lang: str=
             params=dict(gacha_type=gacha_type,size=page_size,end_id=end_id,lang=lang)
         )['list']
         
-        yield from data if raw else prettify_gacha_log(data)
+        yield from data if raw else prettify_gacha_log(data,lang)
         
         if len(data) < page_size:
             return # return if reached the end

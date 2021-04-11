@@ -6,6 +6,9 @@
 
 您可以使用[PyPI](https://pypi.org/project/genshinstats/)进行pip安装
 
+请注意，该项目目前仍在开发中，因此可以随时更改。
+如果您要制作自己的模块，且具有genshinstats作为依赖项，请记住明确设置它应使用的版本。
+
 # 如何使用
 导入`genshinstats`模块，并将cookie设置为登录。
 要设置cookie，请使用`set_cookie(account_id=..., cookie_token=...)`。
