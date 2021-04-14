@@ -36,7 +36,7 @@ def check_in() -> None:
 
 @lru_cache()
 def get_langs() -> list:
-    """Gets a list of translations for hoyolabs."""
+    """Gets a list of languages."""
     return fetch_endpoint(
         "community/misc/wapi/langs",
         params=dict(gids=2)
@@ -141,21 +141,3 @@ def get_active_players(page_size: int=None, offset: int=0) -> list:
         "community/user/wapi/recommendActive",
         params=dict(page_size=page_size or 0xffff,offset=offset,gids=2)
     )['list']
-
-def get_public_players() -> Iterable[dict]:
-    """Gets a list of players with public accounts.
-    
-    Returns a dict of their community uid, game uid and their game card.
-    """
-    players = get_active_players()
-    for player in players:
-        community_uid = player['user']['uid']
-        card = get_record_card(community_uid)
-        if card is None:
-            continue
-        
-        yield {
-            'community_uid':community_uid,
-            'uid':card['game_role_id'],
-            'card':card
-        }

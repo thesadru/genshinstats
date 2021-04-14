@@ -4,8 +4,7 @@ gs.set_cookie(...)
 
 uid = input('Please enter a uid: ')
 action = input('What would you like to view? [1. stats, 2. characters, 3. spiral abyss] ')
-while action not in '123':
-    action = input('Invalid! Must be 1, 2 or 3. Try again: ')
+
 if action == '1':
     print(f'Getting stats for {uid}...\n')
     data = gs.get_user_info(uid)
@@ -15,7 +14,7 @@ if action == '1':
         print(f"{field.replace('_',' ')}: {value}")
     print(f"\nexplorations: ")
     for area in data['explorations']:
-        print(f"{area['name']}: explored {area['percentage']}% | {area['type']} level {area['level']}")
+        print(f"{area['name']}: explored {area['explored']}% | {area['type']} level {area['level']}")
     
 elif action == '2':
     print(f'Getting characters for {uid}...\n')

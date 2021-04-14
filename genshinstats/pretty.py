@@ -39,7 +39,7 @@ def prettify_user_info(data: dict):
             "exquisite_chests": stats["exquisite_chest_number"],
             "precious_chests": stats["precious_chest_number"],
             "luxurious_chests": stats["luxurious_chest_number"],
-            "unlocked_teleports": stats["way_point_number"],
+            "unlocked_waypoints": stats["way_point_number"],
             "unlocked_domains": stats["domain_number"]
         },
         "characters": [{
@@ -53,7 +53,7 @@ def prettify_user_info(data: dict):
         } for i in data["avatars"]],
         "explorations": [{
             "name": i["name"],
-            "percentage": round(i["exploration_percentage"]/10, 1),
+            "explored": round(i["exploration_percentage"]/10, 1),
             "type":i["type"],
             "level":i["level"],
             "icon": i["icon"],

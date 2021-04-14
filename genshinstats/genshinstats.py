@@ -29,8 +29,8 @@ session.headers.update({
     "user-agent":USER_AGENT
 })
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
-OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"
-CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"
+OS_BBS_URL = "https://bbs-api-os.hoyolab.com/" # global
+CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/" # chinese
 
 def set_cookie(account_id: int, cookie_token: str) -> None:
     """Basic configuration function, required for anything beyond search.
@@ -130,7 +130,7 @@ def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: b
         "game_record/genshin/api/character",
         chinese=is_chinese(uid),
         method='POST',
-        json={'character_ids':character_ids,'role_id':uid,'server':server},
+        json=dict(character_ids=character_ids,role_id=uid,server=server), # POST uses the body instead
         headers={'x-rpc-language':lang},
     )["avatars"]
     return data if raw else prettify_characters(data)
@@ -151,7 +151,7 @@ def get_all_characters(uid: int, lang: str='en-us', raw: bool=False) -> list:
 def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
-    Spiral abyss info contains their porgress, stats and individual completes.
+    Spiral abyss info contains their progress, stats and individual completes.
     
     Every season these stats refresh and you can get the previous stats with `previous`.
     """

@@ -11,13 +11,11 @@ def raise_for_error(response: dict) -> NoReturn:
     """Raises a custom genshinstats error from a response."""
     error = {
         # authorization
-        -401:  InvalidDS('Invalid DS token, might be expired.'),
         -100:  NotLoggedIn('Login cookies have not been provided or are incorrect.'),
         # UID
         1009:  InvalidUID('UID could not be found.'),
         10102: DataNotPublic('User has set their data to be private. If this is your account look at the README.md to see how to make it public.'),
         # general errors
-        1:     InvalidScheduleType('Invalid Spiral Abyss schedule type, can only be 1 or 2.'),
         -10002:NoGameAccount('Cannot get rewards info. Account has no game account binded to it.'),
         -1:    InvalidUID('UID is not valid.') if response['message']=='Invalid uid' else InvalidItemID('{} "{}" does not exist.'),
         # code redemption
@@ -63,11 +61,11 @@ def is_chinese(x) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(('cn','1','5'))
 
-def get_genshin_dir() -> Optional[str]:
-    """Find and return the Genshin Impact directory. None if not found."""
+def get_output_log() -> Optional[str]:
+    """Find and return the Genshin Impact output log. None if not found."""
     mihoyo_dir = os.path.expanduser('~/AppData/LocalLow/miHoYo/')
     for name in ["Genshin Impact","原神","YuanShen"]:
-        directory = os.path.join(mihoyo_dir,name)
-        if os.path.exists(directory):
-            return directory
+        output_log = os.path.join(mihoyo_dir,name,'output_log.txt')
+        if os.path.isfile(output_log):
+            return output_log
     return None # no genshin installation

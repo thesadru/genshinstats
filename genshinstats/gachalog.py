@@ -17,11 +17,10 @@ from requests import Session
 
 from .errors import MissingAuthKey
 from .pretty import *
-from .utils import USER_AGENT, get_genshin_dir, raise_for_error
+from .utils import USER_AGENT, get_output_log, raise_for_error
 
 logger = logging.getLogger('genshinstats')
-GENSHIN_DIR = get_genshin_dir()
-GENSHIN_LOG = os.path.join(GENSHIN_DIR,'output_log.txt') if GENSHIN_DIR else None
+GENSHIN_LOG = get_output_log()
 GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
 AUTHKEY_DURATION = 60*60*24 # 1 day
