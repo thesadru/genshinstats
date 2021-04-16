@@ -125,19 +125,20 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str=None, **kwargs) -> dict:
     raise_for_error(data)
 
 @lru_cache()
-def get_gacha_types(lang: str='en') -> list:
+def get_gacha_types(authkey: str, lang: str='en') -> list:
     """Gets possible gacha types.
     
     Returns a list of dicts.
     """
     return fetch_gacha_endpoint(
         "getConfigList",
+        authkey=authkey,
         params=dict(lang=lang)
     )['gacha_type_list']
 
-def recognize_gacha_type(gacha: str, lang: str='en') -> Optional[dict]:
+def recognize_gacha_type(gacha: str, authkey: str=None, lang: str='en') -> Optional[dict]:
     """Recognizes a given gacha type by id, key or name."""
-    for t in get_gacha_types(lang):
+    for t in get_gacha_types(authkey,lang):
         if gacha in t.values():
             return t
     return None
@@ -179,7 +180,7 @@ def get_entire_gacha_log(size: int=None, authkey: str=None, lang: str='en', raw:
     Basically same as running get_gacha_log() with every possible key.
     Will yield pulls from most recent to oldest.
     """
-    gens = [get_gacha_log(t['key'],authkey=authkey,lang=lang,raw=raw) for t in get_gacha_types()]
+    gens = [get_gacha_log(t['key'],authkey=authkey,lang=lang,raw=raw) for t in get_gacha_types(authkey)]
     return islice(heapq.merge(*gens,key=lambda x:x['time'],reverse=True),size)
 
 def get_gacha_items(lang: str='en-us', raw: bool=False) -> list:
