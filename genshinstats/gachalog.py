@@ -125,7 +125,7 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str=None, **kwargs) -> dict:
     raise_for_error(data)
 
 @lru_cache()
-def get_gacha_types(authkey: str, lang: str='en') -> list:
+def get_gacha_types(authkey: str=None, lang: str='en') -> list:
     """Gets possible gacha types.
     
     Returns a list of dicts.
