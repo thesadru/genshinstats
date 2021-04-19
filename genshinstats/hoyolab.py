@@ -5,7 +5,7 @@ Can search users, get record cards, active players...
 import logging
 import time
 from functools import lru_cache
-from typing import Iterable, Optional
+from typing import Optional
 
 from .errors import CodeAlreadyUsed, RedeemCooldown, TooLowAdventureRank
 from .genshinstats import fetch_endpoint

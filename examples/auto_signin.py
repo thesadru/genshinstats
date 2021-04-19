@@ -1,7 +1,7 @@
 import genshinstats as gs
 import time
 
-gs.set_cookie(...)
+gs.set_cookie_auto()
 
 while True:
     success = gs.sign_in()
