@@ -12,7 +12,7 @@ If you're making your own module that has genshinstats as a dependency, remember
 # how to use
 Import the `genshinstats` module and set the cookie to login.
 To set the cookie use `set_cookie(account_id=..., cookie_token=...)`.
-Pass your own cookie values in this fields. ([How to get your cookie](#how-to-get-your-cookie))
+Pass your own cookie values into these fields. ([how can I get my cookie?](#how-can-I-get-my-cookie?))
 The cookie is required and will raise an error if missing.
 
 All functions are documented and type hinted.
@@ -130,6 +130,29 @@ info = gs.get_daily_reward_info()
 print('total rewards claimed:',info['total_sign_day'])
 gs.sign_in() # signs you in, returns a bool whether it succeeded
 ```
+### hoyolab
+Miscalenious stuff for mihoyo's hoyolab. Has searching, auto check-in and code redemption.
+```py
+# search all users and get their nickname and uid
+for user in gs.search('sadru'):
+    print(f"{user['nickname']} ({user['uid']}) - \"{user['introduce']}\"")
+
+# check in to hoyolab
+gs.check_in() # raises in cannot check in
+
+# try to redeem a code
+gs.redeem_code("GENSHINGIFT")
+
+# get a record card; has user nickname and game uid
+card = gs.get_record_card(8366222)
+print(f"{card['nickname']} ({card['game_role_id']}) - AR {card['level']}")
+
+# get an in-game uid from a community uid directly
+uid = 8366222
+# if it's an actual community uid
+if not gs.is_game_uid(uid): 
+    uid = gs.get_uid_from_community(uid)
+```
 
 ## change language
 Some api endpoints support changing languages, you can see them listed here:
@@ -144,20 +167,47 @@ gachalog.get_gacha_details(...,lang='fr-fr')
 > endpoints can use two types of values, long and short. Long is the default value in `gs.get_langs()`, short is only the first part of a lang (`en-us` -> `en`).
 > Chinese has simplified and traditional options, so if you use chinese the short version is the same as the long version (`zh-cn` -> `zh-cn`)
 
-# how to get your cookie
+# faq
+## How can I get my cookie?
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
 2. login to your account
-3. open inspect mode (Developer Tools)
+3. press `F12` to open inspect mode (aka Developer Tools)
 4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
 5. copy `account_id` and `cookie_token`
 6. use `set_cookie(account_id=..., cookie_token=...)` in your code
 
-# errors
-genshinstats uses its own errors defined in `genshinstats.errors`. 
+## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
+The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.
+To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin/accountCenter/gameRecord) and make your account public by clicking [the toogle next to "public"](https://cdn.discordapp.com/attachments/529573765743509504/817509874417008759/make_account_public.png).
 
-The most common one you'll probably see is `DataNotPublic`.
-To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin/accountCenter/gameRecord) and make your account public.
-([how to make your account public](https://cdn.discordapp.com/attachments/529573765743509504/817509874417008759/make_account_public.png))
+## How do the cookie token and authkey work?
+Every endpoint in mihoyo's api requires authentication, this is in the form of a cookie token and an authkey.
+User stats use a cookie token and gacha history uses an authkey.
+
+The cookie token is bound to the user and as far as I know cannot be reset, so remember to never give your cookie token to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
+
+The authkey is a temporary token to access your gacha history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the gacha history.
+
+## How do I get the gacha history of other players?
+To get the gacha history of other players you must get their authkey and pass it as a keyword into `get_gacha_log` or `get_entire_gacha_log`. That will make the function return their gacha history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
+
+To get the autkey you ask the player to press `ESC` while in the game and click the feedback button on the bottom left, then get them to send the url they get redirected to. You can then extract the authkey with `extract_authkey(url)` which you can then pass into the functions.
+
+## Why do you call wish history "gacha log" or "gacha history"?.
+In mihoyo's api the official name for the wish history is `GachaLog`, which is how I also decided to call my functions. The reason why I still call it gacha instead of wish is because I have played other gacha games before and got used to calling everything gacha.
+If you feel like you want to change it then you can open and issue and if enough people disagree with it I'll just change it. 
+For now the name will be staying fo backwards compatibility.
+
+## What's the rate limit?
+As far as I know there is no rate limit, however I recommend you avoid spamming the api, as mihoyo can still ip ban you. My guess is that if you try to make more than 1 request per second the chances are mihoyo is not going to appreciate it.
+
+## How can I get an in-game uid from a hoyolab community uid?
+`get_uid_from_community(community_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game,  or a community one use `is_game_uid(uid)`.
+
+It is impossible to get a community uid from an in-game uid.
+
+## How can I get a user's username?
+Getting the user's username and adventure rank is possible only with their community uid. You can get them with `get_record_card(community_uid)` along with a bunch of other data.
 
 # project layout
 ```
@@ -171,7 +221,7 @@ errors.py          errors used by genshinstats
 # about this project
 ## contribution
 All contributions are welcome as long as it's in a form of a clean PR.
-Currently looking for literally anyone who has a chinese genshin account to help me make this project work for all chinese endpoints (right now it's mostly guesswork).
+Currently, I am looking for literally anyone who has a chinese genshin account to help me make this project work for all chinese endpoints (right now it's mostly guesswork).
 ## crediting
 This project can be freely downloaded and distributed.
 Crediting is appreciated.

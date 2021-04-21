@@ -35,6 +35,7 @@ class NoGameAccount(GenshinStatsException):
     """Tried to get info without an account"""
 class InvalidItemID(GenshinStatsException):
     """Item does not exist."""
+    type: str; item: str
     def set_response(self, response: dict):
         super().set_response(response)
         self.type,self.item = re.match(r'(.+?):(\w+)',self.orig_msg).groups()
@@ -46,6 +47,8 @@ class InvalidCode(CodeRedeemException):
     """Invalid redemption code."""
 class CodeAlreadyUsed(CodeRedeemException):
     """Redemption Code is already in use"""
+class CodeExpired(CodeRedeemException):
+    """Redemption code is expired."""
 class TooLowAdventureRank(CodeRedeemException):
     """Does not meet adventure rank requirements."""
 class RedeemCooldown(CodeRedeemException):

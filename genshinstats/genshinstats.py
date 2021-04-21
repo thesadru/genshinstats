@@ -105,7 +105,7 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
 def get_user_info(uid: int, raw: bool=False) -> dict:
     """Gets game user info of a user based on their uid.
     
-    Game user info contain the main nformation regarding a user.
+    Game user info contain the main information regarding a user.
     Contains owned characters, stats, city and world explorations and role.
     """
     server = recognize_server(uid)
@@ -119,7 +119,7 @@ def get_user_info(uid: int, raw: bool=False) -> dict:
 def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: bool=False) -> list:
     """Gets characters of a user set by their ids.
     
-    Characters contain info about their level, constelation, weapon, and artifacts.
+    Characters contain info about their level, constellation, weapon, and artifacts.
     Talents are not included.
     
     Change the language with lang, 
@@ -138,7 +138,7 @@ def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: b
 def get_all_characters(uid: int, lang: str='en-us', raw: bool=False) -> list:
     """Gets all characters of a user.
     
-    Characters contain info about their level, constelation, weapon, and artifacts.
+    Characters contain info about their level, constellation, weapon, and artifacts.
     Talents are not included.
     
     Change the language with lang, 

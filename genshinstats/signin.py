@@ -30,7 +30,7 @@ def get_daily_rewards(chinese: bool=False) -> list:
 def sign_in(chinese: bool=False, force: bool=False) -> bool:
     """Signs into hoyolab and claims the daily rewards.
     
-    Chinese and global servers work a bit differentelly,
+    Chinese and global servers work a bit differently,
     so you must specify you want to claim rewards for chinese accounts here.
     
     If the reward cannot be claimed, no claim will be attempted.

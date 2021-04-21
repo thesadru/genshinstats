@@ -196,6 +196,7 @@ def prettify_gacha_log(data: list, lang: str='en'):
         "name": i["name"],
         "rarity": int(i["rank_type"]),
         "time": i["time"],
+        "id": i["id"],
         "gacha_type": i["gacha_type"],
         "gacha_name": gachalog.recognize_gacha_type(i['gacha_type'],lang=lang)['name'],
     } for i in data]
@@ -204,7 +205,7 @@ def prettify_gacha_items(data: list):
     return [{
         "name":i["name"],
         "type":i["item_type"],
-        "rarity":i["rank_type"],
+        "rarity":int(i["rank_type"]),
         "id":10000000+int(i["item_id"])-1000 if len(i["item_id"])==4 else int(i["item_id"]),
     } for i in data]
 

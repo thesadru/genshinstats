@@ -14,14 +14,14 @@ from .utils import recognize_server
 logger = logging.getLogger('genshinstats')
 
 def search(keyword: str, size: int=20) -> dict:
-    """Searches posts, topics and users.
+    """Searches all users.
     
     Can return up to 20 results, based on size.
     """
     return fetch_endpoint(
         "community/apihub/wapi/search",
         params=dict(keyword=keyword,size=size,gids=2)
-    )
+    )['users']
 
 def check_in() -> None:
     """Checks in the user who's cookies are currently being used.
@@ -49,19 +49,6 @@ def get_game_accounts(chinese: bool=False) -> list:
     """
     url = "https://api-takumi.mihoyo.com/" if chinese else "https://api-os-takumi.mihoyo.com/"
     return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie")['list']
-
-def get_community_user_info(community_uid: int) -> dict:
-    """Gets community info of a user based on their community uid.
-    
-    Community info contains general data regarding the uid, nickname, introduction gender and so.
-    It also contains stats for general community actions.
-    
-    You can get community id with `search`.
-    """
-    return fetch_endpoint(
-        "community/user/wapi/getUserFullInfo",
-        params=dict(uid=community_uid)
-    )
 
 def get_record_card(community_uid: int) -> Optional[dict]:
     """Gets a game record card of a user based on their community uid.
@@ -99,7 +86,7 @@ def _redeem_code(code: str, uid: int, region: str=None, game_biz: str='hk4e_glob
         if not sleep:
             raise
         logger.debug(f'Sleeping {e.cooldown}s for code redemption.')
-        time.sleep(e.cooldown + 0.5)
+        time.sleep(e.cooldown + 0.5) # for safety
         _redeem_code(code,uid,region,game_biz,sleep=False)
 
 def redeem_code(code: str, uid: int=None, sleep: bool=True) -> int:

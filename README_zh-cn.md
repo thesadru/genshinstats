@@ -131,6 +131,29 @@ info = gs.get_daily_reward_info()
 print('total rewards claimed:',info['total_sign_day'])
 gs.sign_in()
 ```
+### hoyolab
+mihoyo的hoyolab的杂物。 具有搜索功能，自动办理登机手续和代码兑换。
+```py
+# 搜索所有用户并获取其昵称和uid
+for user in gs.search('sadru'):
+    print(f"{user['nickname']} ({user['uid']}) - \"{user['introduce']}\"")
+
+# 签到hoyolab
+gs.check_in() # 引发无法签入
+
+# 尝试兑换代码
+gs.redeem_code("GENSHINGIFT")
+
+# 获取记录卡； 具有用户昵称和游戏uid
+card = gs.get_record_card(8366222)
+print(f"{card['nickname']} ({card['game_role_id']}) - AR {card['level']}")
+
+# 直接从社区uid获取游戏中的uid
+uid = 8366222
+# 如果是实际的社区uid
+if not gs.is_game_uid(uid): 
+    uid = gs.get_uid_from_community(uid)
+```
 
 ## 改变语言
 某些api端点支持更改语言，您可以在此处列出它们：
