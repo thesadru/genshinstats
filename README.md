@@ -12,7 +12,7 @@ If you're making your own module that has genshinstats as a dependency, remember
 # how to use
 Import the `genshinstats` module and set the cookie to login.
 To set the cookie use `set_cookie(account_id=..., cookie_token=...)`.
-Pass your own cookie values into these fields. ([how can I get my cookie?](#how-can-I-get-my-cookie?))
+Pass your own cookie values into these fields. ([how can I get my cookie?](#how-can-I-get-my-cookie))
 The cookie is required and will raise an error if missing.
 
 All functions are documented and type hinted.
@@ -184,14 +184,25 @@ To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin
 Every endpoint in mihoyo's api requires authentication, this is in the form of a cookie token and an authkey.
 User stats use a cookie token and gacha history uses an authkey.
 
-The cookie token is bound to the user and as far as I know cannot be reset, so remember to never give your cookie token to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
+The cookie token is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie token to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
 
 The authkey is a temporary token to access your gacha history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the gacha history.
+
+## Is it possible that my account can be stolen when I login with the cookie?
+I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account and access your data like email, phone number and name, however those are censored so unless you already know what those could be you can't just guess them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@gmail.com`)
+
+That means the person trying to get into your account must at least have your cookie and have an idea on what your email is. They can then request for a password request, which requires him to confirm it from the email since version `1.4`, so he must be able to break into your email too, which I doubt they can. Since version `1.6` there is also 2FA which will make it completely impossible to steal your account.
+
+TL;DR unless you have also given your password away your account cannnot be stolen.
 
 ## How do I get the gacha history of other players?
 To get the gacha history of other players you must get their authkey and pass it as a keyword into `get_gacha_log` or `get_entire_gacha_log`. That will make the function return their gacha history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
 
 To get the autkey you ask the player to press `ESC` while in the game and click the feedback button on the bottom left, then get them to send the url they get redirected to. You can then extract the authkey with `extract_authkey(url)` which you can then pass into the functions.
+
+## How does `set_cookie_auto()` work? Can my data be stolen with it?
+`set_cokie_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookie()`.
+When getting said cookies, they are filtered so only ones for mihoyo are ever pulled out. They will only ever be used as authentication and will never be sent anywhere else.
 
 ## Why do you call wish history "gacha log" or "gacha history"?.
 In mihoyo's api the official name for the wish history is `GachaLog`, which is how I also decided to call my functions. The reason why I still call it gacha instead of wish is because I have played other gacha games before and got used to calling everything gacha.

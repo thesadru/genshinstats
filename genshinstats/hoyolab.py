@@ -7,7 +7,7 @@ import time
 from functools import lru_cache
 from typing import Optional
 
-from .errors import CodeAlreadyUsed, RedeemCooldown, TooLowAdventureRank
+from .errors import CodeRedeemException, RedeemCooldown
 from .genshinstats import fetch_endpoint
 from .utils import recognize_server
 
@@ -112,7 +112,7 @@ def redeem_code(code: str, uid: int=None, sleep: bool=True) -> int:
         logger.info(f"Redeeming code for {account['nickname']} ({account['game_uid']}).")
         try: 
             _redeem_code(code,account['game_uid'],account['region'],account['game_biz'],sleep=sleep)
-        except (CodeAlreadyUsed,TooLowAdventureRank) as e: 
+        except CodeRedeemException as e: 
             logger.info(f"Redeem for {account['nickname']} ({account['game_uid']}) failed ({e}).")
         else: 
             success += 1

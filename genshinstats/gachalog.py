@@ -15,9 +15,9 @@ from urllib.parse import unquote, urljoin
 
 from requests import Session
 
-from .errors import MissingAuthKey
+from .errors import MissingAuthKey, raise_for_error
 from .pretty import *
-from .utils import USER_AGENT, get_output_log, raise_for_error
+from .utils import USER_AGENT, get_output_log
 
 logger = logging.getLogger('genshinstats')
 GENSHIN_LOG = get_output_log()

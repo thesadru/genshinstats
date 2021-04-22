@@ -13,8 +13,9 @@ from urllib.parse import urljoin
 
 from requests import Session
 
+from .errors import raise_for_error
 from .pretty import *
-from .utils import USER_AGENT, is_chinese, raise_for_error, recognize_server
+from .utils import USER_AGENT, is_chinese, recognize_server
 
 logger = logging.getLogger('genshinstats')
 session = Session()

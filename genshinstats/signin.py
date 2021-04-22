@@ -2,7 +2,7 @@
 
 Automatically claims the next reward in the daily check-in rewards.
 """
-from .errors import FirstSignIn
+from .errors import SignInException
 from .genshinstats import fetch_endpoint
 from .hoyolab import get_game_accounts
 
@@ -41,7 +41,7 @@ def sign_in(chinese: bool=False, force: bool=False) -> bool:
     if not force:
         info = get_daily_reward_info(chinese)
         if info['first_bind']:
-            raise FirstSignIn('First sign-in must be done manually. Please go to the website and claim your rewards.')
+            raise SignInException('First sign-in must be done manually. Please go to the website and claim your rewards.')
         if info['is_sign']:
             return False # already signed in
     
