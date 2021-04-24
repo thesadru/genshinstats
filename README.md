@@ -1,10 +1,17 @@
 English | [简体中文](./README_zh-cn.md)
 
 # genshinstats
+[![Downloads](https://pepy.tech/badge/genshinstats)](https://pepy.tech/project/genshinstats)
+[![Downloads/month](https://pepy.tech/badge/genshinstats/month)](https://pepy.tech/project/genshinstats)
+[![PyPI package](https://img.shields.io/pypi/v/genshinstats)](https://pypi.org/project/genshinstats/)
+[![Last Commit](https://img.shields.io/github/last-commit/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/commits/master)
+![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)
+[![License](https://img.shields.io/github/license/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/blob/master/LICENSE)
+
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
 The api endpoints used in this project are not publicly known but are free to use for third part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
 
-You can pip install with [PyPI](https://pypi.org/project/genshinstats/)
+You can install with [`pip install genshinstats`](https://pypi.org/project/genshinstats/)
 
 Be aware that this project is currently still in development and therefore can change at any moment.
 If you're making your own module that has genshinstats as a dependency, remember to explicitly set the version it should use.

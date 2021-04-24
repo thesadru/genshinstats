@@ -4,7 +4,7 @@
 该项目旨在成为原神的[bbs.mihoyo.com](https://bbs.mihoyo.com/ys/) api的包装。
 此项目中使用的api端点尚未公开，但可以免费用于第三方工具，因此，我决定通过为它们进行包装来使其更加公开。
 
-您可以使用[PyPI](https://pypi.org/project/genshinstats/)进行pip安装
+您可以使用[`pip install genshinstats`](https://pypi.org/project/genshinstats/)进行安装
 
 请注意，该项目目前仍在开发中，因此可以随时更改。
 如果您要制作自己的模块，且具有genshinstats作为依赖项，请记住明确设置它应使用的版本。
