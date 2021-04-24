@@ -33,13 +33,18 @@ DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/" # global
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/" # chinese
 
-def set_cookie(account_id: int, cookie_token: str) -> None:
+def set_cookie(ltuid: int, ltoken: str, **kwargs) -> None:
     """Basic configuration function, required for anything beyond search.
     
-    Account id and cookie token must be copied from your browser's cookies.
+    ltuid and ltoken must be copied from your browser's cookies.
+    Any other kwargs provided will be also set as as a cookie.
     """
-    session.cookies.set('account_id',str(account_id))
-    session.cookies.set('cookie_token',cookie_token)
+    kwargs.update({
+        'ltuid': str(ltuid),
+        'ltoken': ltoken
+    }) 
+    session.cookies.update(kwargs)
+
 
 def set_cookie_header(header: str) -> None:
     """Like set_cookie, but you can set the header directly."""
@@ -60,14 +65,12 @@ def set_cookie_auto(browser: str=None) -> None:
     """
     import browser_cookie3
     logger.debug(f'Loading cookies automatically.')
-    if browser is None:
-        jar = browser_cookie3.load()
-    else:
-        jar = getattr(browser_cookie3,browser)()
+    load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
     
-    for c in jar:
-        if 'hoyolab' in c.domain or 'mihoyo' in c.domain:
-            session.cookies.set(c.name,c.value) # do not limit to specific domains
+    session.cookies.update({
+        c.name:c.value for c in load(domain_name='.hoyolab.com') 
+        if c.name[0]!='_'})
+            
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.

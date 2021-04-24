@@ -215,3 +215,15 @@ def get_gacha_details(gacha_id: str, lang: str='en-us', raw: bool=False) -> dict
     )
     r.raise_for_status()
     return r.json() if raw else prettify_gacha_details(r.json())
+
+def get_uid_from_authkey(authkey: str=None) -> int:
+    """Gets a uid from an authkey. 
+    
+    If an authkey is not passed in uses the currently set authkey.
+    """
+    uid = fetch_gacha_endpoint(
+        "getGachaLog",
+        authkey=authkey,
+        params=dict(gacha_type=200,size=1)
+    )['list'][0]['uid']
+    return int(uid)

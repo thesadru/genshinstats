@@ -1,6 +1,6 @@
 import genshinstats as gs
 
-gs.set_cookie(account_id=...,cookie_token=...)
+gs.set_cookie(ltuid=...,ltoken=...)
 
 uid = input('Please enter a uid: ')
 action = input('What would you like to view? [1. stats, 2. characters, 3. spiral abyss] ')

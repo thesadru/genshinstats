@@ -11,7 +11,7 @@
 
 # 如何使用
 导入`genshinstats`模块，并将cookie设置为登录。
-要设置cookie，请使用`set_cookie(account_id=..., cookie_token=...)`。
+要设置cookie，请使用`set_cookie(ltuid=..., ltoken=...)`。
 在此字段中传递您自己的Cookie值。（[如何获取您的cookie](#如何获取您的cookie)）
 Cookie是必填项，如果缺少，则会引发错误。
 
@@ -22,7 +22,7 @@ Cookie是必填项，如果缺少，则会引发错误。
 用法的简单示例：
 ```py
 import genshinstats as gs # 导入模块
-gs.set_cookie(account_id=119480035, cookie_token="hEIIh08ghAIlHY1QQZBnsngVWXzaEMQtrSV0Bowu") # 登录
+gs.set_cookie(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # 登录
 
 uid = 710785423
 user_info = gs.get_user_info(uid) # 使用uid获取用户信息
@@ -65,7 +65,7 @@ for field,value in stats.items():
 可以设置带有标题的cookie
 ```py
 gs.set_cookie_header("""
-_MHYUUID=0110a95f-fbe9-41a3-a26a-5ed1d9e3a8f1; account_id=119480035; cookie_token=hEIIh08ghAIlHY1QQZBnsngVWXzaEMQtrSV0Bowu; ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035; mi18nLang=en-us
+ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035
 """)
 ```
 或通过从浏览器获取它们来自动设置它们
@@ -173,8 +173,8 @@ gachalog.get_gacha_details(...,lang='fr-fr')
 2. 登录到您的帐户
 3. 打开检查模式（开发人员工具）
 4. 转到`应用程序`，`Cookies`，`https://bbs.mihoyo.com`。
-5. 复制`account_id`和`cookie_token`
-6. 在代码中使用`set_cookie(account_id=..., cookie_token=...)`
+5. 复制`ltuid`和`ltoken`
+6. 在代码中使用`set_cookie(ltuid=..., ltoken=...)`
 
 # 个错误
 genshinstats使用自己在`genshinstats.errors`中定义的错误。

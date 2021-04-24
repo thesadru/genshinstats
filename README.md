@@ -11,7 +11,7 @@ If you're making your own module that has genshinstats as a dependency, remember
 
 # how to use
 Import the `genshinstats` module and set the cookie to login.
-To set the cookie use `set_cookie(account_id=..., cookie_token=...)`.
+To set the cookie use `set_cookie(ltuid=..., ltoken=...)`.
 Pass your own cookie values into these fields. ([how can I get my cookie?](#how-can-I-get-my-cookie))
 The cookie is required and will raise an error if missing.
 
@@ -22,7 +22,7 @@ All functions are documented and type hinted.
 Simple examples of usage:
 ```py
 import genshinstats as gs # import module
-gs.set_cookie(account_id=119480035, cookie_token="hEIIh08ghAIlHY1QQZBnsngVWXzaEMQtrSV0Bowu") # login
+gs.set_cookie(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # login
 
 uid = 710785423
 user_info = gs.get_user_info(uid) # get user info with a uid
@@ -65,7 +65,7 @@ for field,value in stats.items():
 It's possible to set the cookies with a header
 ```py
 gs.set_cookie_header("""
-_MHYUUID=0110a95f-fbe9-41a3-a26a-5ed1d9e3a8f1; account_id=119480035; cookie_token=hEIIh08ghAIlHY1QQZBnsngVWXzaEMQtrSV0Bowu; ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035; mi18nLang=en-us
+ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035
 """)
 ```
 Or set them automatically by getting them from a browser
@@ -173,25 +173,25 @@ gachalog.get_gacha_details(...,lang='fr-fr')
 2. login to your account
 3. press `F12` to open inspect mode (aka Developer Tools)
 4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
-5. copy `account_id` and `cookie_token`
-6. use `set_cookie(account_id=..., cookie_token=...)` in your code
+5. copy `ltuid` and `ltoken`
+6. use `set_cookie(ltuid=..., ltoken=...)` in your code
 
 ## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
 The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.
 To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin/accountCenter/gameRecord) and make your account public by clicking [the toogle next to "public"](https://cdn.discordapp.com/attachments/529573765743509504/817509874417008759/make_account_public.png).
 
-## How do the cookie token and authkey work?
-Every endpoint in mihoyo's api requires authentication, this is in the form of a cookie token and an authkey.
-User stats use a cookie token and gacha history uses an authkey.
+## How do the cookie and authkey work?
+Every endpoint in mihoyo's api requires authentication, this is in the form of a cookie and an authkey.
+User stats use a cookie and gacha history uses an authkey.
 
-The cookie token is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie token to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
+The cookie is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
 
 The authkey is a temporary token to access your gacha history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the gacha history.
 
 ## Is it possible that my account can be stolen when I login with the cookie?
-I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account and access your data like email, phone number and name, however those are censored so unless you already know what those could be you can't just guess them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@gmail.com`)
+I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.4` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.6` there is also 2FA which will make it completely impossible to steal your account.
 
-That means the person trying to get into your account must at least have your cookie and have an idea on what your email is. They can then request for a password request, which requires him to confirm it from the email since version `1.4`, so he must be able to break into your email too, which I doubt they can. Since version `1.6` there is also 2FA which will make it completely impossible to steal your account.
+They can of course access your data like email, phone number and real name, however those are censored so unless they already have an idea what those could be that data is useless to them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@g***l.com`)
 
 TL;DR unless you have also given your password away your account cannnot be stolen.
 
@@ -220,6 +220,13 @@ It is impossible to get a community uid from an in-game uid.
 ## How can I get a user's username?
 Getting the user's username and adventure rank is possible only with their community uid. You can get them with `get_record_card(community_uid)` along with a bunch of other data.
 
+## How do I get one type of uid from another?
+- uids of currently logged in user: `gs.get_game_accounts()`
+- hoyolab uid of currently logged in user `gs.session.cookies['ltuid']`
+- from hoyolab uid to game uid: `gs.get_uid_from_community(community_uid)`
+- from authkey to uid: `gs.get_uid_from_authkey(authkey)`
+- from uid to hoyolab uid: `currently impossible`
+
 # project layout
 ```
 genshinstats.py    user stats and characters
@@ -227,6 +234,7 @@ hoyolab.py         user hoyolab community info
 gachalog.py        gacha history
 signin.py          automatic sign in for hoyolabs
 errors.py          errors used by genshinstats
+utils.py           various utility functions
 ```
 
 # about this project
