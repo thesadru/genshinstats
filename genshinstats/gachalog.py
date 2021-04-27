@@ -23,7 +23,6 @@ logger = logging.getLogger('genshinstats')
 GENSHIN_LOG = get_output_log()
 GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(),'genshinstats_authkey.txt')
-AUTHKEY_DURATION = 60*60*24 # 1 day
 
 session = Session()
 session.headers.update({

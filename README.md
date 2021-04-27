@@ -5,16 +5,26 @@ English | [简体中文](./README_zh-cn.md)
 [![Downloads/month](https://pepy.tech/badge/genshinstats/month)](https://pepy.tech/project/genshinstats)
 [![PyPI package](https://img.shields.io/pypi/v/genshinstats)](https://pypi.org/project/genshinstats/)
 [![Last Commit](https://img.shields.io/github/last-commit/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/commits/master)
-![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)
+[![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/graphs/code-frequency)
 [![License](https://img.shields.io/github/license/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/blob/master/LICENSE)
 
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
-The api endpoints used in this project are not publicly known but are free to use for third part tools, so I have decided to get these a bit more publicity by making a wrapper for them.
-
-You can install with [`pip install genshinstats`](https://pypi.org/project/genshinstats/)
+The api endpoints used in this project are not publicly known but are free to use for third party tools, so I have decided to get these a bit more publicity by making a wrapper for them.
 
 Be aware that this project is currently still in development and therefore can change at any moment.
 If you're making your own module that has genshinstats as a dependency, remember to explicitly set the version it should use.
+
+## how to install
+using [pypi](https://pypi.org/project/genshinstats/)
+```
+pip install genshinstats
+```
+or clone and install manually
+```
+git clone https://github.com/thesadru/genshinstats.git
+cd genshinstats
+python setup.py install
+```
 
 # how to use
 Import the `genshinstats` module and set the cookie to login.
@@ -182,6 +192,10 @@ gachalog.get_gacha_details(...,lang='fr-fr')
 4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
 5. copy `ltuid` and `ltoken`
 6. use `set_cookie(ltuid=..., ltoken=...)` in your code
+> It is possibe that ltuid or ltoken are for some reason not avalible in your cookies (blame it on mihoyo).
+> In this case there are probably the old `account_id` and `cookie_token` cookies, so use those with `set_cookie(account_id=..., cookie_token=...)`.
+>
+> If not even those are avalible go to https://account.mihoyo.com/#/login and use the `login_ticket` cookie in `https://webapi-os.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket=<...>`
 
 ## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
 The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.

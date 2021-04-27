@@ -4,10 +4,20 @@
 该项目旨在成为原神的[bbs.mihoyo.com](https://bbs.mihoyo.com/ys/) api的包装。
 此项目中使用的api端点尚未公开，但可以免费用于第三方工具，因此，我决定通过为它们进行包装来使其更加公开。
 
-您可以使用[`pip install genshinstats`](https://pypi.org/project/genshinstats/)进行安装
-
 请注意，该项目目前仍在开发中，因此可以随时更改。
 如果您要制作自己的模块，且具有genshinstats作为依赖项，请记住明确设置它应使用的版本。
+
+## 如何安装
+使用[pypi](https://pypi.org/project/genshinstats/)
+```
+pip install genshinstats
+```
+或克隆并手动安装
+```
+git clone https://github.com/thesadru/genshinstats.git
+cd genshinstats
+python setup.py install
+```
 
 # 如何使用
 导入`genshinstats`模块，并将cookie设置为登录。
@@ -175,6 +185,11 @@ gachalog.get_gacha_details(...,lang='fr-fr')
 4. 转到`应用程序`，`Cookies`，`https://bbs.mihoyo.com`。
 5. 复制`ltuid`和`ltoken`
 6. 在代码中使用`set_cookie(ltuid=..., ltoken=...)`
+> 可能由于某种原因，您的cookie中无法使用uid或ltoken（将其归咎于mihoyo）。
+> 在这种情况下，可能存在旧的`account_id`和`cookie_token` cookie，因此将其与`set_cookie(account_id=..., cookie_token=...)`一起使用。
+>
+> 如果不是，那么请访问`https://account.mihoyo.com/#/login`并使用`https://webapi-os.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket=<...>`
+> (可能只在海外)
 
 # 个错误
 genshinstats使用自己在`genshinstats.errors`中定义的错误。

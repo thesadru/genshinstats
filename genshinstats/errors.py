@@ -34,15 +34,6 @@ class AccountNotFound(GenshinStatsException):
 class DataNotPublic(GenshinStatsException):
     """User hasn't set their data to public."""
 
-class InvalidItemID(GenshinStatsException):
-    """Item does not exist."""
-    type: str
-    item: str
-    def set_response(self, response: dict):
-        super().set_response(response)
-        self.type,self.item = re.match(r'(.+?):(\w+)',self.orig_msg).groups()
-        self.msg = self.msg.format(self.type,self.item)
-
 class CodeRedeemException(GenshinStatsException):
     """Code redemption failed."""
 class RedeemCooldown(CodeRedeemException):
@@ -72,15 +63,12 @@ def raise_for_error(response: dict) -> NoReturn:
     # every error uses a different response code and message, 
     # but the codes are not unique so we must check the message at some points too.
     error = {
-        # authorization
+        # general
         -100:  NotLoggedIn('Login cookies have not been provided or are incorrect.'),
-        # UID
-        1009:  AccountNotFound('Could not find user; uid may not be valid.'),
         10102: DataNotPublic('User\'s data is not public'),
-        # general errors
+        1009:  AccountNotFound('Could not find user; uid may not be valid.'),
+        -1:    AccountNotFound('Could not find user; uid may not be valid.'),
         -10002:AccountNotFound('Cannot get rewards info. Account has no game account binded to it.'),
-        -1:    AccountNotFound('Could not find user; uid may not be valid.') if response['message']=='Invalid uid' else 
-                InvalidItemID('{} "{}" does not exist.'),
         # code redemption
         -2003: CodeRedeemException('Invalid redemption code'),
         -2017: CodeRedeemException('Redemption code has been claimed already.'),

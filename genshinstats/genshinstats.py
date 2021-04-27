@@ -66,11 +66,11 @@ def set_cookie_auto(browser: str=None) -> None:
     import browser_cookie3
     logger.debug(f'Loading cookies automatically.')
     load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
-    
-    session.cookies.update({
-        c.name:c.value for c in load(domain_name='.hoyolab.com') 
-        if c.name[0]!='_'})
-            
+
+    # we want to keep user data secure, so don't use any login ticket cookies
+    for c in load(domain_name='.mihoyo'):
+        if c.name in ['ltuid','ltoken']:
+            session.cookies.set(c.name,c.value)
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
