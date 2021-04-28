@@ -210,7 +210,7 @@ The cookie is bound to the user and as far as I know can only be reset by changi
 The authkey is a temporary token to access your gacha history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the gacha history.
 
 ## Is it possible that my account can be stolen when I login with the cookie?
-I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.4` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.6` there is also 2FA which will make it completely impossible to steal your account.
+I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.3` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.5` there is also 2FA which will make it completely impossible to steal your account.
 
 They can of course access your data like email, phone number and real name, however those are censored so unless they already have an idea what those could be that data is useless to them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@g***l.com`)
 
@@ -220,6 +220,10 @@ TL;DR unless you have also given your password away your account cannnot be stol
 To get the gacha history of other players you must get their authkey and pass it as a keyword into `get_gacha_log` or `get_entire_gacha_log`. That will make the function return their gacha history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
 
 To get the autkey you ask the player to press `ESC` while in the game and click the feedback button on the bottom left, then get them to send the url they get redirected to. You can then extract the authkey with `extract_authkey(url)` which you can then pass into the functions.
+
+## Can I get data like mora or primogems with this api?
+No, all data is hosted on a single server in hongkong, so mihoyo doesn't bother with adding data that changes often like mora, primogems, items, artifact rolls, etc. Talents are also currently unavalible.
+All the data you can get should be already implemented. If you see an endpoint that is useful and hasn't been implemented yet please open an issue or contact me directly.
 
 ## How does `set_cookie_auto()` work? Can my data be stolen with it?
 `set_cokie_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookie()`.
