@@ -235,11 +235,11 @@ def prettify_gacha_details(data: dict):
     } for i in l]
     return {
         "gacha_type": {
-            "100":"Novice Wishes",
-            "200":"Permanent Wish",
-            "301":"Character Event Wish",
-            "302":"Weapon Event Wish"
-        }[data["gacha_type"]],
+            100:"Novice Wishes",
+            200:"Permanent Wish",
+            301:"Character Event Wish",
+            302:"Weapon Event Wish"
+        }[int(data["gacha_type"])],
         "gacha_type_id":int(data["gacha_type"]),
         "banner": re.sub(r'<.*?>','',data["title"]).strip(),
         "title": data["title"],
