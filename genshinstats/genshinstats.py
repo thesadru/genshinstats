@@ -78,7 +78,7 @@ def get_ds_token(salt: str) -> str:
     Uses an MD5 hash with a unique salt.
     """
     t = int(time.time()) # current seconds
-    r = ''.join(random.sample(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
+    r = ''.join(random.choices(string.ascii_lowercase+string.digits, k=6)) # 6 random chars
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest() # hash and get hex
     return f'{t},{r},{h}'
 

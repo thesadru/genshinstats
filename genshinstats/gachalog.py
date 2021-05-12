@@ -155,6 +155,9 @@ def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, end_id: in
     To be able to get history starting from somewhere other than the earliest pull,
     you must pass in the id of the first pull before (chronologically after) the one you want to start from as end_id.
     """
+    if size is not None and size <= 0:
+        return
+    
     page_size = 20 # max size is 20
     while True:
         data = fetch_gacha_endpoint(

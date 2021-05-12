@@ -196,7 +196,7 @@ def prettify_gacha_log(data: list, lang: str='en'):
         "name": i["name"],
         "rarity": int(i["rank_type"]),
         "time": i["time"],
-        "id": i["id"],
+        "id": int(i["id"]),
         "gacha_type": i["gacha_type"],
         "gacha_name": gachalog.recognize_gacha_type(i['gacha_type'],lang=lang)['name'],
     } for i in data]
@@ -210,14 +210,14 @@ def prettify_gacha_items(data: list):
     } for i in data]
 
 def prettify_gacha_details(data: dict):
-    per = lambda p: None if p=='0%' else p[:-1].replace(',','.')
+    per = lambda p: None if p=='0%' else float(p[:-1].replace(',','.'))
     fprobs = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
         "rarity": int(i["rank"]),
         "is_up": bool(i["is_up"]),
         "order_value": i["order_value"],
-    } for i in l]
+    } for i in l] if l else []
     fitems = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
@@ -232,7 +232,7 @@ def prettify_gacha_details(data: dict):
             "":None
         }[i["item_attr"]],
         "icon": i["item_img"],
-    } for i in l]
+    } for i in l] if l else []
     return {
         "gacha_type": {
             100:"Novice Wishes",
@@ -245,7 +245,6 @@ def prettify_gacha_details(data: dict):
         "title": data["title"],
         "content": data["content"],
         "date_range":data["date_range"],
-        "permanent": data["gacha_type"]=="200",
         "r5_up_prob": per(data["r5_up_prob"]), # probability for rate-up 5*
         "r4_up_prob": per(data["r4_up_prob"]), # probability for rate-up 4*
         "r5_prob": per(data["r5_prob"]), # probability for 5*
@@ -259,7 +258,7 @@ def prettify_gacha_details(data: dict):
         "r5_items": fprobs(data["r5_prob_list"]), # list 5* of items that you can get from banner
         "r4_items": fprobs(data["r4_prob_list"]), # list 4* of items that you can get from banner
         "r3_items": fprobs(data["r3_prob_list"]), # list 3* of items that you can get from banner
-        "items": sorted(
-            fprobs(data["r5_prob_list"])+fprobs(data["r4_prob_list"])+fprobs(data["r3_prob_list"]),
-            key=lambda x: x["order_value"])
+        "items": fprobs(sorted(
+            data["r5_prob_list"]+data["r4_prob_list"]+data["r3_prob_list"],
+            key=lambda x: x["order_value"]))
     }
