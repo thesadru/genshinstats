@@ -137,6 +137,7 @@ def get_gacha_types(authkey: str=None, lang: str='en') -> list:
 
 def recognize_gacha_type(gacha: str, authkey: str=None, lang: str='en') -> Optional[dict]:
     """Recognizes a given gacha type by id, key or name."""
+    gacha = str(gacha) # everything is a string anyways, just cast here
     for t in get_gacha_types(authkey,lang):
         if gacha in t.values():
             return t
@@ -158,7 +159,9 @@ def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, end_id: in
     if size is not None and size <= 0:
         return
     
-    page_size = 20 # max size is 20
+    # we create gacha_name outside prettify so we don't make extra requests
+    gacha_name = recognize_gacha_type(gacha_type,authkey=authkey,lang=lang)['name']
+    page_size = 20 # max size per page is 20
     while True:
         data = fetch_gacha_endpoint(
             "getGachaLog",
@@ -166,7 +169,7 @@ def get_gacha_log(gacha_type: int, size: int=None, authkey: str=None, end_id: in
             params=dict(gacha_type=gacha_type,size=page_size,end_id=end_id,lang=lang)
         )['list']
         
-        yield from data if raw else prettify_gacha_log(data,lang)
+        yield from data if raw else prettify_gacha_log(data,gacha_name)
         
         if len(data) < page_size:
             return # return if reached the end
