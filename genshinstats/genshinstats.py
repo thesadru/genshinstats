@@ -8,7 +8,7 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from typing import List
+from typing import List, Union
 from urllib.parse import urljoin
 
 from requests import Session
@@ -33,7 +33,7 @@ DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/" # global
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/" # chinese
 
-def set_cookie(ltuid: int, ltoken: str, **kwargs) -> None:
+def set_cookie(ltuid: Union[int,str], ltoken: str, **kwargs) -> None:
     """Basic configuration function, required for anything beyond search.
     
     ltuid and ltoken must be copied from your browser's cookies.
@@ -45,18 +45,21 @@ def set_cookie(ltuid: int, ltoken: str, **kwargs) -> None:
     }) 
     session.cookies.update(kwargs)
 
-
 def set_cookie_header(header: str) -> None:
     """Like set_cookie, but you can set the header directly."""
     c = SimpleCookie()
     c.load(header)
     session.cookies.update(c)
 
-def get_browser_cookie(browser: str=None) -> dict:
-    """Get cookies from browser"""
+def get_browser_cookies(browser: str=None) -> dict:
+    """Gets cookies from your browser for later storing.
+    
+    If a specifc browser is set, gets data from that browser only.
+    Avalible browsers: chrome, chromium, opera, edge, firefox
+    """
     import browser_cookie3
     load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
-    # we want to keep user data secure, so don't use any login ticket cookies
+    # we want to keep user data secure, so don't fetch any unnecessary cookies
     cookie = {c.name:c.value for c in load(domain_name='.mihoyo') if c.name in ('ltuid', 'ltoken')}
     return cookie
 
@@ -72,7 +75,7 @@ def set_cookie_auto(browser: str=None) -> None:
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     logger.debug(f'Loading cookies automatically.')
-    session.cookies.update(get_browser_cookie(browser))
+    session.cookies.update(get_browser_cookies(browser))
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.

@@ -10,7 +10,7 @@ import re
 from functools import lru_cache
 from itertools import islice
 from tempfile import gettempdir
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 from urllib.parse import unquote, urljoin
 
 from requests import Session
@@ -135,7 +135,7 @@ def get_gacha_types(authkey: str=None, lang: str='en') -> list:
         params=dict(lang=lang)
     )['gacha_type_list']
 
-def recognize_gacha_type(gacha: str, authkey: str=None, lang: str='en') -> Optional[dict]:
+def recognize_gacha_type(gacha: Any, authkey: str=None, lang: str='en') -> Optional[dict]:
     """Recognizes a given gacha type by id, key or name."""
     gacha = str(gacha) # everything is a string anyways, just cast here
     for t in get_gacha_types(authkey,lang):

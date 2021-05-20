@@ -261,6 +261,12 @@ signin.py          automatic sign in for hoyolabs
 errors.py          errors used by genshinstats
 utils.py           various utility functions
 ```
+## versioning
+A.B.C.D (e.g. 1.3.9.2)
+- A = requires the entire project changing its focus
+- B = whenever the project layout changes drastically
+- C = new non-backwards-compatible changes
+- D = minor bug fixes and optimizations
 
 # about this project
 ## contribution
