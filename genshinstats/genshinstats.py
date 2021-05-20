@@ -52,6 +52,14 @@ def set_cookie_header(header: str) -> None:
     c.load(header)
     session.cookies.update(c)
 
+def get_browser_cookie(browser: str=None) -> dict:
+    """Get cookies from browser"""
+    import browser_cookie3
+    load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
+    # we want to keep user data secure, so don't use any login ticket cookies
+    cookie = {c.name:c.value for c in load(domain_name='.mihoyo') if c.name in ('ltuid', 'ltoken')}
+    return cookie
+
 def set_cookie_auto(browser: str=None) -> None:
     """Like set_cookie, but gets the cookies by itself.
     
@@ -63,14 +71,8 @@ def set_cookie_auto(browser: str=None) -> None:
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    import browser_cookie3
     logger.debug(f'Loading cookies automatically.')
-    load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
-
-    # we want to keep user data secure, so don't use any login ticket cookies
-    for c in load(domain_name='.mihoyo'):
-        if c.name in ['ltuid','ltoken']:
-            session.cookies.set(c.name,c.value)
+    session.cookies.update(get_browser_cookie(browser))
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
@@ -167,4 +169,3 @@ def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
         params=dict(server=server,role_id=uid,schedule_type=schedule_type)
     )
     return data if raw else prettify_spiral_abyss(data)
-
