@@ -57,10 +57,7 @@ def get_browser_cookie(browser: str=None) -> dict:
     import browser_cookie3
     load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
     # we want to keep user data secure, so don't use any login ticket cookies
-    cookie={}
-    for c in load(domain_name='.mihoyo'):
-        if c.name in ('ltuid','ltoken'):
-            cookie.update({c.name:c.value})
+    cookie = {c.name:c.value for c in load(domain_name='.mihoyo') if c.name in ('ltuid', 'ltoken')}
     return cookie
 
 def set_cookie_auto(browser: str=None) -> None:
@@ -75,10 +72,7 @@ def set_cookie_auto(browser: str=None) -> None:
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     logger.debug(f'Loading cookies automatically.')
-    # we want to keep user data secure, so don't use any login ticket cookies
-    cookies=get_browser_cookie(browser)
-    for name,value in cookies.items():
-        session.cookies.set(name,value)
+    session.cookies.update(get_browser_cookie(browser))
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
