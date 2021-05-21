@@ -8,6 +8,8 @@ English | [简体中文](./README_zh-cn.md)
 [![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/graphs/code-frequency)
 [![License](https://img.shields.io/github/license/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/blob/master/LICENSE)
 
+THIS IS THE 1.4 DEV VERSION, THE SCRIPT IS CURRENTLY VERY UNSTABLE
+
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
 The api endpoints used in this project are not publicly known but are free to use for third party tools, so I have decided to get these a bit more publicity by making a wrapper for them.
 
@@ -238,17 +240,17 @@ For now the name will be staying fo backwards compatibility.
 As far as I know there is no rate limit, however I recommend you avoid spamming the api, as mihoyo can still ip ban you. My guess is that if you try to make more than 1 request per second the chances are mihoyo is not going to appreciate it.
 
 ## How can I get an in-game uid from a hoyolab community uid?
-`get_uid_from_community(community_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game,  or a community one use `is_game_uid(uid)`.
+`get_uid_from_community(hoyolab_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game,  or a community one use `is_game_uid(uid)`.
 
 It is impossible to get a community uid from an in-game uid.
 
 ## How can I get a user's username?
-Getting the user's username and adventure rank is possible only with their community uid. You can get them with `get_record_card(community_uid)` along with a bunch of other data.
+Getting the user's username and adventure rank is possible only with their community uid. You can get them with `get_record_card(hoyolab_uid)` along with a bunch of other data.
 
 ## How do I get one type of uid from another?
 - uids of currently logged in user: `gs.get_game_accounts()`
 - hoyolab uid of currently logged in user `gs.session.cookies['ltuid']`
-- from hoyolab uid to game uid: `gs.get_uid_from_community(community_uid)`
+- from hoyolab uid to game uid: `gs.get_uid_from_community(hoyolab_uid)`
 - from authkey to uid: `gs.get_uid_from_authkey(authkey)`
 - from uid to hoyolab uid: `currently impossible`
 

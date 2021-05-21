@@ -22,7 +22,7 @@ def _recognize_character_icon(url: str):
     return character
 
 
-def prettify_user_info(data: dict):
+def prettify_stats(data: dict):
     """Returns a prettified version of get_user_info."""
     stats = data["stats"]
     return {
@@ -188,26 +188,26 @@ def prettify_characters(data: list):
     """Returns a prettified version of get_characters."""
     return [prettify_character(i) for i in data]
 
-def prettify_gacha_log(data: list, gacha_name: str = None):
+def prettify_wish_history(data: list, banner_name: str = None):
     return [{
         "type": i["item_type"],
         "name": i["name"],
         "rarity": int(i["rank_type"]),
         "time": i["time"],
         "id": int(i["id"]),
-        "gacha_type": int(i["gacha_type"]),
-        "gacha_name": gacha_name,
+        "banner_type": int(i["gacha_type"]),
+        "banner_name": banner_name,
     } for i in data]
 
-def prettify_gacha_items(data: list):
+def prettify_wish_items(data: list):
     return [{
-        "name":i["name"],
-        "type":i["item_type"],
-        "rarity":int(i["rank_type"]),
-        "id":10000000+int(i["item_id"])-1000 if len(i["item_id"])==4 else int(i["item_id"]),
+        "name": i["name"],
+        "type": i["item_type"],
+        "rarity": int(i["rank_type"]),
+        "id": 10000000+int(i["item_id"])-1000 if len(i["item_id"])==4 else int(i["item_id"]),
     } for i in data]
 
-def prettify_gacha_details(data: dict):
+def prettify_banner_details(data: dict):
     per = lambda p: None if p=='0%' else float(p[:-1].replace(',','.'))
     fprobs = lambda l: [{
         "type": i["item_type"],
@@ -232,13 +232,13 @@ def prettify_gacha_details(data: dict):
         "icon": i["item_img"],
     } for i in l] if l else []
     return {
-        "gacha_type": {
+        "banner_type_name": {
             100:"Novice Wishes",
             200:"Permanent Wish",
             301:"Character Event Wish",
             302:"Weapon Event Wish"
         }[int(data["gacha_type"])],
-        "gacha_type_id":int(data["gacha_type"]),
+        "banner_type": int(data["gacha_type"]),
         "banner": re.sub(r'<.*?>','',data["title"]).strip(),
         "title": data["title"],
         "content": data["content"],

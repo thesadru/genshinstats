@@ -8,7 +8,7 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from typing import List, Union
+from typing import Any, Dict, List, Optional, overload
 from urllib.parse import urljoin
 
 from requests import Session
@@ -21,7 +21,7 @@ logger = logging.getLogger('genshinstats')
 session = Session()
 session.headers.update({
     # required headers
-    "x-rpc-app_version":"1.5.0", # global api uses 1.x.x, chinese api uses 2.x.x
+    "x-rpc-app_version":"1.5.0", # overseas api uses 1.x.x, chinese api uses 2.x.x
     "x-rpc-client_type":"4",
     "x-rpc-language":"en-us",
     # authentications headers
@@ -30,19 +30,22 @@ session.headers.update({
     "user-agent":USER_AGENT
 })
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
-OS_BBS_URL = "https://bbs-api-os.hoyolab.com/" # global
+OS_BBS_URL = "https://bbs-api-os.hoyolab.com/" # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/" # chinese
 
-def set_cookie(ltuid: Union[int,str], ltoken: str, **kwargs) -> None:
+# typing overloads for set_cookie
+@overload
+def set_cookie(*, ltuid: int, ltoken: str): ...
+@overload
+def set_cookie(**kwargs: Any): ...
+
+def set_cookie(**kwargs) -> None:
     """Basic configuration function, required for anything beyond search.
     
     ltuid and ltoken must be copied from your browser's cookies.
     Any other kwargs provided will be also set as as a cookie.
     """
-    kwargs.update({
-        'ltuid': str(ltuid),
-        'ltoken': ltoken
-    }) 
+    kwargs = {k:str(v) for k,v in kwargs.items()}
     session.cookies.update(kwargs)
 
 def set_cookie_header(header: str) -> None:
@@ -51,7 +54,7 @@ def set_cookie_header(header: str) -> None:
     c.load(header)
     session.cookies.update(c)
 
-def get_browser_cookies(browser: str=None) -> dict:
+def get_browser_cookie(browser: Optional[str] = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
     
     If a specifc browser is set, gets data from that browser only.
@@ -60,22 +63,21 @@ def get_browser_cookies(browser: str=None) -> dict:
     import browser_cookie3
     load = getattr(browser_cookie3,browser.lower()) if browser else browser_cookie3.load
     # we want to keep user data secure, so don't fetch any unnecessary cookies
-    cookie = {c.name:c.value for c in load(domain_name='.mihoyo') if c.name in ('ltuid', 'ltoken')}
+    cookie = {c.name:str(c.value) for c in load(domain_name='.mihoyo') if c.name in ('ltuid', 'ltoken')}
     return cookie
 
-def set_cookie_auto(browser: str=None) -> None:
-    """Like set_cookie, but gets the cookies by itself.
+def set_cookie_auto(browser: str = None) -> None:
+    """Like set_cookie, but gets the cookies by itself from your browser.
     
     Requires the module browser-cookie3
-    Be aware that this process can take up to 10 seconds, 
-    so it should be ran only once.
-    To speed it up select a browser.
+    Be aware that this process can take up to 10 seconds.
+    To speed it up you may select a browser.
     
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     logger.debug(f'Loading cookies automatically.')
-    session.cookies.update(get_browser_cookies(browser))
+    session.cookies.update(get_browser_cookie(browser))
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
@@ -87,7 +89,7 @@ def get_ds_token(salt: str) -> str:
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest() # hash and get hex
     return f'{t},{r},{h}'
 
-def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
+def fetch_endpoint(endpoint: str, chinese: bool=False, **kwargs) -> dict:
     """Fetch an enpoint from the hoyolabs API.
     
     Takes in an endpoint url which is joined with the base url.
@@ -111,11 +113,11 @@ def fetch_endpoint(endpoint: str, *, chinese: bool=False, **kwargs) -> dict:
     
     raise_for_error(data)
 
-def get_user_info(uid: int, raw: bool=False) -> dict:
-    """Gets game user info of a user based on their uid.
+def get_stats(uid: int) -> dict:
+    """Gets stats of a user.
     
-    Game user info contain the main information regarding a user.
-    Contains owned characters, stats, city and world explorations and role.
+    Stats contain the main information regarding a user, 
+    that includes stats, characters and explorations.
     """
     server = recognize_server(uid)
     data = fetch_endpoint(
@@ -123,17 +125,22 @@ def get_user_info(uid: int, raw: bool=False) -> dict:
         chinese=is_chinese(uid),
         params=dict(server=server,role_id=uid)
     )
-    return data if raw else prettify_user_info(data)
+    return prettify_stats(data)
 
-def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: bool=False) -> list:
-    """Gets characters of a user set by their ids.
+def get_characters(uid: int, character_ids: Optional[List[int]] = None, lang: str = 'en-us') -> list:
+    """Gets characters of a user.
     
     Characters contain info about their level, constellation, weapon, and artifacts.
     Talents are not included.
     
+    If character_ids are provided gets only characters with those ids.
+    
     Change the language with lang, 
     possible langs can be found with get_langs() under the value field.
     """
+    if character_ids is None:
+        character_ids = [i['id'] for i in get_stats(uid)['characters']]
+    
     server = recognize_server(uid)
     data = fetch_endpoint(
         "game_record/genshin/api/character",
@@ -142,22 +149,9 @@ def get_characters(uid: int, character_ids: List[int], lang: str='en-us', raw: b
         json=dict(character_ids=character_ids,role_id=uid,server=server), # POST uses the body instead
         headers={'x-rpc-language':lang},
     )["avatars"]
-    return data if raw else prettify_characters(data)
+    return prettify_characters(data)
 
-def get_all_characters(uid: int, lang: str='en-us', raw: bool=False) -> list:
-    """Gets all characters of a user.
-    
-    Characters contain info about their level, constellation, weapon, and artifacts.
-    Talents are not included.
-    
-    Change the language with lang, 
-    possible langs can be found with get_langs() under the value field.
-    """
-    characters = get_user_info(uid)['characters']
-    ids = [i['id'] for i in characters]
-    return get_characters(uid,ids,lang,raw)
-
-def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
+def get_spiral_abyss(uid: int, previous: bool = False) -> dict:
     """Gets how far the user has gotten in spiral abyss and their season progress.
     
     Spiral abyss info contains their progress, stats and individual completes.
@@ -171,4 +165,4 @@ def get_spiral_abyss(uid: int, previous: bool=False, raw: bool=False) -> dict:
         chinese=is_chinese(uid),
         params=dict(server=server,role_id=uid,schedule_type=schedule_type)
     )
-    return data if raw else prettify_spiral_abyss(data)
+    return prettify_spiral_abyss(data)
