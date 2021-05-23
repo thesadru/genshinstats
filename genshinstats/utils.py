@@ -5,6 +5,10 @@ from typing import Optional
 
 from .errors import AccountNotFound
 
+__all__ = [
+    'USER_AGENT', 'recognize_server', 'is_game_uid', 'is_chinese', 'get_output_log'
+]
+
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 
 def recognize_server(uid: int) -> str:

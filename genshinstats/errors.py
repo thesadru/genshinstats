@@ -3,7 +3,6 @@
 These take in only a single argument: msg.
 It's possible to add retcodes and the original api response message with `.set_reponse()`.
 """
-import re
 from typing import NoReturn
 
 class GenshinStatsException(Exception):
@@ -36,18 +35,9 @@ class DataNotPublic(GenshinStatsException):
 
 class CodeRedeemException(GenshinStatsException):
     """Code redemption failed."""
-class RedeemCooldown(CodeRedeemException):
-    """Can claim codes only every 5 seconds."""
-    cooldown: int = 5
-    def set_response(self, response: dict):
-        super().set_response(response)
-        self.cooldown = int(re.search(r'\d+',self.orig_msg).group())
-        self.msg = self.msg.format(self.cooldown)
 
 class SignInException(GenshinStatsException):
     """Sign-in failed"""
-class AlreadySignedIn(SignInException):
-    """Already signed in, cannot sign in again."""
 
 class GachaLogException(GenshinStatsException):
     """Base GachaLog Exception."""
@@ -65,20 +55,21 @@ def raise_for_error(response: dict) -> NoReturn:
     error = {
         # general
         -100:  NotLoggedIn('Login cookies have not been provided or are incorrect.'),
+        10001: NotLoggedIn('Login cookies have not been provided or are incorrect.'),
         10102: DataNotPublic('User\'s data is not public'),
         1009:  AccountNotFound('Could not find user; uid may not be valid.'),
         -1:    AccountNotFound('Could not find user; uid may not be valid.'),
         -10002:AccountNotFound('Cannot get rewards info. Account has no game account binded to it.'),
+        -108:  GenshinStatsException('Language is not valid.'),
         # code redemption
         -2003: CodeRedeemException('Invalid redemption code'),
         -2017: CodeRedeemException('Redemption code has been claimed already.'),
         -2001: CodeRedeemException('Redemption code has expired.'),
         -2021: CodeRedeemException('Cannot claim codes for account with adventure rank lower than 10.'),
         -1073: CodeRedeemException('Cannot claim code. Account has no game account bound to it.'),
-        -2016: RedeemCooldown('Redemption in cooldown. Please try again in {} second(s).'),
         # sign in
-        -5003: AlreadySignedIn('Already claimed daily reward, try again tomorrow.'),
-        2001:  AlreadySignedIn('Already checked in today, wait at least a day before checking-in again.'),
+        -5003: SignInException('Already claimed daily reward, try again tomorrow.'),
+        2001:  SignInException('Already checked in today, wait at least a day before checking-in again.'),
         # gacha log
         -100:  InvalidAuthkey('Authkey is not valid.') if response['message']=='authkey error' else 
                 NotLoggedIn('Login cookies have not been provided or are incorrect.'),
@@ -86,3 +77,5 @@ def raise_for_error(response: dict) -> NoReturn:
     }.get(response['retcode'], GenshinStatsException("{} Error ({})"))
     error.set_response(response)
     raise error
+
+del NoReturn # so we don't have to bother with __all__

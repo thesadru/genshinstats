@@ -4,6 +4,7 @@ import os
 import time
 import unittest
 import warnings
+import contextlib
 
 import genshinstats as gs
 
@@ -20,8 +21,8 @@ class GenshinStatsTest(unittest.TestCase):
         gs.set_cookie(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
     def test_recognize_server(self):
         self.assertEqual(gs.recognize_server(uid),'os_euro')
-    def test_stats(self):
-        data['stats'] = gs.get_stats(uid)
+    def test_user_stats(self):
+        data['stats'] = gs.get_user_stats(uid)
     def test_characters(self):
         data['characters'] = gs.get_characters(uid)
     def test_spiral_abyss(self):
@@ -109,6 +110,9 @@ class AccountSpecificTests(unittest.TestCase):
             gs.set_cookie_auto()
     def test_game_uids(self):
         gs.get_game_accounts()
+    def test_check_in(self):
+        with contextlib.suppress(gs.SignInException):
+            gs.hoyolab_check_in()
     @unittest.skip('Redeem code takes too long')
     def test_redeem_code(self):
         # takes like 30s to run
@@ -116,19 +120,14 @@ class AccountSpecificTests(unittest.TestCase):
             gs.redeem_code('genshingift',uid)
         with self.assertRaises(gs.CodeRedeemException):
             gs.redeem_code('invalid',uid)
-        with self.assertRaises(gs.RedeemCooldown):
-            gs.redeem_code('genshingift',sleep=False)
-    def test_check_in(self):
-        try:
-            gs.hoylab_check_in()
-        except gs.AlreadySignedIn:
-            pass
     def test_daily_reward(self):
         gs.claim_daily_reward()
     def test_daily_reward_info(self):
         gs.get_daily_reward_info()
-    def test_daily_awards(self):
-        gs.get_daily_rewards()
+    def test_monthly_rewards(self):
+        gs.get_monthly_rewards()
+    def test_claimed_rewards(self):
+        next(gs.get_claimed_rewards())
 
 if __name__ == '__main__':
     unittest.main()

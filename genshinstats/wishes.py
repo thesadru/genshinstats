@@ -10,7 +10,7 @@ import re
 from functools import lru_cache
 from itertools import islice
 from tempfile import gettempdir
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Dict, Iterator, List, Optional
 from urllib.parse import unquote, urljoin
 
 from requests import Session
@@ -18,6 +18,12 @@ from requests import Session
 from .errors import MissingAuthKey, raise_for_error
 from .pretty import *
 from .utils import USER_AGENT, get_output_log
+
+__all__ = [
+    'extract_authkey', 'get_authkey', 'set_authkey', 'get_banner_ids',
+    'fetch_gacha_endpoint', 'get_banner_types', 'get_wish_history',
+    'get_wish_items', 'get_banner_details', 'get_uid_from_authkey'
+]
 
 logger = logging.getLogger('genshinstats')
 GENSHIN_LOG = get_output_log()
@@ -41,8 +47,7 @@ gacha_session = Session()  # extra session for static resources
 
 def _read_logfile(logfile: str = None) -> str:
     if GENSHIN_LOG is None:
-        raise FileNotFoundError(
-            'No Genshin Installation was found, could not get gacha data.')
+        raise FileNotFoundError('No Genshin Installation was found, could not get gacha data.')
     with open(logfile or GENSHIN_LOG) as file:
         return file.read()
 
@@ -128,10 +133,7 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> dict:
 
 @lru_cache()
 def get_banner_types(authkey: str = None, lang: str = 'en') -> Dict[int, str]:
-    """Gets a list of banner types with their keys
-
-    Returns a list of dicts.
-    """
+    """Gets ids for all banners and their names"""
     banners = fetch_gacha_endpoint(
         "getConfigList",
         authkey=authkey,

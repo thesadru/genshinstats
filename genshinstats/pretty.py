@@ -188,6 +188,14 @@ def prettify_characters(data: list):
     """Returns a prettified version of get_characters."""
     return [prettify_character(i) for i in data]
 
+def prettify_langs(data: list):
+    return [{
+        'name': l['name'],
+        'label': l['label'],
+        'code': l['value'],
+        'short_code': l['value'] if 'zh' in l['value'] else l['value'].split('-')[0]
+    } for l in data]
+
 def prettify_wish_history(data: list, banner_name: str = None):
     return [{
         "type": i["item_type"],
@@ -195,8 +203,8 @@ def prettify_wish_history(data: list, banner_name: str = None):
         "rarity": int(i["rank_type"]),
         "time": i["time"],
         "id": int(i["id"]),
+        "banner": banner_name,
         "banner_type": int(i["gacha_type"]),
-        "banner_name": banner_name,
     } for i in data]
 
 def prettify_wish_items(data: list):
