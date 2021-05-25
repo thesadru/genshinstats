@@ -18,7 +18,7 @@ hoyolab_uid = 8366222
 class GenshinStatsTest(unittest.TestCase):
     @staticmethod
     def setUpClass():
-        gs.set_cookie(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
+        gs.set_cookies(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
     def test_recognize_server(self):
         self.assertEqual(gs.recognize_server(uid),'os_euro')
     def test_user_stats(self):
@@ -59,8 +59,8 @@ class GenshinStatsTest(unittest.TestCase):
     def test_all_banner_ids(self):
         data['banner_ids'] = gs.get_banner_ids()
     def test_banner_details(self):
-        data['banner_details'] = gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53")
-        data['banner_details_all'] = [gs.get_banner_details(i) for i in gs.get_banner_ids()]
+        gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53")
+        data['banner_details'] = [gs.get_banner_details(i) for i in gs.get_banner_ids()]
     def test_authkey_param(self):
         authkey = gs.extract_authkey(gs.wishes._read_logfile())
         list(gs.get_wish_history(200, size=20, authkey=authkey))
@@ -99,15 +99,15 @@ class GenshinStatsTest(unittest.TestCase):
     
     @staticmethod
     def tearDownClass():
-        with open('test.json','w', encoding='utf-8') as file:
-            json.dump(data,file,indent=4,ensure_ascii=False)
+        with open('test.json', 'w', encoding='utf-8') as file:
+            json.dump(data, file, indent=4, ensure_ascii=False)
 
 class AccountSpecificTests(unittest.TestCase):
     @staticmethod
     def setUpClass():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", ResourceWarning)
-            gs.set_cookie_auto()
+            gs.set_cookies_auto()
     def test_game_uids(self):
         gs.get_game_accounts()
     def test_check_in(self):

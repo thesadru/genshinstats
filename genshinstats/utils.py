@@ -1,7 +1,7 @@
 """Various utility functions for genshinstats."""
 import os.path
 import re
-from typing import Optional
+from typing import Optional, Union
 
 from .errors import AccountNotFound
 
@@ -30,7 +30,7 @@ def is_game_uid(uid: int) -> bool:
     """Recognizes whether the uid is a game uid."""
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
 
-def is_chinese(x) -> bool:
+def is_chinese(x: Union[int, str]) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(('cn','1','5'))
 

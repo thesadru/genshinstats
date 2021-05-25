@@ -105,7 +105,7 @@ def get_banner_ids(logfile: str = None) -> List[str]:
     ids = re.findall(r'OnGetWebViewPageFinish:https://.+?gacha_id=([^&]+)', log)
     return list(set(ids))
 
-def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> dict:
+def fetch_gacha_endpoint(endpoint: str, authkey: Optional[str] = None, **kwargs) -> dict:
     """Fetch an enpoint from mihoyo's gacha info.
 
     Takes in an endpoint url which is joined with the base url.

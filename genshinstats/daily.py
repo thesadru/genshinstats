@@ -34,7 +34,7 @@ def get_claimed_rewards(chinese: bool=False) -> Iterator[dict]:
     while True:
         data = fetch_endpoint(
             url+"award",
-            params=dict(act_id=act_id, current_page=current_page, page_size=31)
+            params=dict(act_id=act_id, current_page=current_page)
         )['list']
         yield from data
         if len(data) < 10:
@@ -66,7 +66,7 @@ def claim_daily_reward(chinese: bool=False, lang: str = 'en-us') -> Optional[dic
     fetch_endpoint(
         url+"sign",
         method='POST',
-        params=dict(act_id=act_id,uid=account['game_uid'],region=account['region'])
+        params=dict(act_id=act_id, uid=account['game_uid'], region=account['region'])
     )
     rewards = get_monthly_rewards(chinese, lang=lang)
     return rewards[claimed_rewards + 1]
