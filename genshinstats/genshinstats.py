@@ -18,7 +18,7 @@ from .pretty import *
 from .utils import USER_AGENT, is_chinese, recognize_server
 
 __all__ = [
-    'session', 'set_cookie', 'set_cookie_header', 'get_browser_cookie', 'set_cookie_auto',
+    'session', 'set_cookies', 'set_cookie_header', 'get_browser_cookies', 'set_cookies_auto',
     'get_ds_token', 'fetch_endpoint', 'get_user_stats', 'get_characters', 'get_spiral_abyss'
 ]
 
@@ -40,13 +40,13 @@ CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
 # typing overloads for set_cookie
 @overload
-def set_cookie(*, ltuid: int, ltoken: str): ...
+def set_cookies(*, ltuid: int, ltoken: str): ...
 @overload
-def set_cookie(*, account_id: int, cookie_token: str): ...
+def set_cookies(*, account_id: int, cookie_token: str): ...
 @overload
-def set_cookie(**kwargs: Any): ...
+def set_cookies(**kwargs: Any): ...
 
-def set_cookie(**kwargs) -> None:
+def set_cookies(**kwargs) -> None:
     """Logs in using a cookie, this function must be run at least once
     
     ltuid and ltoken must be copied from your browser's cookies.
@@ -61,7 +61,7 @@ def set_cookie_header(header: str) -> None:
     c.load(header)
     session.cookies.update(c)
 
-def get_browser_cookie(browser: Optional[str] = None) -> Dict[str, str]:
+def get_browser_cookies(browser: Optional[str] = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
     
     If a specifc browser is set, gets data from that browser only.
@@ -78,7 +78,7 @@ def get_browser_cookie(browser: Optional[str] = None) -> Dict[str, str]:
         cookie.update(c)
     return cookie
 
-def set_cookie_auto(browser: str = None) -> None:
+def set_cookies_auto(browser: str = None) -> None:
     """Like set_cookie, but gets the cookies by itself from your browser.
     
     Requires the module browser-cookie3
@@ -89,7 +89,7 @@ def set_cookie_auto(browser: str = None) -> None:
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     logger.debug(f'Loading cookies automatically.')
-    session.cookies.update(get_browser_cookie(browser))
+    session.cookies.update(get_browser_cookies(browser))
 
 def get_ds_token(salt: str) -> str:
     """Creates a new ds token.
