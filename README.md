@@ -186,6 +186,14 @@ gachalog.get_gacha_details(...,lang='fr-fr')
 
 # faq
 ## How can I get my cookie?
+### Method 1
+```py
+cookie_dict = gs.get_browser_cookie("chrome") # search specific browser
+print(cookie_dict)
+# {'ltoken': 'aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh', 'ltuid': '93827185'}
+```
+> requires `cookie-browser3`, can take up to 10s
+### Method 2
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
 2. login to your account
 3. press `F12` to open inspect mode (aka Developer Tools)
