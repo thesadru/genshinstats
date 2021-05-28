@@ -10,7 +10,7 @@ import re
 from functools import lru_cache
 from itertools import islice
 from tempfile import gettempdir
-from typing import Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 from urllib.parse import unquote, urljoin
 
 from requests import Session
@@ -37,7 +37,7 @@ session.headers.update({
 })
 session.params = {
     # required params
-    "authkey_ver": 1,
+    "authkey_ver": "1",
     "lang": "en",
     # authentications params
     "authkey": "",
@@ -46,6 +46,7 @@ gacha_session = Session()  # extra session for static resources
 
 
 def _read_logfile(logfile: str = None) -> str:
+    """Returns the contents of a logfile"""
     if GENSHIN_LOG is None:
         raise FileNotFoundError('No Genshin Installation was found, could not get gacha data.')
     with open(logfile or GENSHIN_LOG) as file:
@@ -78,7 +79,7 @@ def get_authkey(logfile: str = None) -> str:
     raise MissingAuthKey('No authkey could be found in the logs or in a tempfile. '
                          'Open the history in-game first before attempting to request it.')
 
-def set_authkey(authkey: Optional[str] = None, url: Optional[str] = None, logfile: Optional[str] = None) -> None:
+def set_authkey(authkey: str = None, url: str = None, logfile: str = None) -> None:
     """Sets an authkey for log requests.
 
     passing in authkey will simply save it, 
@@ -89,7 +90,7 @@ def set_authkey(authkey: Optional[str] = None, url: Optional[str] = None, logfil
     if authkey is not None:
         pass
     elif url is not None:
-        authkey = extract_authkey(url)
+        authkey = extract_authkey(url) # type: ignore
         if authkey is None:
             raise ValueError("url does not have an authkey parameter")
     else:
@@ -105,7 +106,7 @@ def get_banner_ids(logfile: str = None) -> List[str]:
     ids = re.findall(r'OnGetWebViewPageFinish:https://.+?gacha_id=([^&]+)', log)
     return list(set(ids))
 
-def fetch_gacha_endpoint(endpoint: str, authkey: Optional[str] = None, **kwargs) -> dict:
+def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[str, Any]:
     """Fetch an enpoint from mihoyo's gacha info.
 
     Takes in an endpoint url which is joined with the base url.
@@ -142,7 +143,7 @@ def get_banner_types(authkey: str = None, lang: str = 'en') -> Dict[int, str]:
     return {int(i['key']): i['name'] for i in banners}
 
 def get_wish_history(
-    banner_type: Optional[int] = None, size: int = None, 
+    banner_type: int = None, size: int = None, 
     authkey: str = None, end_id: int = 0, lang: str = 'en'
 ) -> Iterator[dict]:
     """Gets wish history.

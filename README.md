@@ -1,5 +1,3 @@
-English | [简体中文](./README_zh-cn.md)
-
 # genshinstats
 [![Downloads](https://pepy.tech/badge/genshinstats)](https://pepy.tech/project/genshinstats)
 [![Downloads/month](https://pepy.tech/badge/genshinstats/month)](https://pepy.tech/project/genshinstats)
@@ -8,8 +6,6 @@ English | [简体中文](./README_zh-cn.md)
 [![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/graphs/code-frequency)
 [![License](https://img.shields.io/github/license/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/blob/master/LICENSE)
 
-THIS IS THE 1.4 DEV VERSION, THE SCRIPT IS CURRENTLY VERY UNSTABLE
-
 This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
 The api endpoints used in this project are not publicly known but are free to use for third party tools, so I have decided to get these a bit more publicity by making a wrapper for them.
 
@@ -17,7 +13,7 @@ Be aware that this project is currently still in development and therefore can c
 If you're making your own module that has genshinstats as a dependency, remember to explicitly set the version it should use.
 
 ## how to install
-using [pypi](https://pypi.org/project/genshinstats/)
+using [pip](https://pypi.org/project/genshinstats/)
 ```
 pip install genshinstats
 ```
@@ -30,37 +26,37 @@ python setup.py install
 
 # how to use
 Import the `genshinstats` module and set the cookie to login.
-To set the cookie use `set_cookie(ltuid=..., ltoken=...)`.
-Pass your own cookie values into these fields. ([how can I get my cookie?](#how-can-I-get-my-cookie))
+To set the cookie use `set_cookies(ltuid=..., ltoken=...)`.
+Pass your own cookie values into these fields. ([how can I get my cookies?](#how-can-I-get-my-cookies))
 The cookie is required and will raise an error if missing.
 
 All functions are documented and type hinted.
 
 [API documentation](https://thesadru.github.io/pdoc/genshinstats/)
+
 # examples
 Simple examples of usage:
 ```py
 import genshinstats as gs # import module
-gs.set_cookie(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # login
+gs.set_cookies(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # login
 
 uid = 710785423
-user_info = gs.get_user_info(uid) # get user info with a uid
-total_characters = len(user_info['characters']) # get the amount of characters
+data = gs.get_user_stats(uid) # get user info with a uid
+total_characters = len(data['characters']) # get the amount of characters
 print('user "sadru" has a total of',total_characters,'characters')
 ```
 > Cookies should be your own. These are just some example cookies of an account that can be deleted at any time.
 ```py
-stats = gs.get_user_info(uid)['stats']
+stats = gs.get_user_stats(uid)['stats']
 for field,value in stats.items():
-    print(f"{field.replace('_',' ')}: {value}")
+    print(f"{field}: {value}")
 # achievements: 210
-# active days: 121
+# active_days: 121
 # characters: 19
 # ...
 ```
-
 ```py
-characters = gs.get_all_characters(uid)
+characters = gs.get_characters(uid)
 for char in characters:
     print(f"{char['rarity']}* {char['name']:10} | lvl {char['level']:2} C{char['constellation']}")
 # 4* Beidou     | lvl 80 C1
@@ -71,37 +67,33 @@ for char in characters:
 ```
 
 ```py
-spiral_abyss = gs.get_spiral_abyss(uid,previous=True)
+spiral_abyss = gs.get_spiral_abyss(uid, previous=True)
 stats = spiral_abyss['stats']
 for field,value in stats.items():
-    print(f"{field.replace('_',' ')}: {value}")
-# total battles: 14
-# total wins: 7
-# max floor: 9-1
-# total stars: 18
+    print(f"{field}: {value}")
+# total_battles: 14
+# total_wins: 7
+# max_floor: 9-1
+# total_stars: 18
 ```
 
 It's possible to set the cookies with a header
 ```py
-gs.set_cookie_header("""
-ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035
-""")
+gs.set_cookie_header("ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035")
 ```
 Or set them automatically by getting them from a browser
 ```py
-gs.set_cookie_auto() # search all browsers
-gs.set_cookie_auto('chrome') # search specific browser
+gs.set_cookies_auto() # search all browsers
+gs.set_cookies_auto('chrome') # search specific browser
 ```
 > requires `cookie-browser3`, can take up to 10s
 ## submodules
-### gachalog
-Gets your gacha pull logs.
+### wishes
+Gets your wish history.
 For this you must first open the history/details page in genshin impact,
 the script will then get all required data by itself.
 ```py
-types = gs.get_gacha_types() # get all possible types
-key = types[2]['key'] # name == "Character Event Wish", key == '301'
-for i in gs.get_gacha_log(key): # get the gacha log
+for i in gs.get_wish_history():
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 # 2021-03-22 09:50:12 - Razor (4* Character)
 # 2021-03-22 09:50:12 - Harbinger of Dawn (3* Weapon)
@@ -110,14 +102,23 @@ for i in gs.get_gacha_log(key): # get the gacha log
 # ...
 ```
 ```py
-# get all gacha pulls at once
-for i in gs.get_entire_gacha_log():
+types = gs.get_banner_types() # get all possible types
+print(types)
+# {
+#   200: 'Permanent Wish', 
+#   100: 'Novice Wishes', 
+#   301: 'Character Event Wish', 
+#   302: 'Weapon Event Wish'
+# }
+
+# get pulls only from a specific banner
+for i in gs.get_wish_history(301):
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
 ```
 ```py
-ids = gs.get_all_gacha_ids() # get all possible gacha ids (only counts opened details pages)
-for i in ids:
-    details = gs.get_gacha_details(i) 
+banner_ids = gs.get_banner_ids()
+for i in banner_ids:
+    details = gs.get_banner_details(i) 
     print(f"{details['gacha_type']} - {details['banner']}")
     print('5 stars:', ', '.join(i['name'] for i in details['r5_up_items']))
     print('4 stars:', ', '.join(i['name'] for i in details['r4_up_items']))
@@ -127,10 +128,14 @@ for i in ids:
 # 4 stars: The Alley Flash, Wine and Song, Favonius Greatsword, Favonius Warbow, Dragon's Bane
 # ...
 ```
+> `get_all_gacha_ids()` gets a list of all banners whose details page has been opened in the game.
+>
+> Basically uses the same approach as `get_authkey`
+
 View other's history by passing in an authkey:
 ```py
 authkey = "t5QMiyrenV50CFbqnB4Z+aG4ltprY1JxM5YoaChr9QH0Lp6rK5855xxa1P55..."
-gs.get_gacha_log(301,20,authkey=authkey)
+gs.get_wish_history(size=20,authkey=authkey)
 ```
 Or by directly setting the authkey:
 ```py
@@ -145,9 +150,19 @@ gs.set_authkey(logfile='other_output_log.txt')
 ### signin
 Automatically get daily sign in rewards for the currently logged-in user.
 ```py
-info = gs.get_daily_reward_info()
-print('total rewards claimed:',info['total_sign_day'])
-gs.sign_in() # signs you in, returns a bool whether it succeeded
+signed_in, claimed_rewards = gs.get_daily_reward_info()
+print('total rewards claimed:', claimed_rewards)
+
+reward = gs.claim_daily_reward()
+if reward is not None:
+    print(f"Claimed daily reward - {reward['cnt']} {reward['name']}")
+else:
+    print("Could not claim daily reward")
+```
+```py
+# get all claimed rewards
+for i in gs.get_claimed_rewards():
+    print(i['cnt'], i['name'])
 ```
 ### hoyolab
 Miscalenious stuff for mihoyo's hoyolab. Has searching, auto check-in and code redemption.
@@ -157,44 +172,89 @@ for user in gs.search('sadru'):
     print(f"{user['nickname']} ({user['uid']}) - \"{user['introduce']}\"")
 
 # check in to hoyolab
-gs.check_in() # raises in cannot check in
-
-# try to redeem a code
-gs.redeem_code("GENSHINGIFT")
+gs.hoyolab_check_in()
 
 # get a record card; has user nickname and game uid
 card = gs.get_record_card(8366222)
 print(f"{card['nickname']} ({card['game_role_id']}) - AR {card['level']}")
 
-# get an in-game uid from a community uid directly
+# get an in-game uid from a hoyolab uid directly
 uid = 8366222
-# if it's an actual community uid
+# if it's an actual hoyolab uid
 if not gs.is_game_uid(uid): 
-    uid = gs.get_uid_from_community(uid)
+    uid = gs.get_uid_from_hoyolab_uid(uid)
 ```
+You can also redeem gift codes from events such as livestreams
+```py
+gs.redeem_code('GENSHINGIFT')
+```
+> `redeem_code()` requires a special form of authentication: an `account_id` and `cookie_token` cookies.
+> You can get these by grabbing cookies from [the official genshin site](https://genshin.mihoyo.com/en/gift) instead of hoyolabs.
 
 ## change language
 Some api endpoints support changing languages, you can see them listed here:
 ```py
-genshinstats.get_all_characters(...,lang='fr-fr')
+get_characters(..., lang='fr-fr')
 
-gachalog.get_gacha_types(lang='fr')
-gachalog.get_gacha_log(...,lang='fr')
-gachalog.get_gacha_items(lang='fr-fr')
-gachalog.get_gacha_details(...,lang='fr-fr')
+get_banner_types(lang='fr')
+get_wish_history(..., lang='fr')
+get_wish_items(lang='fr-fr')
+get_banner_details(..., lang='fr-fr')
 ```
 > endpoints can use two types of values, long and short. Long is the default value in `gs.get_langs()`, short is only the first part of a lang (`en-us` -> `en`).
 > Chinese has simplified and traditional options, so if you use chinese the short version is the same as the long version (`zh-cn` -> `zh-cn`)
 
+## using genshinstats asynchronously (for example with a discord bot)
+This project does not support [asyncio](https://docs.python.org/3/library/asyncio) out of the box but it's fairly easy to use it asynchronously with [futures](https://docs.python.org/3/library/concurrent.futures).
+I recommend you take advantage of `asyncio.wrap_future()`. This function takes in a `concurrent.futures.Future` object and returns an awaitable `asyncio.Future` object.
+To use this function you must create a `ThreadPoolExecutor` and turn submitted futures in asyncio futures.
+```py
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import genshinstats as gs
+
+gs.set_cookies_auto()
+
+executor = ThreadPoolExecutor()
+async def asyncify(func, *args, **kwargs):
+    # a function that wraps a function as a coroutine
+    future = executor.submit(func, *args, **kwargs)
+    return await asyncio.wrap_future(future)
+
+async def main():
+    characters = await asyncify(gs.get_characters, 710785423)
+    print(characters)
+
+asyncio.run(main())
+executor.shutdown() # remember to close the executor at the end!
+```
+
 # faq
-## How can I get my cookie?
+## How can I get my cookies?
+### automatic
+You can call `get_browser_cookies` to get a dictionary of cookies that are needed for authentication.
+```py
+import genshinstats as gs
+cookies = gs.get_browser_cookies()
+print(cookies)
+# {'ltuid': '93827185', 'ltoken': 'aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh'}
+```
+You can then use these cookies in your actual code or save them as enviroment variables
+```py
+gs.set_cookies(ltuid=93827185, ltoken='aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh')
+```
+You can also just set the cookies using `set_cookies_auto` which calls `get_browser_cookies` every time you run the script
+```py
+gs.set_cookies_auto()
+```
+### manual
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
 2. login to your account
 3. press `F12` to open inspect mode (aka Developer Tools)
 4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
 5. copy `ltuid` and `ltoken`
-6. use `set_cookie(ltuid=..., ltoken=...)` in your code
-> It is possibe that ltuid or ltoken are for some reason not avalible in your cookies (blame it on mihoyo).
+6. use `set_cookies(ltuid=..., ltoken=...)` in your code
+> It is possible that ltuid or ltoken are for some reason not avalible in your cookies (blame it on mihoyo).
 > In this case there are probably the old `account_id` and `cookie_token` cookies, so use those with `set_cookie(account_id=..., cookie_token=...)`.
 >
 > If not even those are avalible go to https://account.mihoyo.com/#/login and use the `login_ticket` cookie in `https://webapi-os.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket=<...>`
@@ -218,8 +278,8 @@ They can of course access your data like email, phone number and real name, howe
 
 TL;DR unless you have also given your password away your account cannnot be stolen.
 
-## How do I get the gacha history of other players?
-To get the gacha history of other players you must get their authkey and pass it as a keyword into `get_gacha_log` or `get_entire_gacha_log`. That will make the function return their gacha history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
+## How do I get the wish history of other players?
+To get the wish history of other players you must get their authkey and pass it as a keyword into `get_wish_history`. That will make the function return their wish history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
 
 To get the autkey you ask the player to press `ESC` while in the game and click the feedback button on the bottom left, then get them to send the url they get redirected to. You can then extract the authkey with `extract_authkey(url)` which you can then pass into the functions.
 
@@ -227,22 +287,15 @@ To get the autkey you ask the player to press `ESC` while in the game and click 
 No, all data is hosted on a single server in hongkong, so mihoyo doesn't bother with adding data that changes often like mora, primogems, items, artifact rolls, etc. Talents are also currently unavalible.
 All the data you can get should be already implemented. If you see an endpoint that is useful and hasn't been implemented yet please open an issue or contact me directly.
 
-## How does `set_cookie_auto()` work? Can my data be stolen with it?
-`set_cokie_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookie()`.
+## How does `set_cookies_auto()` work? Can my data be stolen with it?
+`set_cokies_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookies()`.
 When getting said cookies, they are filtered so only ones for mihoyo are ever pulled out. They will only ever be used as authentication and will never be sent anywhere else.
-
-## Why do you call wish history "gacha log" or "gacha history"?.
-In mihoyo's api the official name for the wish history is `GachaLog`, which is how I also decided to call my functions. The reason why I still call it gacha instead of wish is because I have played other gacha games before and got used to calling everything gacha.
-If you feel like you want to change it then you can open and issue and if enough people disagree with it I'll just change it. 
-For now the name will be staying fo backwards compatibility.
 
 ## What's the rate limit?
 As far as I know there is no rate limit, however I recommend you avoid spamming the api, as mihoyo can still ip ban you. My guess is that if you try to make more than 1 request per second the chances are mihoyo is not going to appreciate it.
 
-## How can I get an in-game uid from a hoyolab community uid?
-`get_uid_from_community(hoyolab_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game,  or a community one use `is_game_uid(uid)`.
-
-It is impossible to get a community uid from an in-game uid.
+## How can I get an in-game uid from a hoyolab uid?
+`get_uid_from_hoyolab(hoyolab_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game or a hoyolab one use `is_game_uid(uid)`.
 
 ## How can I get a user's username?
 Getting the user's username and adventure rank is possible only with their community uid. You can get them with `get_record_card(hoyolab_uid)` along with a bunch of other data.
@@ -258,10 +311,10 @@ Getting the user's username and adventure rank is possible only with their commu
 ```
 genshinstats.py    user stats and characters
 hoyolab.py         user hoyolab community info
-gachalog.py        gacha history
-signin.py          automatic sign in for hoyolabs
-errors.py          errors used by genshinstats
+wishes.py          wish history
+daily.py           automatic daily reward claiming
 utils.py           various utility functions
+errors.py          errors used by genshinstats
 ```
 ## versioning
 A.B.C.D (e.g. 1.3.9.2)

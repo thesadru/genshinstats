@@ -81,7 +81,7 @@ def get_uid_from_hoyolab_uid(hoyolab_uid: int) -> Optional[int]:
     card = get_record_card(hoyolab_uid)
     return int(card['game_role_id']) if card else None
 
-def redeem_code(code: str, uid: Optional[int] = None) -> None:
+def redeem_code(code: str, uid: int = None) -> None:
     """Redeems a gift code for the currently signed in user.
 
     Api endpoint for https://genshin.mihoyo.com/en/gift.
@@ -103,10 +103,12 @@ def redeem_code(code: str, uid: Optional[int] = None) -> None:
         )
     else:
         for account in get_game_accounts():
+            if account['level'] < 10:
+                continue # Cannot claim codes for account with adventure rank lower than 10.
             try:
                 redeem_code(code, account['game_uid'])
             except CodeRedeemException as e:
-                print(f"Redeem for {account['nickname']} ({account['game_uid']}) failed: {e}.")
+                print(f"Redeem for {account['nickname']} ({account['game_uid']}) failed: {e}")
             else:
-                print(f"Redeemed code for {account['nickname']} ({account['game_uid']}).")
-            time.sleep(5)
+                print(f"Redeemed code for {account['nickname']} ({account['game_uid']})")
+            time.sleep(5) # there's a ratelimit of 1 request every 5 seconds

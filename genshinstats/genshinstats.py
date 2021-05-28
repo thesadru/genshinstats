@@ -8,7 +8,7 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from typing import Any, Dict, List, Optional, overload
+from typing import Any, Dict, List, overload
 from urllib.parse import urljoin
 
 from requests import Session
@@ -38,7 +38,7 @@ DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
-# typing overloads for set_cookie
+# typing overloads for set_cookie (check PEP 484 for more info)
 @overload
 def set_cookies(*, ltuid: int, ltoken: str): ...
 @overload
@@ -47,21 +47,31 @@ def set_cookies(*, account_id: int, cookie_token: str): ...
 def set_cookies(**kwargs: Any): ...
 
 def set_cookies(**kwargs) -> None:
-    """Logs in using a cookie, this function must be run at least once
+    """Logs-in using a cookie, this function must be run at least once
     
-    ltuid and ltoken must be copied from your browser's cookies.
-    Any other kwargs provided will be also set as as a cookie.
+    The provided cookies can either be ltuid and ltoken or account_id and cookie_token.
+    Combination of both is also allowed.
     """
     kwargs = {k: str(v) for k, v in kwargs.items()}
     session.cookies.update(kwargs)
 
 def set_cookie_header(header: str) -> None:
-    """Like set_cookie, but you can set the header directly."""
-    c = SimpleCookie()
-    c.load(header)
-    session.cookies.update(c)
+    """Like set_cookie, but you can set the cookie with a header instead."""
+    session.cookies.update(SimpleCookie(header))
 
-def get_browser_cookies(browser: Optional[str] = None) -> Dict[str, str]:
+# possible alternatives for get_browser_cookies
+def get_browser_cookies_alt(browser: str = None) -> Dict[str, str]:
+    import browser_cookie3
+    load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
+    
+    cookies = {}
+    for domain in ('mihoyo', 'hoyolab'):
+        for c in load(domain_name=domain):
+            if c.name in ('ltuid', 'ltoken', 'account_id', 'cookie_token'):
+                cookies[c.name] = str(c.value)
+    return cookies
+
+def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
     
     If a specifc browser is set, gets data from that browser only.
@@ -71,12 +81,12 @@ def get_browser_cookies(browser: Optional[str] = None) -> Dict[str, str]:
     load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
     # For backwards compatibility we also get account_id and cookie_token
     # however we can't just get every cookie because there's sensitive information
-    cookie = {}
+    allowed_cookies = {'ltuid', 'ltoken', 'account_id', 'cookie_token'}
+    cookies = {}
     for domain in ('mihoyo', 'hoyolab'):
-        c = {c.name: str(c.value) for c in load(domain_name=domain)
-             if c.name in ('ltuid', 'ltoken', 'account_id', 'cookie_token')}
-        cookie.update(c)
-    return cookie
+        c = {c.name: str(c.value) for c in load(domain_name=domain) if c.name in allowed_cookies}
+        cookies.update(c)
+    return cookies
 
 def set_cookies_auto(browser: str = None) -> None:
     """Like set_cookie, but gets the cookies by itself from your browser.
@@ -92,16 +102,13 @@ def set_cookies_auto(browser: str = None) -> None:
     session.cookies.update(get_browser_cookies(browser))
 
 def get_ds_token(salt: str) -> str:
-    """Creates a new ds token.
-    
-    Uses an MD5 hash with a unique salt.
-    """
+    """Creates a new ds token for authentication."""
     t = int(time.time())  # current seconds
     r = ''.join(random.choices(string.ascii_letters, k=6))  # 6 random chars
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest()  # hash and get hex
     return f'{t},{r},{h}'
 
-def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> dict:
+def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, Any]:
     """Fetch an enpoint from the API.
 
     Takes in an endpoint url which is joined with the base url.
@@ -139,7 +146,7 @@ def get_user_stats(uid: int) -> dict:
     )
     return prettify_stats(data)
 
-def get_characters(uid: int, character_ids: Optional[List[int]] = None, lang: str = 'en-us') -> list:
+def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us') -> list:
     """Gets characters of a user.
     
     Characters contain info about their level, constellation, weapon, and artifacts.
