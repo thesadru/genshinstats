@@ -2,13 +2,11 @@
 
 Can search users, get record cards, active players...
 """
-from genshinstats.pretty import prettify_langs
 import logging
 import time
 from functools import lru_cache
 from typing import Dict, List, Optional
 
-from .errors import CodeRedeemException
 from .genshinstats import fetch_endpoint
 from .utils import recognize_server
 
@@ -41,13 +39,13 @@ def hoyolab_check_in() -> None:
     )
 
 @lru_cache()
-def get_langs() -> List[Dict[str, str]]:
-    """Gets a list of languages."""
+def get_langs() -> Dict[str, str]:
+    """Gets codes of all languages and their names"""
     data = fetch_endpoint(
         "community/misc/wapi/langs",
         params=dict(gids=2)
     )['langs']
-    return prettify_langs(data)
+    return {i['value']: i['name'] for i in data}
 
 def get_game_accounts(chinese: bool = False) -> List[dict]:
     """Gets all game accounts of the currently signed in player.
@@ -105,10 +103,5 @@ def redeem_code(code: str, uid: int = None) -> None:
         for account in get_game_accounts():
             if account['level'] < 10:
                 continue # Cannot claim codes for account with adventure rank lower than 10.
-            try:
-                redeem_code(code, account['game_uid'])
-            except CodeRedeemException as e:
-                print(f"Redeem for {account['nickname']} ({account['game_uid']}) failed: {e}")
-            else:
-                print(f"Redeemed code for {account['nickname']} ({account['game_uid']})")
+            redeem_code(code, account['game_uid'])
             time.sleep(5) # there's a ratelimit of 1 request every 5 seconds

@@ -6,11 +6,7 @@
 [![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/graphs/code-frequency)
 [![License](https://img.shields.io/github/license/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/blob/master/LICENSE)
 
-This project is meant to be a wrapper for the Genshin Impact's [hoyolab.com](https://www.hoyolab.com/genshin/) api.
-The api endpoints used in this project are not publicly known but are free to use for third party tools, so I have decided to get these a bit more publicity by making a wrapper for them.
-
-Be aware that this project is currently still in development and therefore can change at any moment.
-If you're making your own module that has genshinstats as a dependency, remember to explicitly set the version it should use.
+Genshinstats is an unofficial wrapper for the Genshin Impact api. It supports getting user stats, wish history and automatic claiming of daily check-in rewards.
 
 ## how to install
 using [pip](https://pypi.org/project/genshinstats/)
@@ -25,12 +21,10 @@ python setup.py install
 ```
 
 # how to use
-Import the `genshinstats` module and set the cookie to login.
-To set the cookie use `set_cookies(ltuid=..., ltoken=...)`.
-Pass your own cookie values into these fields. ([how can I get my cookies?](#how-can-I-get-my-cookies))
-The cookie is required and will raise an error if missing.
+You simply need to import the module and use the `set_cookies` function to login. 
+Since all mihoyo's apis are private there's no kind of api token or authentication header, instead you are required to use your own account cookies. ([how can I get my cookies?](#how-can-I-get-my-cookies))
 
-All functions are documented and type hinted.
+The best way to learn is with examples so I have provided a usage example for every function.
 
 [API documentation](https://thesadru.github.io/pdoc/genshinstats/)
 
@@ -104,12 +98,10 @@ for i in gs.get_wish_history():
 ```py
 types = gs.get_banner_types() # get all possible types
 print(types)
-# {
-#   200: 'Permanent Wish', 
-#   100: 'Novice Wishes', 
-#   301: 'Character Event Wish', 
-#   302: 'Weapon Event Wish'
-# }
+# {100: 'Novice Wishes',
+#  200: 'Permanent Wish',
+#  301: 'Character Event Wish',
+#  302: 'Weapon Event Wish'}
 
 # get pulls only from a specific banner
 for i in gs.get_wish_history(301):
@@ -159,8 +151,8 @@ if reward is not None:
 else:
     print("Could not claim daily reward")
 ```
+You can also get a list of all rewards you have claimed so far
 ```py
-# get all claimed rewards
 for i in gs.get_claimed_rewards():
     print(i['cnt'], i['name'])
 ```
@@ -184,7 +176,7 @@ uid = 8366222
 if not gs.is_game_uid(uid): 
     uid = gs.get_uid_from_hoyolab_uid(uid)
 ```
-You can also redeem gift codes from events such as livestreams
+You can also redeem gift codes mihoyo gives out during events such as livestreams
 ```py
 gs.redeem_code('GENSHINGIFT')
 ```
@@ -194,19 +186,48 @@ gs.redeem_code('GENSHINGIFT')
 ## change language
 Some api endpoints support changing languages, you can see them listed here:
 ```py
-get_characters(..., lang='fr-fr')
-
-get_banner_types(lang='fr')
-get_wish_history(..., lang='fr')
-get_wish_items(lang='fr-fr')
-get_banner_details(..., lang='fr-fr')
+get_characters
+get_banner_types
+get_wish_history
+get_wish_items
+get_banner_details
+claim_daily_reward
 ```
-> endpoints can use two types of values, long and short. Long is the default value in `gs.get_langs()`, short is only the first part of a lang (`en-us` -> `en`).
-> Chinese has simplified and traditional options, so if you use chinese the short version is the same as the long version (`zh-cn` -> `zh-cn`)
+You can get a all language codes and their names with `get_langs()`
+```py
+{'de-de': 'Deutsch',
+ 'en-us': 'English',
+ 'es-es': 'Español',
+ 'fr-fr': 'Français',
+ 'id-id': 'Indonesia',
+ 'ja-jp': '日本語',
+ 'ko-kr': '한국어',
+ 'pt-pt': 'Português',
+ 'ru-ru': 'Pусский',
+ 'th-th': 'ภาษาไทย',
+ 'vi-vn': 'Tiếng Việt',
+ 'zh-cn': '简体中文',
+ 'zh-tw': '繁體中文'}
+```
+Any of these codes can then be passed as the `lang` parameter
+```py
+characters = gs.get_characters(710785423, lang='zh-cn')
+print(characters)
+# {'name': '莫娜',
+#  'rarity': 5,
+#  'element': 'Hydro',
+#  ...
+#  'weapon': {'name': '万国诸海图谱',
+#             'rarity': 4,
+#             'type': '法器',
+#             'description': '详尽记载了大陆周边海流气候的海图，是从异国经由商路流落到璃月的奇异典籍。',
+#             ...},
+#  ...
+```
 
 ## using genshinstats asynchronously (for example with a discord bot)
 This project does not support [asyncio](https://docs.python.org/3/library/asyncio) out of the box but it's fairly easy to use it asynchronously with [futures](https://docs.python.org/3/library/concurrent.futures).
-I recommend you take advantage of `asyncio.wrap_future()`. This function takes in a `concurrent.futures.Future` object and returns an awaitable `asyncio.Future` object.
+You can use `asyncio.wrap_future()`. This function takes in a `concurrent.futures.Future` object and returns an awaitable `asyncio.Future` object.
 To use this function you must create a `ThreadPoolExecutor` and turn submitted futures in asyncio futures.
 ```py
 import asyncio
@@ -231,7 +252,18 @@ executor.shutdown() # remember to close the executor at the end!
 
 # faq
 ## How can I get my cookies?
-### automatic
+1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
+2. login to your account
+3. press `F12` to open inspect mode (aka Developer Tools)
+4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
+5. copy `ltuid` and `ltoken`
+6. use `set_cookies(ltuid=..., ltoken=...)` in your code
+> It is possible that ltuid or ltoken are for some reason not avalible in your cookies (blame it on mihoyo).
+> In this case there are probably the old `account_id` and `cookie_token` cookies, so use those with `set_cookie(account_id=..., cookie_token=...)`.
+>
+> If not even those are avalible go to https://account.mihoyo.com/#/login and use the `login_ticket` cookie in `https://webapi-os.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket=<...>`
+
+### automatic alternative
 You can call `get_browser_cookies` to get a dictionary of cookies that are needed for authentication.
 ```py
 import genshinstats as gs
@@ -247,17 +279,6 @@ You can also just set the cookies using `set_cookies_auto` which calls `get_brow
 ```py
 gs.set_cookies_auto()
 ```
-### manual
-1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
-2. login to your account
-3. press `F12` to open inspect mode (aka Developer Tools)
-4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
-5. copy `ltuid` and `ltoken`
-6. use `set_cookies(ltuid=..., ltoken=...)` in your code
-> It is possible that ltuid or ltoken are for some reason not avalible in your cookies (blame it on mihoyo).
-> In this case there are probably the old `account_id` and `cookie_token` cookies, so use those with `set_cookie(account_id=..., cookie_token=...)`.
->
-> If not even those are avalible go to https://account.mihoyo.com/#/login and use the `login_ticket` cookie in `https://webapi-os.account.mihoyo.com/Api/cookie_accountinfo_by_loginticket?login_ticket=<...>`
 
 ## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
 The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.
@@ -274,7 +295,7 @@ The authkey is a temporary token to access your gacha history. It's unique for e
 ## Is it possible that my account can be stolen when I login with the cookie?
 I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.3` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.5` there is also 2FA which will make it completely impossible to steal your account.
 
-They can of course access your data like email, phone number and real name, however those are censored so unless they already have an idea what those could be that data is useless to them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@g***l.com`)
+They can of course access your data like email, phone number and real name, however those are censored so unless they already have an idea what those could be that data is useless to them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@gmail.com`)
 
 TL;DR unless you have also given your password away your account cannnot be stolen.
 
@@ -282,6 +303,13 @@ TL;DR unless you have also given your password away your account cannnot be stol
 To get the wish history of other players you must get their authkey and pass it as a keyword into `get_wish_history`. That will make the function return their wish history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
 
 To get the autkey you ask the player to press `ESC` while in the game and click the feedback button on the bottom left, then get them to send the url they get redirected to. You can then extract the authkey with `extract_authkey(url)` which you can then pass into the functions.
+
+## Why doesn't `get_wish_history()` return a normal list?
+When you do `print(gs.get_wish_history())` you get  an output that looks something like `<generator object get_wish_history at 0x000001DA6A128580>`
+
+This is because the wish history is split into pages which must be requested one at a time, that means trying to return all the pulls at once would take way too long. The wokaround around this is to use a "generator" - a special list that generates values on the fly.
+
+If you absolutely need a list you can just explicitely cast the generator to a list with `list(get_wish_history())` however that might take a few seconds fetch.
 
 ## Can I get data like mora or primogems with this api?
 No, all data is hosted on a single server in hongkong, so mihoyo doesn't bother with adding data that changes often like mora, primogems, items, artifact rolls, etc. Talents are also currently unavalible.
@@ -316,12 +344,6 @@ daily.py           automatic daily reward claiming
 utils.py           various utility functions
 errors.py          errors used by genshinstats
 ```
-## versioning
-A.B.C.D (e.g. 1.3.9.2)
-- A = requires the entire project changing its focus
-- B = whenever the project layout changes drastically
-- C = new non-backwards-compatible changes
-- D = minor bug fixes and optimizations
 
 # about this project
 ## contribution

@@ -44,6 +44,9 @@ session.params = {
 }
 gacha_session = Session()  # extra session for static resources
 
+def _get_short_lang_code(lang: str) -> str:
+    """Returns an alternative short lang code"""
+    return lang if 'zh' in lang else lang.split('-')[0]
 
 def _read_logfile(logfile: str = None) -> str:
     """Returns the contents of a logfile"""
@@ -115,7 +118,6 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     Includes error handling and getting the authkey.
     """
     if authkey is None:
-        # update authkey
         session.params['authkey'] = session.params['authkey'] or get_authkey()
     else:
         kwargs['params']['authkey'] = authkey
@@ -138,7 +140,7 @@ def get_banner_types(authkey: str = None, lang: str = 'en') -> Dict[int, str]:
     banners = fetch_gacha_endpoint(
         "getConfigList",
         authkey=authkey,
-        params=dict(lang=lang)
+        params=dict(lang=_get_short_lang_code(lang))
     )['gacha_type_list']
     return {int(i['key']): i['name'] for i in banners}
 
@@ -170,7 +172,8 @@ def get_wish_history(
         return
 
     # we create banner_name outside prettify so we don't make extra requests
-    banner_name = get_banner_types()[banner_type]
+    banner_name = get_banner_types(authkey, lang)[banner_type]
+    lang = _get_short_lang_code(lang)
     page_size = 20  # max size per page is 20
     
     while True:
@@ -194,10 +197,7 @@ def get_wish_history(
 
 
 def get_wish_items(lang: str = 'en-us') -> list:
-    """Gets the list of items that can be gotten from the wish.
-
-    Returns a list of avalible characters and weapons.
-    """
+    """Gets the list of characters and weapons that can be gotten from the gacha."""
     r = gacha_session.get(
         f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/{lang}.json"
     )

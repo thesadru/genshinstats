@@ -1,10 +1,11 @@
+import contextlib
 import json
 import logging
 import os
+import random
 import time
 import unittest
 import warnings
-import contextlib
 
 import genshinstats as gs
 
@@ -74,27 +75,24 @@ class GenshinStatsTest(unittest.TestCase):
         self.assertEqual(gs.get_uid_from_authkey(gs.get_authkey()),uid)
         
     def test_langs(self):
-        lang = 'fr-fr'
-        short_lang = 'fr'
+        lang = random.choice(list(gs.get_langs()))
         data['langs'] = {
             'characters':gs.get_characters(uid, lang=lang),
-            'gacha_types':gs.get_banner_types(lang=short_lang),
-            'wish_history':list(gs.get_wish_history(200, 20, lang=short_lang)),
-            'gacha_items':gs.get_wish_items(lang=lang),
-            'gacha_details':gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53", lang=lang),
+            'banner_types':gs.get_banner_types(lang=lang),
+            'wish_history':list(gs.get_wish_history(200, 20, lang=lang)),
+            'wish_items':gs.get_wish_items(lang=lang),
+            'banner_details':gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53", lang=lang),
         }
         # data['langs'] = {}
-        # for l in gs.get_langs():
-        #     lang = l['value']
-        #     short_lang = l['value'].split('-')[0]
-        #     if short_lang == 'zh': short_lang = lang # ???
+        # for lang, name in gs.get_langs().items():
         #     data['langs'][lang] = {
-        #         'lang':lang,'short_lang':short_lang,
-        #         'characters':gs.get_all_characters(uid,lang=lang),
-        #         'gacha_types':gs.get_gacha_types(lang=short_lang),
-        #         'wish_history':list(gs.get_wish_history(301,10,lang=short_lang)),
-        #         'gacha_items':gs.get_gacha_items(lang=lang),
-        #         'gacha_details':gs.get_gacha_details(gacha_id,lang=lang),
+        #         'lang':lang,
+        #         'lang_name': name,
+        #         'characters':gs.get_characters(uid, lang=lang),
+        #         'banner_types': gs.get_banner_types(lang=lang),
+        #         'wish_history':list(gs.get_wish_history(301, 10, lang=lang)),
+        #         'wish_items':gs.get_wish_items(lang=lang),
+        #         'banner_details':gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53", lang=lang),
         #     }
     
     @staticmethod

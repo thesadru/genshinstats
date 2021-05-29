@@ -101,7 +101,7 @@ def set_cookies_auto(browser: str = None) -> None:
     logger.debug(f'Loading cookies automatically.')
     session.cookies.update(get_browser_cookies(browser))
 
-def get_ds_token(salt: str) -> str:
+def get_ds_token(salt: str = DS_SALT) -> str:
     """Creates a new ds token for authentication."""
     t = int(time.time())  # current seconds
     r = ''.join(random.choices(string.ascii_letters, k=6))  # 6 random chars
@@ -118,7 +118,7 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
     Can specifically use the chinese base url and request data for chinese users, 
     but that requires being logged in as that user.
     """
-    session.headers['ds'] = get_ds_token(DS_SALT)
+    session.headers['ds'] = get_ds_token()
     method = kwargs.pop('method', 'get')
     url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
     
@@ -133,18 +133,14 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
     raise_for_error(data)
 
 def get_user_stats(uid: int) -> dict:
-    """Gets stats of a user.
-    
-    Stats contain the main information regarding a user, 
-    that includes stats, characters and explorations.
-    """
+    """Gets basic user information and stats."""
     server = recognize_server(uid)
     data = fetch_endpoint(
         "game_record/genshin/api/index",
         chinese=is_chinese(uid),
         params=dict(server=server, role_id=uid)
     )
-    return prettify_stats(data)
+    return prettify_user_stats(data)
 
 def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us') -> list:
     """Gets characters of a user.
@@ -152,10 +148,7 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
     Characters contain info about their level, constellation, weapon, and artifacts.
     Talents are not included.
     
-    If character_ids are provided gets only characters with those ids.
-    
-    Change the language with lang, 
-    possible langs can be found with get_langs() under the value field.
+    If character_ids are provided then only characters with those ids are returned.
     """
     if character_ids is None:
         character_ids = [i['id'] for i in get_user_stats(uid)['characters']]
@@ -171,9 +164,7 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
     return prettify_characters(data)
 
 def get_spiral_abyss(uid: int, previous: bool = False) -> dict:
-    """Gets how far the user has gotten in spiral abyss and their season progress.
-    
-    Spiral abyss info contains their progress, stats and individual completes.
+    """Gets spiral abyss runs of a user and details about them.
     
     Every season these stats refresh and you can get the previous stats with `previous`.
     """

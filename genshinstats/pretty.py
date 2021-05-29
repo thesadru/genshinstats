@@ -7,9 +7,9 @@ import re
 from datetime import datetime
 from math import ceil
 
-def _recognize_character_icon(url: str):
+def _recognize_character_icon(url):
     """Recognizes a character's icon url and returns its name."""
-    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_(?:.*)_(\w+)(?:@\dx)?.png'
+    exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_.*_(\w+)(?:@\dx)?.png'
     match = re.fullmatch(exp,url)
     if match is None:
         return None
@@ -22,23 +22,22 @@ def _recognize_character_icon(url: str):
     return character
 
 
-def prettify_stats(data: dict):
-    """Returns a prettified version of get_user_info."""
-    stats = data["stats"]
+def prettify_user_stats(data):
+    s = data["stats"]
     return {
         "stats": {
-            "achievements": stats["achievement_number"],
-            "active_days": stats["active_day_number"],
-            "characters": stats["avatar_number"],
-            "spiral_abyss": stats["spiral_abyss"],
-            "anemoculi": stats["anemoculus_number"],
-            "geoculi": stats["geoculus_number"],
-            "common_chests": stats["common_chest_number"],
-            "exquisite_chests": stats["exquisite_chest_number"],
-            "precious_chests": stats["precious_chest_number"],
-            "luxurious_chests": stats["luxurious_chest_number"],
-            "unlocked_waypoints": stats["way_point_number"],
-            "unlocked_domains": stats["domain_number"]
+            "achievements": s["achievement_number"],
+            "active_days": s["active_day_number"],
+            "characters": s["avatar_number"],
+            "spiral_abyss": s["spiral_abyss"],
+            "anemoculi": s["anemoculus_number"],
+            "geoculi": s["geoculus_number"],
+            "common_chests": s["common_chest_number"],
+            "exquisite_chests": s["exquisite_chest_number"],
+            "precious_chests": s["precious_chest_number"],
+            "luxurious_chests": s["luxurious_chest_number"],
+            "unlocked_waypoints": s["way_point_number"],
+            "unlocked_domains": s["domain_number"]
         },
         "characters": [{
             "name": i["name"],
@@ -58,8 +57,7 @@ def prettify_stats(data: dict):
         } for i in data["world_explorations"]]
     }
 
-def prettify_spiral_abyss(data: dict):
-    """Returns a prettified version of get_spiral_abyss."""
+def prettify_spiral_abyss(data):
     fchars = lambda d: [{
         "value": a["value"],
         "name":_recognize_character_icon(a["avatar_icon"]),
@@ -114,39 +112,37 @@ def prettify_spiral_abyss(data: dict):
         } for f in data["floors"]]
     }
 
-def prettify_character(data: dict):
-    """Returns a prettified version of a single item from get_characters."""
-    weapon = data["weapon"]
-    return {
-        "name": data["name"],
+def prettify_characters(data):
+    return [{
+        "name": i["name"],
         "alt_name":{
-            "Traveler":"Aether" if "Boy" in data["icon"] else "Lumine",
+            "Traveler":"Aether" if "Boy" in i["icon"] else "Lumine",
             "Venti":"Barbatos",
             "Zhongli":"Morax",
             "Albedo":"Kreideprinz",
             "Tartaglia":"Childe",
-        }.get(data["name"],None),
-        "rarity": data["rarity"],
-        "element": data["element"] if data["name"]!="Traveler" else {
+        }.get(i["name"],None),
+        "rarity": i["rarity"],
+        "element": i["element"] if i["name"]!="Traveler" else {
             71:"Anemo",
             91:"Geo"
-        }[data["constellations"][0]["id"]], # traveler elements
-        "level": data["level"],
-        "ascension": ceil(data["level"]//10)-1,
-        "friendship": data["fetter"],
-        "constellation": sum(c["is_actived"] for c in data["constellations"]),
-        "icon": data["image"],
-        "id": data["id"],
+        }[i["constellations"][0]["id"]], # traveler elements
+        "level": i["level"],
+        "ascension": ceil(i["level"]//10)-1,
+        "friendship": i["fetter"],
+        "constellation": sum(c["is_actived"] for c in i["constellations"]),
+        "icon": i["image"],
+        "id": i["id"],
         "weapon": {
-            "name": weapon["name"],
-            "rarity": weapon["rarity"],
-            "type": weapon["type_name"],
-            "level": weapon["level"],
-            "ascension": weapon["promote_level"],
-            "refinement": weapon["affix_level"],
-            "description": weapon["desc"],
-            "icon": weapon["icon"],
-            "id": weapon["id"],
+            "name": i["weapon"]["name"],
+            "rarity": i["weapon"]["rarity"],
+            "type": i["weapon"]["type_name"],
+            "level": i["weapon"]["level"],
+            "ascension": i["weapon"]["promote_level"],
+            "refinement": i["weapon"]["affix_level"],
+            "description": i["weapon"]["desc"],
+            "icon": i["weapon"]["icon"],
+            "id": i["weapon"]["id"],
         },
         "artifacts": [{
             "name": a["name"],
@@ -173,7 +169,7 @@ def prettify_character(data: dict):
             },
             "icon": a["icon"],
             "id": a["id"],
-        } for a in data["reliquaries"]],
+        } for a in i["reliquaries"]],
         "constellations": [{
             "name": c["name"],
             "effect": c["effect"],
@@ -181,22 +177,10 @@ def prettify_character(data: dict):
             "index": c["pos"],
             "icon": c["icon"],
             "id": c["id"],
-        } for c in data["constellations"]]
-    }
+        } for c in i["constellations"]]
+    } for i in data]
 
-def prettify_characters(data: list):
-    """Returns a prettified version of get_characters."""
-    return [prettify_character(i) for i in data]
-
-def prettify_langs(data: list):
-    return [{
-        'name': l['name'],
-        'label': l['label'],
-        'code': l['value'],
-        'short_code': l['value'] if 'zh' in l['value'] else l['value'].split('-')[0]
-    } for l in data]
-
-def prettify_wish_history(data: list, banner_name: str = None):
+def prettify_wish_history(data, banner_name = None):
     return [{
         "type": i["item_type"],
         "name": i["name"],
@@ -207,7 +191,7 @@ def prettify_wish_history(data: list, banner_name: str = None):
         "banner_type": int(i["gacha_type"]),
     } for i in data]
 
-def prettify_wish_items(data: list):
+def prettify_wish_items(data):
     return [{
         "name": i["name"],
         "type": i["item_type"],
@@ -215,7 +199,7 @@ def prettify_wish_items(data: list):
         "id": 10000000+int(i["item_id"])-1000 if len(i["item_id"])==4 else int(i["item_id"]),
     } for i in data]
 
-def prettify_banner_details(data: dict):
+def prettify_banner_details(data):
     per = lambda p: None if p=='0%' else float(p[:-1].replace(',','.'))
     fprobs = lambda l: [{
         "type": i["item_type"],
