@@ -8,7 +8,7 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from typing import Any, Dict, List, overload
+from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 from requests import Session
@@ -38,14 +38,6 @@ DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
-# typing overloads for set_cookie (check PEP 484 for more info)
-@overload
-def set_cookies(*, ltuid: int, ltoken: str): ...
-@overload
-def set_cookies(*, account_id: int, cookie_token: str): ...
-@overload
-def set_cookies(**kwargs: Any): ...
-
 def set_cookies(**kwargs) -> None:
     """Logs-in using a cookie, this function must be run at least once
     
@@ -59,18 +51,6 @@ def set_cookie_header(header: str) -> None:
     """Like set_cookie, but you can set the cookie with a header instead."""
     session.cookies.update(SimpleCookie(header))
 
-# possible alternatives for get_browser_cookies
-def get_browser_cookies_alt(browser: str = None) -> Dict[str, str]:
-    import browser_cookie3
-    load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
-    
-    cookies = {}
-    for domain in ('mihoyo', 'hoyolab'):
-        for c in load(domain_name=domain):
-            if c.name in ('ltuid', 'ltoken', 'account_id', 'cookie_token'):
-                cookies[c.name] = str(c.value)
-    return cookies
-
 def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
     
@@ -82,11 +62,12 @@ def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     # For backwards compatibility we also get account_id and cookie_token
     # however we can't just get every cookie because there's sensitive information
     allowed_cookies = {'ltuid', 'ltoken', 'account_id', 'cookie_token'}
-    cookies = {}
-    for domain in ('mihoyo', 'hoyolab'):
-        c = {c.name: str(c.value) for c in load(domain_name=domain) if c.name in allowed_cookies}
-        cookies.update(c)
-    return cookies
+    return {
+        c.name: c.value 
+        for domain in ('mihoyo', 'hoyolab') 
+        for c in load(domain_name=domain) 
+        if c.name in allowed_cookies and c.value is not None
+    }
 
 def set_cookies_auto(browser: str = None) -> None:
     """Like set_cookie, but gets the cookies by itself from your browser.

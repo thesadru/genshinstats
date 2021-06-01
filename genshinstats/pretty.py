@@ -189,6 +189,7 @@ def prettify_wish_history(data, banner_name = None):
         "id": int(i["id"]),
         "banner": banner_name,
         "banner_type": int(i["gacha_type"]),
+        "uid": int(i["uid"]),
     } for i in data]
 
 def prettify_wish_items(data):

@@ -19,7 +19,7 @@ CN_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/" # chinese
 CN_ACT_ID = "e202009291139501"
 
 def fetch_daily_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, Any]:
-    """Fetch an enpoint from the daily rewards API."""
+    """Fetch an enpoint for daily rewards"""
     url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
     kwargs.setdefault('params',{})['act_id'] = act_id
     url = urljoin(url, endpoint)
@@ -36,14 +36,14 @@ def get_daily_reward_info(chinese: bool = False) -> Tuple[bool, int]:
     return data['is_sign'], data['total_sign_day']
 
 def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us') -> list:
-    """Gets a list of rewards for the current month"""
+    """Gets a list of avalible rewards for the current month"""
     return fetch_daily_endpoint(
         "home", chinese, 
         params=dict(lang=lang)
     )['awards']
 
 def get_claimed_rewards(chinese: bool = False) -> Iterator[dict]:
-    """Gets claimed awards for the currently logged-in user"""
+    """Gets all claimed awards for the currently logged-in user"""
     current_page = 1
     while True:
         data = fetch_daily_endpoint(
@@ -59,7 +59,7 @@ def claim_daily_reward(chinese: bool=False, lang: str = 'en-us') -> Optional[dic
     """Signs into hoyolab and claims the daily rewards.
     
     Chinese and overseas servers work a bit differently,
-    so you must specify you want to claim rewards for chinese accounts.
+    so you must specify whether you want to claim rewards for chinese accounts.
     
     Returns the claimed reward or None if the reward cannot be claimed yet.
     """

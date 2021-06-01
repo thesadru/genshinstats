@@ -8,7 +8,7 @@ import logging
 import os
 import re
 from functools import lru_cache
-from itertools import islice
+from itertools import chain, islice
 from tempfile import gettempdir
 from typing import Any, Dict, Iterator, List, Optional
 from urllib.parse import unquote, urljoin
@@ -157,16 +157,16 @@ def get_wish_history(
     
     If a size is set the total returned amount of pulls will be equal to or lower than the size.
 
-    To be able to get history starting from somewhere other than the earliest pull,
-    you must pass in the id of the first pull before (chronologically after) the one you want to start from as end_id.
+    To be able to get history starting from somewhere other than the last pull
+    you may pass in the id of the pull right chronologically after the one you want to start from as end_id.
     """
     if size is not None and size <= 0:
         return
     
     if banner_type is None:
-        # get data from all banners by getting data from every individual banner
-        # the data gets sorted by pull date with heapq.merge and sliced with islice
-        gens = [get_wish_history(banner_type, None, authkey, end_id, lang)
+        # we get data from all banners by getting data from every individual banner
+        # and then sorting it by pull date with heapq.merge
+        gens = [get_wish_history(banner_type, None, authkey, end_id)
                 for banner_type in get_banner_types(authkey)]
         yield from islice(heapq.merge(*gens, key=lambda x: x['time'], reverse=True), size)
         return
@@ -222,11 +222,11 @@ def get_banner_details(banner_id: str, lang: str = 'en-us') -> dict:
 def get_uid_from_authkey(authkey: str = None) -> int:
     """Gets a uid from an authkey. 
 
-    If an authkey is not passed in uses the currently set authkey.
+    If an authkey is not passed in the function uses the currently set authkey.
     """
-    uid = fetch_gacha_endpoint(
-        "getGachaLog",
-        authkey=authkey,
-        params=dict(gacha_type=200, size=1)
-    )['list'][0]['uid']
-    return int(uid)
+    # for safety we use all banners, probably overkill
+    histories = [get_wish_history(i, 1, authkey) for i in get_banner_types(authkey)]
+    pull = next(chain(*histories), None)
+    if pull is None: # very rare but possible
+        raise Exception('User has never made a wish')
+    return pull['uid']

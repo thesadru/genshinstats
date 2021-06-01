@@ -21,15 +21,15 @@ class GenshinStatsTest(unittest.TestCase):
     def setUpClass():
         gs.set_cookies(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
     def test_recognize_server(self):
-        self.assertEqual(gs.recognize_server(uid),'os_euro')
+        self.assertEqual(gs.recognize_server(uid), 'os_euro')
     def test_user_stats(self):
         data['stats'] = gs.get_user_stats(uid)
     def test_characters(self):
         data['characters'] = gs.get_characters(uid)
     def test_spiral_abyss(self):
         data['spiral_abyss'] = [
-            gs.get_spiral_abyss(uid,previous=False),
-            gs.get_spiral_abyss(uid,previous=True)
+            gs.get_spiral_abyss(uid, previous=False),
+            gs.get_spiral_abyss(uid, previous=True)
         ]
     def test_is_game_uid(self):
         self.assertTrue(gs.is_game_uid(710785423))
@@ -72,7 +72,7 @@ class GenshinStatsTest(unittest.TestCase):
         self.assertEqual(x, [])
         self.assertLess(t, .01)
     def test_uid_from_authkey(self):
-        self.assertEqual(gs.get_uid_from_authkey(gs.get_authkey()),uid)
+        self.assertEqual(gs.get_uid_from_authkey(gs.get_authkey()), uid)
         
     def test_langs(self):
         lang = random.choice(list(gs.get_langs()))
@@ -115,9 +115,9 @@ class AccountSpecificTests(unittest.TestCase):
     def test_redeem_code(self):
         # takes like 30s to run
         with self.assertRaises(gs.CodeRedeemException):
-            gs.redeem_code('genshingift',uid)
+            gs.redeem_code('genshingift', uid)
         with self.assertRaises(gs.CodeRedeemException):
-            gs.redeem_code('invalid',uid)
+            gs.redeem_code('invalid', uid)
     def test_daily_reward(self):
         gs.claim_daily_reward()
     def test_daily_reward_info(self):
