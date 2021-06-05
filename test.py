@@ -1,6 +1,5 @@
 import contextlib
 import json
-import logging
 import os
 import random
 import time
@@ -8,9 +7,6 @@ import unittest
 import warnings
 
 import genshinstats as gs
-
-logging.basicConfig()
-# gs.logger.setLevel(logging.DEBUG)
 
 data = {}
 uid = 710785423
@@ -65,12 +61,6 @@ class GenshinStatsTest(unittest.TestCase):
     def test_authkey_param(self):
         authkey = gs.extract_authkey(gs.wishes._read_logfile())
         list(gs.get_wish_history(200, size=20, authkey=authkey))
-    def test_empty_gacha(self):
-        s = time.time()
-        x = list(gs.get_wish_history(200, size=0))
-        t = time.time() - s
-        self.assertEqual(x, [])
-        self.assertLess(t, .01)
     def test_uid_from_authkey(self):
         self.assertEqual(gs.get_uid_from_authkey(gs.get_authkey()), uid)
         

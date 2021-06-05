@@ -16,10 +16,12 @@ def _recognize_character_icon(url):
     character = match.group(1)
     if character.startswith("Player"):
         return "Traveler"
-    elif character.startswith("Qin"):
+    elif character == "Ambor":
+        return "Amber"
+    elif character == "Qin":
         return "Jean"
-    
-    return character
+    else:
+        return character
 
 
 def prettify_user_stats(data):
@@ -57,70 +59,15 @@ def prettify_user_stats(data):
         } for i in data["world_explorations"]]
     }
 
-def prettify_spiral_abyss(data):
-    fchars = lambda d: [{
-        "value": a["value"],
-        "name":_recognize_character_icon(a["avatar_icon"]),
-        "rarity":a["rarity"],
-        "icon":a["avatar_icon"],
-        "id":a["avatar_id"],
-    } for a in d]
-    todate = lambda x: datetime.fromtimestamp(int(x)).strftime("%Y-%m-%d")
-    totime = lambda x: datetime.fromtimestamp(int(x)).isoformat(' ')
-    return {
-        "season": data["schedule_id"],
-        "season_start_time": todate(data["start_time"]),
-        "season_end_time":   todate(data["end_time"]),
-        "stats": {
-            "total_battles": data["total_battle_times"],
-            "total_wins": data["total_win_times"],
-            "max_floor": data["max_floor"],
-            "total_stars": data["total_star"],
-        },
-        "character_ranks": {
-            "most_chambers_won": fchars(data["reveal_rank"]),
-            "most_chambers_lost": fchars(data["defeat_rank"]),
-            "strongest_hit": fchars(data["damage_rank"]),
-            "most_damage_taken": fchars(data["take_damage_rank"]),
-            "most_bursts_used": fchars(data["normal_skill_rank"]),
-            "most_skills_used": fchars(data["energy_skill_rank"]),
-        },
-        "floors": [{
-            "floor": f["index"],
-            "stars": f["star"],
-            "max_stars": f["max_star"],
-            "start": totime(f["levels"][0]["battles"][0]["timestamp"]),
-            "icon": f["icon"],
-            "chambers":[{
-                "chamber": l["index"],
-                "stars": l["star"],
-                "max_stars": l["max_star"],
-                "has_halves":len(l["battles"]) == 2,
-                "battles":[{
-                    "half": b["index"],
-                    "timestamp": totime(b["timestamp"]),
-                    "characters":[{
-                        "name": _recognize_character_icon(c["icon"]),
-                        "rarity": c["rarity"],
-                        "level": c["level"],
-                        "icon": c["icon"],
-                        "id": c["id"],
-
-                    } for c in b["avatars"]]
-                } for b in l["battles"]]
-            } for l in f["levels"]]
-        } for f in data["floors"]]
-    }
-
 def prettify_characters(data):
     return [{
         "name": i["name"],
         "alt_name":{
-            "Traveler":"Aether" if "Boy" in i["icon"] else "Lumine",
-            "Venti":"Barbatos",
-            "Zhongli":"Morax",
-            "Albedo":"Kreideprinz",
-            "Tartaglia":"Childe",
+            "Traveler": "Aether" if "Boy" in i["icon"] else "Lumine",
+            "Venti": "Barbatos",
+            "Zhongli": "Morax",
+            "Albedo": "Kreideprinz",
+            "Tartaglia": "Childe",
         }.get(i["name"],None),
         "rarity": i["rarity"],
         "element": i["element"] if i["name"]!="Traveler" else {
@@ -179,6 +126,61 @@ def prettify_characters(data):
             "id": c["id"],
         } for c in i["constellations"]]
     } for i in data]
+
+def prettify_spiral_abyss(data):
+    fchars = lambda d: [{
+        "value": a["value"],
+        "name":_recognize_character_icon(a["avatar_icon"]),
+        "rarity":a["rarity"],
+        "icon":a["avatar_icon"],
+        "id":a["avatar_id"],
+    } for a in d]
+    todate = lambda x: datetime.fromtimestamp(int(x)).strftime("%Y-%m-%d")
+    totime = lambda x: datetime.fromtimestamp(int(x)).isoformat(' ')
+    return {
+        "season": data["schedule_id"],
+        "season_start_time": todate(data["start_time"]),
+        "season_end_time": todate(data["end_time"]),
+        "stats": {
+            "total_battles": data["total_battle_times"],
+            "total_wins": data["total_win_times"],
+            "max_floor": data["max_floor"],
+            "total_stars": data["total_star"],
+        },
+        "character_ranks": {
+            "most_uses": fchars(data["reveal_rank"]),
+            "most_kills": fchars(data["defeat_rank"]),
+            "strongest_hit": fchars(data["damage_rank"]),
+            "most_damage_taken": fchars(data["take_damage_rank"]),
+            "most_bursts_used": fchars(data["normal_skill_rank"]),
+            "most_skills_used": fchars(data["energy_skill_rank"]),
+        },
+        "floors": [{
+            "floor": f["index"],
+            "stars": f["star"],
+            "max_stars": f["max_star"],
+            "start": totime(f["levels"][0]["battles"][0]["timestamp"]),
+            "icon": f["icon"],
+            "chambers":[{
+                "chamber": l["index"],
+                "stars": l["star"],
+                "max_stars": l["max_star"],
+                "has_halves":len(l["battles"]) == 2,
+                "battles":[{
+                    "half": b["index"],
+                    "timestamp": totime(b["timestamp"]),
+                    "characters":[{
+                        "name": _recognize_character_icon(c["icon"]),
+                        "rarity": c["rarity"],
+                        "level": c["level"],
+                        "icon": c["icon"],
+                        "id": c["id"],
+
+                    } for c in b["avatars"]]
+                } for b in l["battles"]]
+            } for l in f["levels"]]
+        } for f in data["floors"]]
+    }
 
 def prettify_wish_history(data, banner_name = None):
     return [{

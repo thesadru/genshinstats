@@ -4,7 +4,6 @@ Gets pull data from the current banners in basic json.
 Requires an auth key that can be gotten from an output_log.txt file.
 """
 import heapq
-import logging
 import os
 import re
 from functools import lru_cache
@@ -25,7 +24,6 @@ __all__ = [
     'get_wish_items', 'get_banner_details', 'get_uid_from_authkey'
 ]
 
-logger = logging.getLogger('genshinstats')
 GENSHIN_LOG = get_output_log()
 GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(), 'genshinstats_authkey.txt')
@@ -67,7 +65,6 @@ def get_authkey(logfile: str = None) -> str:
 
     This will either be done from the logs or from a tempfile.
     """
-    logger.debug('Getting an authkey from log files.')
     # first try the log
     authkey = extract_authkey(_read_logfile(logfile))
     if authkey is not None:
@@ -124,7 +121,6 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     method = kwargs.pop('method', 'get')
     url = urljoin(GACHA_LOG_URL, endpoint)
 
-    logger.debug(f'Fetching gacha endpoint "{url}"')
     r = session.request(method, url, **kwargs)
     r.raise_for_status()
 

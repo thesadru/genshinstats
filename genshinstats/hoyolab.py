@@ -2,7 +2,6 @@
 
 Can search users, get record cards, active players...
 """
-import logging
 import time
 from functools import lru_cache
 from typing import Dict, List, Optional
@@ -14,8 +13,6 @@ __all__ = [
     'search', 'hoyolab_check_in', 'get_langs', 'get_game_accounts',
     'get_record_card', 'get_uid_from_hoyolab_uid', 'redeem_code'
 ]
-
-logger = logging.getLogger('genshinstats')
 
 def search(keyword: str, size: int = 20) -> dict:
     """Searches all users.

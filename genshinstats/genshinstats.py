@@ -3,7 +3,6 @@
 Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
-import logging
 import random
 import string
 import time
@@ -18,11 +17,11 @@ from .pretty import *
 from .utils import USER_AGENT, is_chinese, recognize_server
 
 __all__ = [
-    'session', 'set_cookies', 'set_cookie_header', 'get_browser_cookies', 'set_cookies_auto',
-    'get_ds_token', 'fetch_endpoint', 'get_user_stats', 'get_characters', 'get_spiral_abyss'
+    'session', 'set_cookies', 'set_cookie_header', 'get_browser_cookies', 
+    'set_cookies_auto', 'get_ds_token', 'fetch_endpoint', 'get_user_stats', 
+    'get_characters', 'get_spiral_abyss', 'get_all_user_data'
 ]
 
-logger = logging.getLogger('genshinstats')
 session = Session()
 session.headers.update({
     # required headers
@@ -79,7 +78,6 @@ def set_cookies_auto(browser: str = None) -> None:
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    logger.debug(f'Loading cookies automatically.')
     session.cookies.update(get_browser_cookies(browser))
 
 def get_ds_token(salt: str = DS_SALT) -> str:
@@ -103,7 +101,6 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
     method = kwargs.pop('method', 'get')
     url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
     
-    logger.debug(f'Fetching endpoint "{url}"')
     r = session.request(method, url, **kwargs)
     r.raise_for_status()
     
@@ -157,3 +154,14 @@ def get_spiral_abyss(uid: int, previous: bool = False) -> dict:
         params=dict(server=server, role_id=uid, schedule_type=schedule_type)
     )
     return prettify_spiral_abyss(data)
+
+def get_all_user_data(uid: int, lang: str = 'en-us') -> dict:
+    """Fetches all data a user can has. Very slow.
+    
+    A helper function that gets all avalible data for a user and returns it as one dict.
+    However that makes it fairly slow so it's not recommended to use it outside caching.
+    """
+    data = get_user_stats(uid)
+    data['characters'] = get_characters(uid, [i['id'] for i in data['characters']], lang=lang)
+    data['spiral_abyss'] = [get_spiral_abyss(uid), get_spiral_abyss(uid, previous=True)]
+    return data
