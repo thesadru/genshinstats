@@ -21,7 +21,7 @@ python setup.py install
 ```
 
 # how to use
-You simply need to import the module and use the `set_cookies` function to login. 
+You simply need to import the module and use the `set_cookie` function to login. 
 Since all mihoyo's apis are private there's no kind of api token or authentication header, instead you are required to use your own account cookies. ([how can I get my cookies?](#how-can-I-get-my-cookies))
 
 The best way to learn is with examples so I have provided a usage example for every function.
@@ -32,7 +32,7 @@ The best way to learn is with examples so I have provided a usage example for ev
 Simple examples of usage:
 ```py
 import genshinstats as gs # import module
-gs.set_cookies(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # login
+gs.set_cookie(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # login
 
 uid = 710785423
 data = gs.get_user_stats(uid) # get user info with a uid
@@ -40,6 +40,8 @@ total_characters = len(data['characters']) # get the amount of characters
 print('user "sadru" has a total of',total_characters,'characters')
 ```
 > Cookies should be your own. These are just some example cookies of an account that can be deleted at any time.
+
+> Note that `set_cookie` and `set_cookies` are different functions! The latter should only be used when getting data for other users (for example social media bots)
 ```py
 stats = gs.get_user_stats(uid)['stats']
 for field,value in stats.items():
@@ -53,10 +55,9 @@ for field,value in stats.items():
 characters = gs.get_characters(uid)
 for char in characters:
     print(f"{char['rarity']}* {char['name']:10} | lvl {char['level']:2} C{char['constellation']}")
+# 5* Xiao       | lvl 90 C0
 # 4* Beidou     | lvl 80 C1
 # 4* Fischl     | lvl 80 C1
-# 4* Bennett    | lvl 80 C2
-# 5* Mona       | lvl 80 C0
 # ...
 ```
 
@@ -66,19 +67,19 @@ stats = spiral_abyss['stats']
 for field,value in stats.items():
     print(f"{field}: {value}")
 # total_battles: 14
-# total_wins: 7
-# max_floor: 9-1
-# total_stars: 18
+# total_wins: 9
+# max_floor: 11-3
+# total_stars: 19
 ```
 
 It's possible to set the cookies with a header
 ```py
-gs.set_cookie_header("ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035")
+gs.set_cookie("ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035")
 ```
 Or set them automatically by getting them from a browser
 ```py
-gs.set_cookies_auto() # search all browsers
-gs.set_cookies_auto('chrome') # search specific browser
+gs.set_cookie_auto() # search all browsers
+gs.set_cookie_auto('chrome') # search specific browser
 ```
 > requires `cookie-browser3`, can take up to 10s
 ## submodules
@@ -111,16 +112,15 @@ for i in gs.get_wish_history(301):
 banner_ids = gs.get_banner_ids()
 for i in banner_ids:
     details = gs.get_banner_details(i) 
-    print(f"{details['gacha_type']} - {details['banner']}")
+    print(f"{details['banner_type_name']} - {details['banner']}")
     print('5 stars:', ', '.join(i['name'] for i in details['r5_up_items']))
     print('4 stars:', ', '.join(i['name'] for i in details['r4_up_items']))
     print()
 # Weapon Event Wish - Event Wish "Epitome Invocation"
 # 5 stars: Elegy for the End, Skyward Blade
 # 4 stars: The Alley Flash, Wine and Song, Favonius Greatsword, Favonius Warbow, Dragon's Bane
-# ...
 ```
-> `get_all_gacha_ids()` gets a list of all banners whose details page has been opened in the game.
+> `get_all_banner_ids()` gets a list of all banners whose details page has been opened in the game.
 >
 > Basically uses the same approach as `get_authkey`
 
@@ -147,7 +147,7 @@ print('total rewards claimed:', claimed_rewards)
 
 reward = gs.claim_daily_reward()
 if reward is not None:
-    print(f"Claimed daily reward - {reward['cnt']} {reward['name']}")
+    print(f"Claimed daily reward - {reward['cnt']}x {reward['name']}")
 else:
     print("Could not claim daily reward")
 ```
@@ -189,7 +189,7 @@ Some api endpoints support changing languages, you can see them listed here:
 get_characters
 get_banner_types
 get_wish_history
-get_wish_items
+get_gacha_items
 get_banner_details
 claim_daily_reward
 ```
@@ -234,7 +234,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import genshinstats as gs
 
-gs.set_cookies_auto()
+gs.set_cookie_auto()
 
 executor = ThreadPoolExecutor()
 async def asyncify(func, *args, **kwargs):
@@ -257,7 +257,7 @@ executor.shutdown() # remember to close the executor at the end!
 3. press `F12` to open inspect mode (aka Developer Tools)
 4. go to `Application`, `Cookies`, `https://www.hoyolab.com`.
 5. copy `ltuid` and `ltoken`
-6. use `set_cookies(ltuid=..., ltoken=...)` in your code
+6. use `set_cookie(ltuid=..., ltoken=...)` in your code
 > It is possible that ltuid or ltoken are for some reason not avalible in your cookies (blame it on mihoyo).
 > In this case there are probably the old `account_id` and `cookie_token` cookies, so use those with `set_cookie(account_id=..., cookie_token=...)`.
 >
@@ -273,12 +273,18 @@ print(cookies)
 ```
 You can then use these cookies in your actual code or save them as enviroment variables
 ```py
-gs.set_cookies(ltuid=93827185, ltoken='aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh')
+gs.set_cookie(ltuid=93827185, ltoken='aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh')
 ```
-You can also just set the cookies using `set_cookies_auto` which calls `get_browser_cookies` every time you run the script
+You can also just set the cookies using `set_cookie_auto` which calls `get_browser_cookies` every time you run the script
 ```py
-gs.set_cookies_auto()
+gs.set_cookie_auto()
 ```
+### setting multiple cookies at once
+Mihoyo allows users to get data for only up to 30 other users per day, to circumvent this limitation you can set multiple cookies at once with `set_cookies()`
+```py
+gs.set_cookies({'ltuid': 1, 'ltoken': 'token...'}, {'ltuid': 2, 'ltoken': 'other token...'})
+```
+> This function works essentially the same like `set_cookie` meaning you can also pass in cookie headers and `http.cookies.BaseCookie` objects.
 
 ## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
 The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.
@@ -286,11 +292,11 @@ To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin
 
 ## How do the cookie and authkey work?
 Every endpoint in mihoyo's api requires authentication, this is in the form of a cookie and an authkey.
-User stats use a cookie and gacha history uses an authkey.
+User stats use a cookie and wish history uses an authkey.
 
 The cookie is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
 
-The authkey is a temporary token to access your gacha history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the gacha history.
+The authkey is a temporary token to access your wish history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the wish history.
 
 ## Is it possible that my account can be stolen when I login with the cookie?
 I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.3` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.5` there is also 2FA which will make it completely impossible to steal your account.
@@ -315,8 +321,8 @@ If you absolutely need a list you can just explicitely cast the generator to a l
 No, all data is hosted on a single server in hongkong, so mihoyo doesn't bother with adding data that changes often like mora, primogems, items, artifact rolls, etc. Talents are also currently unavalible.
 All the data you can get should be already implemented. If you see an endpoint that is useful and hasn't been implemented yet please open an issue or contact me directly.
 
-## How does `set_cookies_auto()` work? Can my data be stolen with it?
-`set_cokies_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookies()`.
+## How does `set_cookie_auto()` work? Can my data be stolen with it?
+`set_cookie_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookies()`.
 When getting said cookies, they are filtered so only ones for mihoyo are ever pulled out. They will only ever be used as authentication and will never be sent anywhere else.
 
 ## What's the rate limit?
@@ -326,12 +332,11 @@ As far as I know there is no rate limit, however I recommend you avoid spamming 
 `get_uid_from_hoyolab(hoyolab_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game or a hoyolab one use `is_game_uid(uid)`.
 
 ## How can I get a user's username?
-Getting the user's username and adventure rank is possible only with their community uid. You can get them with `get_record_card(hoyolab_uid)` along with a bunch of other data.
+Getting the user's username and adventure rank is possible only with their hoyolab uid. You can get them with `get_record_card(hoyolab_uid)` along with a bunch of other data.
 
 ## How do I get one type of uid from another?
 - uids of currently logged in user: `gs.get_game_accounts()`
-- hoyolab uid of currently logged in user `gs.session.cookies['ltuid']`
-- from hoyolab uid to game uid: `gs.get_uid_from_community(hoyolab_uid)`
+- from hoyolab uid to game uid: `gs.get_uid_from_hoyolab(hoyolab_uid)`
 - from authkey to uid: `gs.get_uid_from_authkey(authkey)`
 - from uid to hoyolab uid: `currently impossible`
 

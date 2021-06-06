@@ -86,7 +86,9 @@ def redeem_code(code: str, uid: int = None) -> None:
     specifying the uid will claim it only for that account.
     Returns the amount of users it managed to claim codes for.
 
-    Claiming code for every account will take 5s per account because of cooldowns.
+    You can claim codes only every 5s so you must sleep between claims. 
+    The function sleeps for you when claiming for every account 
+    but you must sleep yourself when passing in a uid or when an error is encountered.
 
     Currently codes can only be claimed for overseas accounts, not chinese.
     """

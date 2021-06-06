@@ -21,11 +21,11 @@ from .utils import USER_AGENT, get_output_log
 __all__ = [
     'extract_authkey', 'get_authkey', 'set_authkey', 'get_banner_ids',
     'fetch_gacha_endpoint', 'get_banner_types', 'get_wish_history',
-    'get_wish_items', 'get_banner_details', 'get_uid_from_authkey'
+    'get_gacha_items', 'get_banner_details', 'get_uid_from_authkey'
 ]
 
 GENSHIN_LOG = get_output_log()
-GACHA_LOG_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
+GACHA_INFO_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(), 'genshinstats_authkey.txt')
 
 session = Session()
@@ -40,7 +40,7 @@ session.params = {
     # authentications params
     "authkey": "",
 }
-gacha_session = Session()  # extra session for static resources
+static_session = Session()  # extra session for static resources
 
 def _get_short_lang_code(lang: str) -> str:
     """Returns an alternative short lang code"""
@@ -119,7 +119,7 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     else:
         kwargs['params']['authkey'] = authkey
     method = kwargs.pop('method', 'get')
-    url = urljoin(GACHA_LOG_URL, endpoint)
+    url = urljoin(GACHA_INFO_URL, endpoint)
 
     r = session.request(method, url, **kwargs)
     r.raise_for_status()
@@ -192,13 +192,13 @@ def get_wish_history(
         end_id = data[-1]['id']
 
 
-def get_wish_items(lang: str = 'en-us') -> list:
+def get_gacha_items(lang: str = 'en-us') -> list:
     """Gets the list of characters and weapons that can be gotten from the gacha."""
-    r = gacha_session.get(
+    r = static_session.get(
         f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/{lang}.json"
     )
     r.raise_for_status()
-    return prettify_wish_items(r.json())
+    return prettify_gacha_items(r.json())
 
 def get_banner_details(banner_id: str, lang: str = 'en-us') -> dict:
     """Gets details of a specific banner.
@@ -209,7 +209,7 @@ def get_banner_details(banner_id: str, lang: str = 'en-us') -> dict:
     
     The newbie gacha has no json resource tied to it, so you can't get info about it.
     """
-    r = gacha_session.get(
+    r = static_session.get(
         f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{banner_id}/{lang}.json"
     )
     r.raise_for_status()

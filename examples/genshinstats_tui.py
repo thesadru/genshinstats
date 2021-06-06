@@ -1,6 +1,6 @@
 import genshinstats as gs
 
-gs.set_cookies(ltuid=..., ltoken=...)
+gs.set_cookie(ltuid=..., ltoken=...)
 
 uid = int(input('Please enter a uid: '))
 action = input(

@@ -3,8 +3,6 @@
 These take in only a single argument: msg.
 It's possible to add retcodes and the original api response message with `.set_reponse()`.
 """
-from typing import NoReturn
-
 class GenshinStatsException(Exception):
     """Base Exception for all genshinstats errors."""
     retcode: int = 0
@@ -26,6 +24,8 @@ class GenshinStatsException(Exception):
     def msg(self, msg):
         self.args = (msg,)
 
+class TooManyRequests(GenshinStatsException):
+    """Made too many requests and got ratelimited"""
 class NotLoggedIn(GenshinStatsException):
     """Cookies have not been provided."""
 class AccountNotFound(GenshinStatsException):
@@ -35,7 +35,6 @@ class DataNotPublic(GenshinStatsException):
 
 class CodeRedeemException(GenshinStatsException):
     """Code redemption failed."""
-
 class SignInException(GenshinStatsException):
     """Sign-in failed"""
 
@@ -48,12 +47,13 @@ class AuthKeyTimeout(GachaLogException):
 class MissingAuthKey(GachaLogException):
     """No gacha authkey was found."""
 
-def raise_for_error(response: dict) -> NoReturn:
+def raise_for_error(response: dict):
     """Raises a custom genshinstats error from a response."""
     # every error uses a different response code and message, 
     # but the codes are not unique so we must check the message at some points too.
     error = {
         # general
+        10101: TooManyRequests("Cannnot get data for more than 30 accounts per cookie per day."),
         -100:  NotLoggedIn('Login cookies have not been provided or are incorrect.'),
         10001: NotLoggedIn('Login cookies have not been provided or are incorrect.'),
         10102: DataNotPublic('User\'s data is not public'),
@@ -77,5 +77,3 @@ def raise_for_error(response: dict) -> NoReturn:
     }.get(response['retcode'], GenshinStatsException("{} Error ({})"))
     error.set_response(response)
     raise error
-
-del NoReturn # so we don't have to bother with __all__

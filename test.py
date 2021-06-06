@@ -15,7 +15,7 @@ hoyolab_uid = 8366222
 class GenshinStatsTest(unittest.TestCase):
     @staticmethod
     def setUpClass():
-        gs.set_cookies(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
+        gs.set_cookie(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
     def test_recognize_server(self):
         self.assertEqual(gs.recognize_server(uid), 'os_euro')
     def test_user_stats(self):
@@ -51,8 +51,8 @@ class GenshinStatsTest(unittest.TestCase):
         data['banner_types'] = gs.get_banner_types()
     def test_wish_history(self):
         data['wish_history'] = list(gs.get_wish_history(size=60))
-    def test_wish_items(self):
-        data['wish_items'] = gs.get_wish_items()
+    def test_gacha_items(self):
+        data['gacha_items'] = gs.get_gacha_items()
     def test_all_banner_ids(self):
         data['banner_ids'] = gs.get_banner_ids()
     def test_banner_details(self):
@@ -70,7 +70,7 @@ class GenshinStatsTest(unittest.TestCase):
             'characters':gs.get_characters(uid, lang=lang),
             'banner_types':gs.get_banner_types(lang=lang),
             'wish_history':list(gs.get_wish_history(200, 20, lang=lang)),
-            'wish_items':gs.get_wish_items(lang=lang),
+            'gacha_items':gs.get_gacha_items(lang=lang),
             'banner_details':gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53", lang=lang),
         }
         # data['langs'] = {}
@@ -81,7 +81,7 @@ class GenshinStatsTest(unittest.TestCase):
         #         'characters':gs.get_characters(uid, lang=lang),
         #         'banner_types': gs.get_banner_types(lang=lang),
         #         'wish_history':list(gs.get_wish_history(301, 10, lang=lang)),
-        #         'wish_items':gs.get_wish_items(lang=lang),
+        #         'gacha_items':gs.get_gacha_items(lang=lang),
         #         'banner_details':gs.get_banner_details("b8fd0d8a6c940c7a16a486367de5f6d2232f53", lang=lang),
         #     }
     
@@ -95,7 +95,7 @@ class AccountSpecificTests(unittest.TestCase):
     def setUpClass():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", ResourceWarning)
-            gs.set_cookies_auto()
+            gs.set_cookie_auto()
     def test_game_uids(self):
         gs.get_game_accounts()
     def test_check_in(self):
@@ -105,9 +105,10 @@ class AccountSpecificTests(unittest.TestCase):
     def test_redeem_code(self):
         # takes like 30s to run
         with self.assertRaises(gs.CodeRedeemException):
-            gs.redeem_code('genshingift', uid)
+            gs.redeem_code('genshingift') # already claimed
+        time.sleep(5) # ratelimit
         with self.assertRaises(gs.CodeRedeemException):
-            gs.redeem_code('invalid', uid)
+            gs.redeem_code('invalid') # invalid code
     def test_daily_reward(self):
         gs.claim_daily_reward()
     def test_daily_reward_info(self):
