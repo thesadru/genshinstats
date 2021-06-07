@@ -86,7 +86,8 @@ gs.set_cookie_auto('chrome') # search specific browser
 ### wishes
 Gets your wish history.
 For this you must first open the history/details page in genshin impact,
-the script will then get all required data by itself.
+you can find the page in the wish menu on the bottom left.
+The script is then able to get your authkey and 
 ```py
 for i in gs.get_wish_history():
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
@@ -357,3 +358,21 @@ Currently, I am looking for literally anyone who has a chinese genshin account t
 ## crediting
 This project can be freely downloaded and distributed.
 Crediting is appreciated.
+
+# CHANGELOG
+## 1.4
+- Renamed majority of functions
+    - `get_user_data` -> `get_user_stats`
+    - `get_gacha_history` -> `get_wish_history`
+        - the before ambigious `gacha` was renamed to `wish` or `bannner`
+    - `sign_in` -> `claim_daily_reward`
+    - ...
+- Removed `get_all_*` style functions - functions are overloaded to get all by default
+- Made it possible to use multiple cookies to overcome ratelimits
+    - `set_cookie` keeps its behaviour but is now overloaded to work with headers
+    - `set_cookies` sets multiple cookies which will be silently rotated as needed
+- Removed the need for short lang codes, they are now parsed internally
+- `get_langs` and `get_banner_types` now return a dict instead of a list of dicts
+- Gift codes can now be redeemed for all game accounts instead of just a single one.
+- Added `__all__` to not spam the namespace with unexpected variables
+- Reduced the amount of errors

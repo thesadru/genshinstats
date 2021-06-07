@@ -7,10 +7,11 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from typing import Any, Dict, List, Mapping, Optional, Union
+from http.cookiejar import Cookie, CookieJar, CookiePolicy, DefaultCookiePolicy
+from typing import Any, Dict, List, Mapping, Union
 from urllib.parse import urljoin
 
-from requests import Session
+from requests.sessions import Session, RequestsCookieJar
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
 from .pretty import *
@@ -32,35 +33,14 @@ session.headers.update({
     # recommended headers
     "user-agent": USER_AGENT
 })
-cookies: List[SimpleCookie] = []
+
+cookies: List[RequestsCookieJar] = [] # a list of all avalible cookies
 
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
-CookieLike = Union[SimpleCookie, Mapping[str, Any], str] # type-hint only
-def _add_cookie(cookie: CookieLike, clear: bool = False) -> Optional[SimpleCookie]:
-    """Adds a cookie, makes sure there are no copies"""
-    if isinstance(cookie, Mapping) and not isinstance(cookie, SimpleCookie):
-        cookie = {k: str(v) for k, v in cookie.items()}
-    cookie = SimpleCookie(cookie)
-    
-    if 'ltuid' in cookie:
-        key = 'ltuid'
-    elif 'account_id' in cookie:
-        key = 'account_id'
-    else:
-        raise ValueError(f'Invalid cookie: {cookie!r} - has no ltuid or account_id')
-    
-    if clear:
-        cookies.clear()
-    elif cookie[key] in (i[key] for i in cookies):
-        return None
-    
-    cookies.append(cookie)
-    return cookie
-
-def set_cookie(cookie: CookieLike = None, **kwargs: Any) -> None:
+def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> None:
     """Logs-in using a cookie.
     
     Usage:
@@ -72,16 +52,28 @@ def set_cookie(cookie: CookieLike = None, **kwargs: Any) -> None:
     if bool(cookie) == bool(kwargs):
         raise ValueError("Cannot use both positional and keyword arguments at once")
     
-    _add_cookie(cookie or kwargs, clear=True)
+    set_cookies(cookie or kwargs)
 
-def set_cookies(*cookies: CookieLike) -> None:
+def set_cookies(*args: Union[Mapping[str, Any], str], clear: bool = True) -> None:
     """Sets multiple cookies at once to cycle between. Takes same arguments as set_cookie.
     
     Unlike set_cookie, this function allows for multiple cookies to be used at once.
     This is so far the only way to circumvent the rate limit.
+    
+    If clear is set to False the previously set cookies won't be cleared.
     """
-    for cookie in cookies:
-        _add_cookie(cookie)
+    global cookies
+    if clear:
+        cookies = []
+    
+    for cookie in args:
+        if isinstance(cookie, Mapping):
+            cookie = {k: str(v) for k, v in cookie.items()} # SimpleCookie needs a string
+        cookie = SimpleCookie(cookie)
+        
+        jar = RequestsCookieJar()
+        jar.update(cookie)
+        cookies.append(jar)
 
 def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
@@ -89,7 +81,7 @@ def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    import browser_cookie3
+    import browser_cookie3 # optional library
     load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
     # For backwards compatibility we also get account_id and cookie_token
     # however we can't just get every cookie because there's sensitive information
@@ -111,8 +103,9 @@ def set_cookie_auto(browser: str = None) -> None:
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    _add_cookie(get_browser_cookies(browser), clear=True)
+    set_cookie(get_browser_cookies(browser), clear=True)
 set_cookies_auto = set_cookie_auto # alias
+
 
 def get_ds_token(salt: str = DS_SALT) -> str:
     """Creates a new ds token for authentication."""
@@ -120,17 +113,6 @@ def get_ds_token(salt: str = DS_SALT) -> str:
     r = ''.join(random.choices(string.ascii_letters, k=6))  # 6 random chars
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest()  # hash and get hex
     return f'{t},{r},{h}'
-
-def _fetch_endpoint(method: str, url: str, **kwargs) -> dict:
-    """Fetches an endpoint without any extra stuff"""
-    r = session.request(method, url, **kwargs)
-    r.raise_for_status()
-    
-    data = r.json()
-    if data['retcode'] == 0:
-        return data['data']
-    
-    raise_for_error(data)
 
 def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, Any]:
     """Fetch an enpoint from the API.
@@ -141,7 +123,10 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
     
     Can specifically use the chinese base url and request data for chinese users, 
     but that requires being logged in as that user.
+    
+    Supports handling ratelimits if multiple cookies are set with `set_cookies`
     """
+    # parse the arguments for requests.request
     session.headers['ds'] = get_ds_token()
     method = kwargs.pop('method', 'get')
     url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
@@ -149,19 +134,30 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
     # go through every single avalible cookie to avoid ratelimits
     for cookie in cookies.copy():
         
-        cookie = {k: v.value for k,v in cookie.items()}
+        r = session.request(method, url, cookies=cookie, **kwargs)
+        r.raise_for_status()
+        
+        # update the cookies but clear the session cookies
+        cookie.update(r.cookies)
+        session.cookies.clear()
+        
+        data = r.json() # valid json is always returned no matter what
+        if data['retcode'] == 0:
+            return data['data']
+        
         try:
-            return _fetch_endpoint(method, url, cookies=cookie, **kwargs)
+            raise_for_error(data)
         except TooManyRequests:
-            cookies.append(cookies.pop(0)) # move the ratelimited cookie to the end
+            # move the ratelimited cookie to the end to let the ratelimit wears off
+            cookies.append(cookies.pop(0))
+    
+    # if we're here it means we used up all our cookies so we must handle that
+    if len(cookies) == 0:
+        raise NotLoggedIn('Login cookies have not been provided')
+    elif len(cookies) == 1:
+        raise TooManyRequests("Cannnot get data for more than 30 accounts per day.")
     else:
-        # more readable errors
-        if len(cookies) == 0:
-            raise NotLoggedIn('Login cookies have not been provided')
-        if len(cookies) == 1:
-            raise TooManyRequests("Cannnot get data for more than 30 accounts per day.")
-        else:
-            raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
+        raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
 
 def get_user_stats(uid: int) -> dict:
     """Gets basic user information and stats."""

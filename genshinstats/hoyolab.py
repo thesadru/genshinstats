@@ -14,7 +14,7 @@ __all__ = [
     'get_record_card', 'get_uid_from_hoyolab_uid', 'redeem_code'
 ]
 
-def search(keyword: str, size: int = 20) -> dict:
+def search(keyword: str, size: int = 20) -> list:
     """Searches all users.
 
     Can return up to 20 results, based on size.

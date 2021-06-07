@@ -1,4 +1,5 @@
 import contextlib
+from http.cookies import SimpleCookie
 import json
 import os
 import random
@@ -18,6 +19,16 @@ class GenshinStatsTest(unittest.TestCase):
         gs.set_cookie(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
     def test_recognize_server(self):
         self.assertEqual(gs.recognize_server(uid), 'os_euro')
+    def test_cookie(self):
+        gs.set_cookies() # equivalent to gs.cookies.clear()
+        self.assertEqual(gs.genshinstats.cookies, [])
+        gs.set_cookies('header1', 'header2')
+        self.assertEqual(len(gs.genshinstats.cookies), 2)
+        cookie = dict(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
+        gs.set_cookie(cookie)
+        expected = gs.genshinstats.RequestsCookieJar()
+        expected.update(cookie)
+        self.assertEqual(gs.genshinstats.cookies[0], cookie)
     def test_user_stats(self):
         data['stats'] = gs.get_user_stats(uid)
     def test_characters(self):
