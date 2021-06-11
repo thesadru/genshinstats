@@ -227,28 +227,19 @@ print(characters)
 ```
 
 ## using genshinstats asynchronously (for example with a discord bot)
-This project does not support [asyncio](https://docs.python.org/3/library/asyncio) out of the box but it's fairly easy to use it asynchronously with [futures](https://docs.python.org/3/library/concurrent.futures).
-You can use `asyncio.wrap_future()`. This function takes in a `concurrent.futures.Future` object and returns an awaitable `asyncio.Future` object.
-To use this function you must create a `ThreadPoolExecutor` and turn submitted futures in asyncio futures.
+To use any function asynchronously you can use the `asyncify()` function.
+It takes the a function and its args and kwargs. Returns an awaitable.
 ```py
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import genshinstats as gs
 
 gs.set_cookie_auto()
 
-executor = ThreadPoolExecutor()
-async def asyncify(func, *args, **kwargs):
-    # a function that wraps a function as a coroutine
-    future = executor.submit(func, *args, **kwargs)
-    return await asyncio.wrap_future(future)
-
 async def main():
-    characters = await asyncify(gs.get_characters, 710785423)
+    characters = await gs.asyncify(gs.get_characters, 710785423)
     print(characters)
 
 asyncio.run(main())
-executor.shutdown() # remember to close the executor at the end!
 ```
 
 # faq

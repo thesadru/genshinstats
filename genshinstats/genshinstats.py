@@ -103,7 +103,7 @@ def set_cookie_auto(browser: str = None) -> None:
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    set_cookie(get_browser_cookies(browser), clear=True)
+    set_cookies(get_browser_cookies(browser), clear=True)
 set_cookies_auto = set_cookie_auto # alias
 
 
