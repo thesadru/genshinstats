@@ -1,10 +1,11 @@
 import genshinstats as gs
 
-for t in gs.get_gacha_types():
-    print(t['name'])
+banners = gs.get_banner_types()
+for banner_type, banner_name in banners.items():
+    print(banner_name)
     
     since = 0
-    for pull in gs.get_gacha_log(t['key']):
+    for pull_index, pull in gs.get_wish_history(banner_type):
         since += 1
         if pull['rarity'] == 5:
             print(f"{since} pulls since 5*, {90-since} until pity")

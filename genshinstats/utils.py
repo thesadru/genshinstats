@@ -1,9 +1,14 @@
 """Various utility functions for genshinstats."""
+import asyncio
 import os.path
 import re
-from typing import Optional
+from typing import Awaitable, Callable, Optional, TypeVar, Union
 
 from .errors import AccountNotFound
+
+__all__ = [
+    'USER_AGENT', 'recognize_server', 'is_game_uid', 'is_chinese', 'get_output_log', 'asyncify'
+]
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 
@@ -26,7 +31,7 @@ def is_game_uid(uid: int) -> bool:
     """Recognizes whether the uid is a game uid."""
     return bool(re.fullmatch(r'[6789]\d{8}',str(uid)))
 
-def is_chinese(x) -> bool:
+def is_chinese(x: Union[int, str]) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(('cn','1','5'))
 
@@ -38,3 +43,10 @@ def get_output_log() -> Optional[str]:
         if os.path.isfile(output_log):
             return output_log
     return None # no genshin installation
+
+T = TypeVar('T')
+def asyncify(func: Callable[..., T], *args, **kwargs) -> Awaitable[T]:
+    """Wraps a function as an awaitable so it can be used in asyncio projects."""
+    loop = asyncio.get_event_loop()
+    # use run_in_executor so we don't have to create our own
+    return loop.run_in_executor(None, lambda: func(*args, **kwargs))
