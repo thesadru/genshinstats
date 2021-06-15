@@ -1,6 +1,6 @@
 """Wrapper for the hoyolab.com community api.
 
-Can search users, get record cards, active players...
+Can search users, get record cards, redeem codes...
 """
 import time
 from functools import lru_cache

@@ -1,7 +1,7 @@
-"""Genshin Impact gacha pulls log.
+"""Genshin Impact wish history.
 
-Gets pull data from the current banners in basic json.
-Requires an auth key that can be gotten from an output_log.txt file.
+Gets wish history from the current banners in a clean api.
+Requires an authkey that is fetched automatically from a logfile.
 """
 import heapq
 import os
@@ -207,7 +207,7 @@ def get_banner_details(banner_id: str, lang: str = 'en-us') -> dict:
     These keep rotating so you need to get them with get_banner_ids().
     example standard wish: "a37a19624270b092e7250edfabce541a3435c2"
     
-    The newbie gacha has no json resource tied to it, so you can't get info about it.
+    The newbie gacha has no json resource tied to it so you can't get info about it.
     """
     r = static_session.get(
         f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{banner_id}/{lang}.json"

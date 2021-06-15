@@ -1,6 +1,6 @@
 """Automatic sign-in for hoyolab's daily rewards.
 
-Automatically claims the next reward in the daily check-in rewards.
+Automatically claims the next daily reward in the daily check-in rewards.
 """
 from typing import Any, Dict, Iterator, Optional, Tuple
 from urllib.parse import urljoin
