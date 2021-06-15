@@ -243,7 +243,6 @@ asyncio.run(main())
 ```
 
 # faq
-## How can I get my cookies?
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
 2. login to your account
 3. press `F12` to open inspect mode (aka Developer Tools)
