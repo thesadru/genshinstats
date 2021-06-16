@@ -1,3 +1,4 @@
+"""Automaticallly checks-in and claims the daily reward every 24 hours"""
 import genshinstats as gs
 import time
 

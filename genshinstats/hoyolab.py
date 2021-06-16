@@ -11,7 +11,8 @@ from .utils import recognize_server
 
 __all__ = [
     'search', 'hoyolab_check_in', 'get_langs', 'get_game_accounts',
-    'get_record_card', 'get_uid_from_hoyolab_uid', 'redeem_code'
+    'get_record_card', 'get_uid_from_hoyolab_uid', 'redeem_code',
+    'get_recommended_users', 'get_hot_posts'
 ]
 
 def search(keyword: str, size: int = 20) -> list:
@@ -104,3 +105,26 @@ def redeem_code(code: str, uid: int = None) -> None:
                 continue # Cannot claim codes for account with adventure rank lower than 10.
             redeem_code(code, account['game_uid'])
             time.sleep(5) # there's a ratelimit of 1 request every 5 seconds
+
+def get_recommended_users(page_size: int = None) -> List[dict]:
+    """Gets a list of recommended active users"""
+    return fetch_endpoint(
+        "community/user/wapi/recommendActive",
+        params=dict(page_size=page_size or 0x10000, offset=0, gids=2)
+    )['list']
+
+def get_hot_posts(forum_id: int = 1, size: int = 100, lang: str = 'en-us') -> List[dict]:
+    """Fetches hot posts from the front page of hoyolabs
+    
+    Posts are split into different forums set by ids 1-5.
+    There may be less posts returned than size.
+    """
+    # the api is physically unable to return more than 2 ^ 24 bytes
+    # that's around 2 ^ 15 posts so we limit the amount to 2 ^ 14
+    # the user shouldn't be getting that many posts in the first place
+    return fetch_endpoint(
+        "/community/post/api/forumHotPostFullList",
+        params=dict(forum_id=forum_id, page_size=min(size, 0x4000), lang=lang)
+    )['posts']
+
+    

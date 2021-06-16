@@ -137,7 +137,7 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
         r = session.request(method, url, cookies=cookie, **kwargs)
         r.raise_for_status()
         
-        # update the cookies but clear the session cookies
+        # update the chosen cookies but clear the session cookies
         cookie.update(r.cookies)
         session.cookies.clear()
         
@@ -148,7 +148,7 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
         try:
             raise_for_error(data)
         except TooManyRequests:
-            # move the ratelimited cookie to the end to let the ratelimit wears off
+            # move the ratelimited cookie to the end to let the ratelimit wear off
             cookies.append(cookies.pop(0))
     
     # if we're here it means we used up all our cookies so we must handle that

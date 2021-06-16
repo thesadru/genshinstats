@@ -1,11 +1,12 @@
+import calendar
 import contextlib
-from http.cookies import SimpleCookie
 import json
 import os
 import random
 import time
 import unittest
 import warnings
+from datetime import datetime
 
 import genshinstats as gs
 
@@ -54,9 +55,17 @@ class GenshinStatsTest(unittest.TestCase):
     def test_search(self):
         data['search'] = gs.search('sadru')
     def test_record_card(self):
-        data['record_card'] = gs.get_record_card(hoyolab_uid)
+        card = gs.get_record_card(hoyolab_uid)
+        self.assertIsNotNone(card)
+        data['record_card'] = card
     def test_uid_from_community(self):
         self.assertEqual(gs.get_uid_from_hoyolab_uid(hoyolab_uid), uid)
+    def test_recommended(self):
+        recommended = gs.get_recommended_users()
+        self.assertGreater(len(recommended), 100)
+    def test_hot_posts(self):
+        hot_posts = gs.get_hot_posts(size=120)
+        self.assertGreater(len(hot_posts), 100)
     
     def test_banner_types(self):
         data['banner_types'] = gs.get_banner_types()
@@ -125,7 +134,9 @@ class AccountSpecificTests(unittest.TestCase):
     def test_daily_reward_info(self):
         gs.get_daily_reward_info()
     def test_monthly_rewards(self):
-        gs.get_monthly_rewards()
+        rewards = gs.get_monthly_rewards()
+        now = datetime.now()
+        self.assertEqual(len(rewards), calendar.monthrange(now.year,  now.month)[1])
     def test_claimed_rewards(self):
         next(gs.get_claimed_rewards())
 

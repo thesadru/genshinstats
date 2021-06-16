@@ -1,3 +1,4 @@
+"""Calculates your pity for each banner"""
 import genshinstats as gs
 
 banners = gs.get_banner_types()
