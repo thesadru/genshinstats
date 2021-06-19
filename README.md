@@ -243,6 +243,7 @@ asyncio.run(main())
 ```
 
 # faq
+## How can I get my cookies?
 1. go to [hoyolab.com](https://www.hoyolab.com/genshin/)
 2. login to your account
 3. press `F12` to open inspect mode (aka Developer Tools)
@@ -288,6 +289,12 @@ User stats use a cookie and wish history uses an authkey.
 The cookie is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
 
 The authkey is a temporary token to access your wish history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the wish history.
+
+## How can I claim daily rewards for other users.
+When making projects that claim daily rewards for other users you can pass in a `cookie` parameter - `claim_daily_rewards(cookie={'ltuid': ..., 'ltoken': ...})`.
+This will avoid having to set global cookies so you can use it with threading.
+
+Hint: If you want to use your user's cookies to fetch data you can add it with `set_cookies(cookie, clear=False)`.
 
 ## Is it possible that my account can be stolen when I login with the cookie?
 I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.3` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.5` there is also 2FA which will make it completely impossible to steal your account.

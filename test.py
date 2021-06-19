@@ -30,6 +30,14 @@ class GenshinStatsTest(unittest.TestCase):
         expected = gs.genshinstats.RequestsCookieJar()
         expected.update(cookie)
         self.assertEqual(gs.genshinstats.cookies[0], cookie)
+    def test_cookie_param(self):
+        gs.set_cookies()
+        cookie = dict(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # from README.md
+        accounts = gs.get_game_accounts(cookie=cookie)
+        self.assertEqual(accounts, [])
+        with contextlib.suppress(gs.SignInException):
+            gs.hoyolab_check_in(cookie)
+        gs.set_cookie(ltuid=os.environ['GS_LTUID'],ltoken=os.environ['GS_LTOKEN'])
     def test_user_stats(self):
         data['stats'] = gs.get_user_stats(uid)
     def test_characters(self):

@@ -2,7 +2,7 @@
 
 Automatically claims the next daily reward in the daily check-in rewards.
 """
-from typing import Any, Dict, Iterator, Optional, Tuple
+from typing import Any, Dict, Iterator, Mapping, Optional, Tuple
 from urllib.parse import urljoin
 
 from .genshinstats import fetch_endpoint
@@ -27,27 +27,28 @@ def fetch_daily_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict
     return fetch_endpoint(url, **kwargs)
 
 
-def get_daily_reward_info(chinese: bool = False) -> Tuple[bool, int]:
+def get_daily_reward_info(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Tuple[bool, int]:
     """Fetches daily award info for the currently logged-in user.
     
     Returns a tuple - whether the user is logged in, how many total rewards the user has claimed so far
     """
-    data = fetch_daily_endpoint("info", chinese)
+    data = fetch_daily_endpoint("info", chinese, cookie=cookie)
     return data['is_sign'], data['total_sign_day']
 
 def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us') -> list:
     """Gets a list of avalible rewards for the current month"""
     return fetch_daily_endpoint(
-        "home", chinese, 
+        "home", chinese,
         params=dict(lang=lang)
     )['awards']
 
-def get_claimed_rewards(chinese: bool = False) -> Iterator[dict]:
+def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Iterator[dict]:
     """Gets all claimed awards for the currently logged-in user"""
     current_page = 1
     while True:
         data = fetch_daily_endpoint(
-            "award", chinese, 
+            "award", chinese,
+            cookie=cookie,
             params=dict(current_page=current_page)
         )['list']
         yield from data
@@ -55,21 +56,24 @@ def get_claimed_rewards(chinese: bool = False) -> Iterator[dict]:
             break
         current_page += 1
 
-def claim_daily_reward(chinese: bool=False, lang: str = 'en-us') -> Optional[dict]:
+def claim_daily_reward(chinese: bool=False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[dict]:
     """Signs into hoyolab and claims the daily rewards.
     
     Chinese and overseas servers work a bit differently,
     so you must specify whether you want to claim rewards for chinese accounts.
     
+    When claiming rewards for other users you may add a cookie argument.
+    
     Returns the claimed reward or None if the reward cannot be claimed yet.
     """
-    signed_in, claimed_rewards = get_daily_reward_info(chinese)
+    signed_in, claimed_rewards = get_daily_reward_info(chinese, cookie)
     if signed_in:
         return None # already signed in
     
-    account = get_game_accounts(chinese)[0] # we need just one uid
+    account = get_game_accounts(chinese, cookie)[0] # we need just one uid
     fetch_daily_endpoint(
-        "sign", chinese, 
+        "sign", chinese,
+        cookie=cookie,
         method="POST",
         params=dict(uid=account['game_uid'], region=account['region'])
     )

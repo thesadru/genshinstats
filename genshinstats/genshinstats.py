@@ -46,7 +46,7 @@ def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> N
     >>> set_cookie(ltuid=..., ltoken=...)
     >>> set_cookie(account_id=..., cookie_token=...)
     >>> set_cookie({'ltuid': ..., 'ltoken': ...})
-    >>> set_cookie("ltuid=..., ltoken=...")
+    >>> set_cookie("ltuid=...; ltoken=...")
     """
     if bool(cookie) == bool(kwargs):
         raise ValueError("Cannot use both positional and keyword arguments at once")
@@ -112,7 +112,16 @@ def get_ds_token(salt: str = DS_SALT) -> str:
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest()  # hash and get hex
     return f'{t},{r},{h}'
 
-def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, Any]:
+def _request(*args, **kwargs):
+    """Fancy requests.request"""
+    r = session.request(*args, **kwargs)
+    r.raise_for_status()
+    data = r.json()
+    if data['retcode'] == 0:
+        return data['data']
+    raise_for_error(data)
+
+def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, Any] = None, **kwargs) -> Dict[str, Any]:
     """Fetch an enpoint from the API.
 
     Takes in an endpoint url which is joined with the base url.
@@ -124,35 +133,30 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, 
     
     Supports handling ratelimits if multiple cookies are set with `set_cookies`
     """
+    
     # parse the arguments for requests.request
     session.headers['ds'] = get_ds_token()
     method = kwargs.pop('method', 'get')
     url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
     
-    # go through every single avalible cookie to avoid ratelimits
+    if cookie is not None:
+        cookie = {k: str(v) for k, v in cookie.items()}
+        return _request(method, url, cookies=cookie, **kwargs)
+    elif len(cookies) == 0:
+        raise NotLoggedIn('Login cookies have not been provided')
+    
     for cookie in cookies.copy():
-        
-        r = session.request(method, url, cookies=cookie, **kwargs)
-        r.raise_for_status()
-        
-        # update the chosen cookies but clear the session cookies
-        cookie.update(r.cookies)
-        session.cookies.clear()
-        
-        data = r.json() # valid json is always returned no matter what
-        if data['retcode'] == 0:
-            return data['data']
-        
         try:
-            raise_for_error(data)
+            return _request(method, url, cookies=cookie, **kwargs)
         except TooManyRequests:
             # move the ratelimited cookie to the end to let the ratelimit wear off
             cookies.append(cookies.pop(0))
+        finally:
+            cookie.update(session.cookies)
+            session.cookies.clear()
     
     # if we're here it means we used up all our cookies so we must handle that
-    if len(cookies) == 0:
-        raise NotLoggedIn('Login cookies have not been provided')
-    elif len(cookies) == 1:
+    if len(cookies) == 1:
         raise TooManyRequests("Cannnot get data for more than 30 accounts per day.")
     else:
         raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")

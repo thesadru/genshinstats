@@ -156,7 +156,7 @@ def get_wish_history(
     if banner_type is None:
         # we get data from all banners by getting data from every individual banner
         # and then sorting it by pull date with heapq.merge
-        gens = [get_wish_history(banner_type, None, authkey, end_id)
+        gens = [get_wish_history(banner_type, None, authkey, end_id, lang)
                 for banner_type in get_banner_types(authkey)]
         yield from islice(heapq.merge(*gens, key=lambda x: x['time'], reverse=True), size)
         return

@@ -4,7 +4,7 @@ Can search users, get record cards, redeem codes...
 """
 import time
 from functools import lru_cache
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from .genshinstats import fetch_endpoint
 from .utils import recognize_server
@@ -14,6 +14,16 @@ __all__ = [
     'get_record_card', 'get_uid_from_hoyolab_uid', 'redeem_code',
     'get_recommended_users', 'get_hot_posts'
 ]
+
+
+@lru_cache()
+def get_langs() -> Dict[str, str]:
+    """Gets codes of all languages and their names"""
+    data = fetch_endpoint(
+        "community/misc/wapi/langs",
+        params=dict(gids=2)
+    )['langs']
+    return {i['value']: i['name'] for i in data}
 
 def search(keyword: str, size: int = 20) -> list:
     """Searches all users.
@@ -25,33 +35,25 @@ def search(keyword: str, size: int = 20) -> list:
         params=dict(keyword=keyword, size=size, gids=2)
     )['users']
 
-def hoyolab_check_in() -> None:
+def hoyolab_check_in(cookie: Mapping[str, Any] = None) -> None:
     """Checks in the currently logged-in user to hoyolab.
 
     This function will not claim daily rewards!!!
     """
     fetch_endpoint(
         "community/apihub/api/signIn",
+        cookie=cookie,
         method='POST',
         json=dict(gids=2)
     )
 
-@lru_cache()
-def get_langs() -> Dict[str, str]:
-    """Gets codes of all languages and their names"""
-    data = fetch_endpoint(
-        "community/misc/wapi/langs",
-        params=dict(gids=2)
-    )['langs']
-    return {i['value']: i['name'] for i in data}
-
-def get_game_accounts(chinese: bool = False) -> List[dict]:
+def get_game_accounts(chinese: bool = False, cookie: Mapping[str, Any] = None) -> List[dict]:
     """Gets all game accounts of the currently signed in player.
 
     Can get accounts both for overseas and china.
     """
     url = "https://api-takumi.mihoyo.com/" if chinese else "https://api-os-takumi.mihoyo.com/"
-    return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie")['list']
+    return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie", cookie=cookie)['list']
 
 def get_record_card(hoyolab_uid: int) -> Optional[dict]:
     """Gets a game record card of a user based on their hoyolab uid.
@@ -77,7 +79,7 @@ def get_uid_from_hoyolab_uid(hoyolab_uid: int) -> Optional[int]:
     card = get_record_card(hoyolab_uid)
     return int(card['game_role_id']) if card else None
 
-def redeem_code(code: str, uid: int = None) -> None:
+def redeem_code(code: str, uid: int = None, cookie: Mapping[str, Any] = None) -> None:
     """Redeems a gift code for the currently signed in user.
 
     Api endpoint for https://genshin.mihoyo.com/en/gift.
@@ -96,6 +98,7 @@ def redeem_code(code: str, uid: int = None) -> None:
     if uid is not None:
         fetch_endpoint(
             "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
+            cookie=cookie,
             params=dict(uid=uid, region=recognize_server(uid),
                         cdkey=code, game_biz='hk4e_global', lang='en')
         )
@@ -123,7 +126,7 @@ def get_hot_posts(forum_id: int = 1, size: int = 100, lang: str = 'en-us') -> Li
     # that's around 2 ^ 15 posts so we limit the amount to 2 ^ 14
     # the user shouldn't be getting that many posts in the first place
     return fetch_endpoint(
-        "/community/post/api/forumHotPostFullList",
+        "community/post/api/forumHotPostFullList",
         params=dict(forum_id=forum_id, page_size=min(size, 0x4000), lang=lang)
     )['posts']
 
