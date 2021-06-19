@@ -7,11 +7,10 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from http.cookiejar import Cookie, CookieJar, CookiePolicy, DefaultCookiePolicy
 from typing import Any, Dict, List, Mapping, Union
 from urllib.parse import urljoin
 
-from requests.sessions import Session, RequestsCookieJar
+from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
 from .pretty import *
@@ -62,9 +61,8 @@ def set_cookies(*args: Union[Mapping[str, Any], str], clear: bool = True) -> Non
     
     If clear is set to False the previously set cookies won't be cleared.
     """
-    global cookies
     if clear:
-        cookies = []
+        cookies.clear()
     
     for cookie in args:
         if isinstance(cookie, Mapping):
@@ -81,7 +79,7 @@ def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     If a specifc browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    import browser_cookie3 # optional library
+    import browser_cookie3  # optional library
     load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
     # For backwards compatibility we also get account_id and cookie_token
     # however we can't just get every cookie because there's sensitive information

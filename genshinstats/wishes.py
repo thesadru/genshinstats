@@ -79,22 +79,16 @@ def get_authkey(logfile: str = None) -> str:
     raise MissingAuthKey('No authkey could be found in the logs or in a tempfile. '
                          'Open the history in-game first before attempting to request it.')
 
-def set_authkey(authkey: str = None, url: str = None, logfile: str = None) -> None:
+def set_authkey(authkey: str = None) -> None:
     """Sets an authkey for log requests.
 
-    passing in authkey will simply save it, 
-    passing in a url will take the authkey out of it,
-    passing in a logfile will search it,
-    otherwise searches the logs and a tempfile.
+    You may pass in an authkey, a url with an authkey 
+    or a path to a logfile with the authkey.
     """
-    if authkey is not None:
-        pass
-    elif url is not None:
-        authkey = extract_authkey(url) # type: ignore
-        if authkey is None:
-            raise ValueError("url does not have an authkey parameter")
+    if authkey is None or os.path.isfile(authkey):
+        authkey = get_authkey(authkey)
     else:
-        authkey = get_authkey(logfile)
+        authkey = extract_authkey(authkey) or authkey
     session.params['authkey'] = authkey
 
 def get_banner_ids(logfile: str = None) -> List[str]:

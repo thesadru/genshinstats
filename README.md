@@ -135,9 +135,9 @@ Or by directly setting the authkey:
 # directly with the token:
 gs.set_authkey("D3ZYe49SUzpDgzrt/l00n2673Zg8N/Yd9OSc7NulRHhp8EhzlEnz2ISBtKBR0fZ/DGs8...")
 # get from a url:
-gs.set_authkey(url="https://webstatic-sea.mihoyo.com/ys/event/im-service/index.html?...")
+gs.set_authkey("https://webstatic-sea.mihoyo.com/ys/event/im-service/index.html?...")
 # read from a custom file:
-gs.set_authkey(logfile='other_output_log.txt')
+gs.set_authkey('other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.
 ### signin

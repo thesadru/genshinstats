@@ -74,4 +74,4 @@ def claim_daily_reward(chinese: bool=False, lang: str = 'en-us') -> Optional[dic
         params=dict(uid=account['game_uid'], region=account['region'])
     )
     rewards = get_monthly_rewards(chinese, lang=lang)
-    return rewards[claimed_rewards + 1]
+    return rewards[claimed_rewards]
