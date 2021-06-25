@@ -14,7 +14,7 @@ class GenshinStatsException(Exception):
         """Adds an optional response object to the error."""
         self.retcode = response['retcode']
         self.orig_msg = response['message']
-        if type(self) == GenshinStatsException: # for exceptions without a type
+        if type(self) is GenshinStatsException: # for exceptions without a type
             self.msg = self.msg.format(self.retcode,self.orig_msg)
 
     @property

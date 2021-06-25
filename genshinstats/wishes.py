@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 GENSHIN_LOG = get_output_log()
-GACHA_INFO_URL = "https://hk4e-api.mihoyo.com/event/gacha_info/api/"
+GACHA_INFO_URL = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(), 'genshinstats_authkey.txt')
 
 session = Session()
@@ -55,7 +55,7 @@ def _read_logfile(logfile: str = None) -> str:
 
 def extract_authkey(string: str) -> Optional[str]:
     """Extracts an authkey from the provided string. Returns None if not found."""
-    match = re.search(r'https://.+?authkey=([^&]+)', string, re.MULTILINE)
+    match = re.search(r'https://.+?authkey=([^&#]+)', string, re.MULTILINE)
     if match is not None:
         return unquote(match.group(1))
     return None
@@ -97,7 +97,7 @@ def get_banner_ids(logfile: str = None) -> List[str]:
     You need to open the details of all banners for this to work.
     """
     log = _read_logfile(logfile)
-    ids = re.findall(r'OnGetWebViewPageFinish:https://.+?gacha_id=([^&]+)', log)
+    ids = re.findall(r'OnGetWebViewPageFinish:https://.+?gacha_id=([^&#]+)', log)
     return list(set(ids))
 
 def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[str, Any]:

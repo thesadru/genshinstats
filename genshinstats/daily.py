@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 
 from .genshinstats import fetch_endpoint
 from .hoyolab import get_game_accounts
+from .utils import recognize_server
 
 __all__ = [
     'fetch_daily_endpoint', 'get_daily_reward_info', 'get_claimed_rewards', 
@@ -35,12 +36,18 @@ def get_daily_reward_info(chinese: bool = False, cookie: Mapping[str, Any] = Non
     data = fetch_daily_endpoint("info", chinese, cookie=cookie)
     return data['is_sign'], data['total_sign_day']
 
-def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us') -> list:
+_monthly_rewards = None # homebrew cache, dangerous since it should only last 1 month but who cares
+def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> list:
     """Gets a list of avalible rewards for the current month"""
-    return fetch_daily_endpoint(
-        "home", chinese,
-        params=dict(lang=lang)
-    )['awards']
+    global _monthly_rewards
+    if _monthly_rewards is None:
+        _monthly_rewards = fetch_daily_endpoint(
+            "home", chinese,
+            cookie=cookie,
+            params=dict(lang=lang)
+        )['awards']
+    
+    return _monthly_rewards
 
 def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Iterator[dict]:
     """Gets all claimed awards for the currently logged-in user"""
@@ -56,7 +63,7 @@ def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None)
             break
         current_page += 1
 
-def claim_daily_reward(chinese: bool=False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[dict]:
+def claim_daily_reward(uid: int = None, chinese: bool=False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[dict]:
     """Signs into hoyolab and claims the daily rewards.
     
     Chinese and overseas servers work a bit differently,
@@ -68,14 +75,16 @@ def claim_daily_reward(chinese: bool=False, lang: str = 'en-us', cookie: Mapping
     """
     signed_in, claimed_rewards = get_daily_reward_info(chinese, cookie)
     if signed_in:
-        return None # already signed in
+        return None
     
-    account = get_game_accounts(chinese, cookie)[0] # we need just one uid
+    # we need just one uid
+    uid = uid or get_game_accounts(chinese, cookie)[0]['game_uid']
     fetch_daily_endpoint(
         "sign", chinese,
         cookie=cookie,
         method="POST",
-        params=dict(uid=account['game_uid'], region=account['region'])
+        # these seem to no longer be required however I'm not risking it
+        params=dict(uid=uid, region=recognize_server(uid), lang=lang)
     )
-    rewards = get_monthly_rewards(chinese, lang=lang)
+    rewards = get_monthly_rewards(chinese, lang, cookie)
     return rewards[claimed_rewards]

@@ -13,7 +13,12 @@ using [pip](https://pypi.org/project/genshinstats/)
 ```
 pip install genshinstats
 ```
-or clone and install manually
+### Alternatives:
+using pip from the dev branch
+```py
+pip install git+https://github.com/thesadru/genshinstats@dev
+```
+clone and install manually
 ```
 git clone https://github.com/thesadru/genshinstats.git
 cd genshinstats
@@ -26,18 +31,18 @@ Since all mihoyo's apis are private there's no kind of api token or authenticati
 
 The best way to learn is with examples so I have provided a usage example for every function.
 
-[API documentation](https://thesadru.github.io/pdoc/genshinstats/)
+You may also use the [documentation](https://thesadru.github.io/pdoc/genshinstats/)
 
 # examples
 Simple examples of usage:
 ```py
-import genshinstats as gs # import module
-gs.set_cookie(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT") # login
+import genshinstats as gs
+gs.set_cookie(ltuid=119480035, ltoken="cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT")
 
 uid = 710785423
-data = gs.get_user_stats(uid) # get user info with a uid
-total_characters = len(data['characters']) # get the amount of characters
-print('user "sadru" has a total of',total_characters,'characters')
+data = gs.get_user_stats(uid)
+total_characters = len(data['characters'])
+print('user "sadru" has a total of', total_characters, 'characters')
 ```
 > Cookies should be your own. These are just some example cookies of an account that can be deleted at any time.
 
@@ -140,12 +145,11 @@ gs.set_authkey("https://webstatic-sea.mihoyo.com/ys/event/im-service/index.html?
 gs.set_authkey('other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.
-### signin
+> 
+> For more info on how to get the authkey you can use the instructions on [paimon.moe](https://paimon.moe/wish), just click the "auto import" button.
+### daily rewards
 Automatically get daily sign in rewards for the currently logged-in user.
 ```py
-signed_in, claimed_rewards = gs.get_daily_reward_info()
-print('total rewards claimed:', claimed_rewards)
-
 reward = gs.claim_daily_reward()
 if reward is not None:
     print(f"Claimed daily reward - {reward['cnt']}x {reward['name']}")
@@ -228,7 +232,6 @@ print(characters)
 
 ## using genshinstats asynchronously (for example with a discord bot)
 To use any function asynchronously you can use the `asyncify()` function.
-It takes the a function and its args and kwargs. Returns an awaitable.
 ```py
 import asyncio
 import genshinstats as gs
@@ -294,7 +297,7 @@ The authkey is a temporary token to access your wish history. It's unique for ev
 When making projects that claim daily rewards for other users you can pass in a `cookie` parameter - `claim_daily_rewards(cookie={'ltuid': ..., 'ltoken': ...})`.
 This will avoid having to set global cookies so you can use it with threading.
 
-Hint: If you want to use your user's cookies to fetch data you can add it with `set_cookies(cookie, clear=False)`.
+This cookie parameter is avalible for the majority of other accounts.
 
 ## Is it possible that my account can be stolen when I login with the cookie?
 I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.3` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.5` there is also 2FA which will make it completely impossible to steal your account.
@@ -323,8 +326,10 @@ All the data you can get should be already implemented. If you see an endpoint t
 `set_cookie_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookies()`.
 When getting said cookies, they are filtered so only ones for mihoyo are ever pulled out. They will only ever be used as authentication and will never be sent anywhere else.
 
-## What's the rate limit?
-As far as I know there is no rate limit, however I recommend you avoid spamming the api, as mihoyo can still ip ban you. My guess is that if you try to make more than 1 request per second the chances are mihoyo is not going to appreciate it.
+## What's the ratelimit?
+You may only fetch data for 30 users per day per cookie.
+That means that when making projects that fetches data for other users it's recommended to use multiple cookies.
+You can set a bunch of cookies at once with `set_cookies(cookie1, cookie2, ...)`.
 
 ## How can I get an in-game uid from a hoyolab uid?
 `get_uid_from_hoyolab(hoyolab_uid)` can do that for you. It will return None if the user's data is private. To check whether a given uid is a game or a hoyolab one use `is_game_uid(uid)`.
@@ -357,6 +362,19 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.4
+- Added a cookie parameter to all functions that use cookies
+- Added `set_visibility`
+- Made `claim_daily_reward` send an email in the correct language
+- Improved `setup.py`
+- Updated to the new wish history domain
+## 1.4.3
+- Added a cookie parameter to `claim_daily_reward`
+## 1.4.2
+- Made several improvements to the claiming of daily rewards
+## 1.4.1
+- Added `get_recommended_users`
+- Added `get_hot_posts`
 ## 1.4
 - Renamed majority of functions
     - `get_user_data` -> `get_user_stats`

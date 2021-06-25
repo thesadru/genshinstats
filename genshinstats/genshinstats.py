@@ -17,7 +17,7 @@ from .pretty import *
 from .utils import USER_AGENT, is_chinese, recognize_server
 
 __all__ = [
-    'set_cookie', 'set_cookies', 'get_browser_cookies', 'set_cookies_auto', 'set_cookie_auto', 'get_ds_token', 
+    'set_cookie', 'set_cookies', 'get_browser_cookies', 'set_cookies_auto', 'set_cookie_auto',
     'fetch_endpoint', 'get_user_stats', 'get_characters', 'get_spiral_abyss', 'get_all_user_data'
 ]
 
@@ -76,7 +76,7 @@ def set_cookies(*args: Union[Mapping[str, Any], str], clear: bool = True) -> Non
 def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
     
-    If a specifc browser is set, gets data from that browser only.
+    If a specific browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     import browser_cookie3  # optional library
@@ -98,14 +98,14 @@ def set_cookie_auto(browser: str = None) -> None:
     Be aware that this process can take up to 10 seconds.
     To speed it up you may select a browser.
     
-    If a specifc browser is set, gets data from that browser only.
+    If a specific browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     set_cookies(get_browser_cookies(browser), clear=True)
 set_cookies_auto = set_cookie_auto # alias
 
 
-def get_ds_token(salt: str = DS_SALT) -> str:
+def generate_ds_token(salt: str = DS_SALT) -> str:
     """Creates a new ds token for authentication."""
     t = int(time.time())  # current seconds
     r = ''.join(random.choices(string.ascii_letters, k=6))  # 6 random chars
@@ -116,6 +116,8 @@ def _request(*args, **kwargs):
     """Fancy requests.request"""
     r = session.request(*args, **kwargs)
     r.raise_for_status()
+    kwargs['cookies'].update(session.cookies)
+    session.cookies.clear()
     data = r.json()
     if data['retcode'] == 0:
         return data['data']
@@ -133,9 +135,8 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     
     Supports handling ratelimits if multiple cookies are set with `set_cookies`
     """
-    
     # parse the arguments for requests.request
-    session.headers['ds'] = get_ds_token()
+    session.headers['ds'] = generate_ds_token()
     method = kwargs.pop('method', 'get')
     url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
     
@@ -151,9 +152,6 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
         except TooManyRequests:
             # move the ratelimited cookie to the end to let the ratelimit wear off
             cookies.append(cookies.pop(0))
-        finally:
-            cookie.update(session.cookies)
-            session.cookies.clear()
     
     # if we're here it means we used up all our cookies so we must handle that
     if len(cookies) == 1:
@@ -161,17 +159,18 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     else:
         raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
 
-def get_user_stats(uid: int) -> dict:
+def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> dict:
     """Gets basic user information and stats."""
     server = recognize_server(uid)
     data = fetch_endpoint(
         "game_record/genshin/api/index",
         chinese=is_chinese(uid),
+        cookie=cookie,
         params=dict(server=server, role_id=uid)
     )
     return prettify_user_stats(data)
 
-def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us') -> list:
+def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> list:
     """Gets characters of a user.
     
     Characters contain info about their level, constellation, weapon, and artifacts.
@@ -186,13 +185,14 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
     data = fetch_endpoint(
         "game_record/genshin/api/character",
         chinese=is_chinese(uid),
+        cookie=cookie,
         method='POST',
         json=dict(character_ids=character_ids, role_id=uid, server=server),  # POST uses the body instead
         headers={'x-rpc-language': lang},
     )["avatars"]
     return prettify_characters(data)
 
-def get_spiral_abyss(uid: int, previous: bool = False) -> dict:
+def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any] = None) -> dict:
     """Gets spiral abyss runs of a user and details about them.
     
     Every season these stats refresh and you can get the previous stats with `previous`.
@@ -202,17 +202,18 @@ def get_spiral_abyss(uid: int, previous: bool = False) -> dict:
     data = fetch_endpoint(
         "game_record/genshin/api/spiralAbyss",
         chinese=is_chinese(uid),
+        cookie=cookie,
         params=dict(server=server, role_id=uid, schedule_type=schedule_type)
     )
     return prettify_spiral_abyss(data)
 
-def get_all_user_data(uid: int, lang: str = 'en-us') -> dict:
+def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> dict:
     """Fetches all data a user can has. Very slow.
     
     A helper function that gets all avalible data for a user and returns it as one dict.
     However that makes it fairly slow so it's not recommended to use it outside caching.
     """
-    data = get_user_stats(uid)
-    data['characters'] = get_characters(uid, [i['id'] for i in data['characters']], lang=lang)
-    data['spiral_abyss'] = [get_spiral_abyss(uid), get_spiral_abyss(uid, previous=True)]
+    data = get_user_stats(uid, cookie)
+    data['characters'] = get_characters(uid, [i['id'] for i in data['characters']], lang, cookie)
+    data['spiral_abyss'] = [get_spiral_abyss(uid, previous, cookie) for previous in [False, True]]
     return data
