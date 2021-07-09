@@ -14,8 +14,7 @@ class GenshinStatsException(Exception):
         """Adds an optional response object to the error."""
         self.retcode = response['retcode']
         self.orig_msg = response['message']
-        if type(self) is GenshinStatsException: # for exceptions without a type
-            self.msg = self.msg.format(self.retcode,self.orig_msg)
+        self.msg = self.msg.format(self.retcode, self.orig_msg)
 
     @property
     def msg(self):
@@ -38,13 +37,13 @@ class CodeRedeemException(GenshinStatsException):
 class SignInException(GenshinStatsException):
     """Sign-in failed"""
 
-class GachaLogException(GenshinStatsException):
+class AuthkeyError(GenshinStatsException):
     """Base GachaLog Exception."""
-class InvalidAuthkey(GachaLogException):
+class InvalidAuthkey(AuthkeyError):
     """An authkey is invalid."""
-class AuthKeyTimeout(GachaLogException):
+class AuthkeyTimeout(AuthkeyError):
     """An authkey has timed out."""
-class MissingAuthKey(GachaLogException):
+class MissingAuthKey(AuthkeyError):
     """No gacha authkey was found."""
 
 def raise_for_error(response: dict):
@@ -68,12 +67,12 @@ def raise_for_error(response: dict):
         -2021: CodeRedeemException('Cannot claim codes for account with adventure rank lower than 10.'),
         -1073: CodeRedeemException('Cannot claim code. Account has no game account bound to it.'),
         # sign in
-        -5003: SignInException('Already claimed daily reward, try again tomorrow.'),
-        2001:  SignInException('Already checked in today, wait at least a day before checking-in again.'),
+        -5003: SignInException('Already claimed daily reward today.'),
+        2001:  SignInException('Already checked into hoyolab today.'),
         # gacha log
         -100:  InvalidAuthkey('Authkey is not valid.') if response['message']=='authkey error' else 
                 NotLoggedIn('Login cookies have not been provided or are incorrect.'),
-        -101:  AuthKeyTimeout('Authkey has timed-out. Update it by opening the history page in Genshin.')
+        -101:  AuthkeyTimeout('Authkey has timed-out. Update it by opening the history page in Genshin.')
     }.get(response['retcode'], GenshinStatsException("{} Error ({})"))
     error.set_response(response)
     raise error

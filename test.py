@@ -154,7 +154,7 @@ class AccountSpecificTests(unittest.TestCase):
         with contextlib.suppress(gs.SignInException):
             gs.hoyolab_check_in()
 
-    @unittest.skip('Redeem code takes too long')
+    @unittest.skip('Unreliable. Redeem code takes too long.')
     def test_redeem_code(self):
         # takes like 30s to run
         with self.assertRaises(gs.CodeRedeemException):

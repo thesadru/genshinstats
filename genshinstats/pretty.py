@@ -111,7 +111,7 @@ def prettify_characters(data):
                     "pieces":e["activation_number"],
                     "effect":e["effect"],
                 } for e in a["set"]["affixes"]],
-                "set_id": int(re.search(r'UI_RelicIcon_(\d+)_\d',a["icon"]).group(1)),
+                "set_id": int(re.search(r'UI_RelicIcon_(\d+)_\d',a["icon"]).group(1)), # type: ignore
                 "id": a["set"]["id"]
             },
             "icon": a["icon"],

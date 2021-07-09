@@ -14,9 +14,9 @@ using [pip](https://pypi.org/project/genshinstats/)
 pip install genshinstats
 ```
 ### Alternatives:
-using pip from the dev branch
-```py
-pip install git+https://github.com/thesadru/genshinstats@dev
+using pip from git
+```
+pip install git+https://github.com/thesadru/genshinstats
 ```
 clone and install manually
 ```
@@ -49,7 +49,7 @@ print('user "sadru" has a total of', total_characters, 'characters')
 > Note that `set_cookie` and `set_cookies` are different functions! The latter should only be used when getting data for other users (for example social media bots)
 ```py
 stats = gs.get_user_stats(uid)['stats']
-for field,value in stats.items():
+for field, value in stats.items():
     print(f"{field}: {value}")
 # achievements: 210
 # active_days: 121
@@ -69,7 +69,7 @@ for char in characters:
 ```py
 spiral_abyss = gs.get_spiral_abyss(uid, previous=True)
 stats = spiral_abyss['stats']
-for field,value in stats.items():
+for field, value in stats.items():
     print(f"{field}: {value}")
 # total_battles: 14
 # total_wins: 9
@@ -126,14 +126,14 @@ for i in banner_ids:
 # 5 stars: Elegy for the End, Skyward Blade
 # 4 stars: The Alley Flash, Wine and Song, Favonius Greatsword, Favonius Warbow, Dragon's Bane
 ```
-> `get_all_banner_ids()` gets a list of all banners whose details page has been opened in the game.
+> `get_banner_ids()` gets a list of all banners whose details page has been opened in the game.
 >
 > Basically uses the same approach as `get_authkey`
 
 View other's history by passing in an authkey:
 ```py
 authkey = "t5QMiyrenV50CFbqnB4Z+aG4ltprY1JxM5YoaChr9QH0Lp6rK5855xxa1P55..."
-gs.get_wish_history(size=20,authkey=authkey)
+gs.get_wish_history(size=20, authkey=authkey)
 ```
 Or by directly setting the authkey:
 ```py
@@ -231,7 +231,8 @@ print(characters)
 ```
 
 ## using genshinstats asynchronously (for example with a discord bot)
-To use any function asynchronously you can use the `asyncify()` function.
+To use any function asynchronously you can use the `asyncio.to_thread(func, *args, **kwargs)` function.
+If you're using python 3.8 or less you can use `loop.run_in_executor(None, func, *args)`. Check out the `asyncio` docs for more info.
 ```py
 import asyncio
 import genshinstats as gs
@@ -239,7 +240,7 @@ import genshinstats as gs
 gs.set_cookie_auto()
 
 async def main():
-    characters = await gs.asyncify(gs.get_characters, 710785423)
+    characters = await asyncio.to_thread(gs.get_characters, 710785423)
     print(characters)
 
 asyncio.run(main())
@@ -279,7 +280,6 @@ Mihoyo allows users to get data for only up to 30 other users per day, to circum
 ```py
 gs.set_cookies({'ltuid': 1, 'ltoken': 'token...'}, {'ltuid': 2, 'ltoken': 'other token...'})
 ```
-> This function works essentially the same like `set_cookie` meaning you can also pass in cookie headers and `http.cookies.BaseCookie` objects.
 
 ## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
 The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.
@@ -292,6 +292,8 @@ User stats use a cookie and wish history uses an authkey.
 The cookie is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
 
 The authkey is a temporary token to access your wish history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the wish history.
+
+Tip for developers: the first 682 characters (85 bytes) of the authkey are always the same for each user. You can use this to easily indentify if an authkey belongs to the same user as another authkey.
 
 ## How can I claim daily rewards for other users.
 When making projects that claim daily rewards for other users you can pass in a `cookie` parameter - `claim_daily_rewards(cookie={'ltuid': ..., 'ltoken': ...})`.
@@ -362,6 +364,11 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.4.1
+- Added `validate_authkey`
+- Made `claim_daily_reward` no longer require a uid.
+- Renamed `GachaLogException` to `AuthkeyError`
+- Removed `genshinstats.asyncify()` in favor of `asyncio.to_thread()`
 ## 1.4.4
 - Added a cookie parameter to all functions that use cookies
 - Added `set_visibility`

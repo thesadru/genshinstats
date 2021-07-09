@@ -63,7 +63,7 @@ def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None)
             break
         current_page += 1
 
-def claim_daily_reward(uid: int = None, chinese: bool=False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[dict]:
+def claim_daily_reward(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[dict]:
     """Signs into hoyolab and claims the daily rewards.
     
     Chinese and overseas servers work a bit differently,
@@ -77,14 +77,11 @@ def claim_daily_reward(uid: int = None, chinese: bool=False, lang: str = 'en-us'
     if signed_in:
         return None
     
-    # we need just one uid
-    uid = uid or get_game_accounts(chinese, cookie)[0]['game_uid']
     fetch_daily_endpoint(
         "sign", chinese,
         cookie=cookie,
         method="POST",
-        # these seem to no longer be required however I'm not risking it
-        params=dict(uid=uid, region=recognize_server(uid), lang=lang)
+        params=dict(lang=lang)
     )
     rewards = get_monthly_rewards(chinese, lang, cookie)
     return rewards[claimed_rewards]

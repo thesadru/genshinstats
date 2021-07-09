@@ -3,6 +3,7 @@
 Gets wish history from the current banners in a clean api.
 Requires an authkey that is fetched automatically from a logfile.
 """
+import base64
 import heapq
 import os
 import re
@@ -14,14 +15,15 @@ from urllib.parse import unquote, urljoin
 
 from requests import Session
 
-from .errors import MissingAuthKey, raise_for_error
+from .errors import AuthkeyError, MissingAuthKey, raise_for_error
 from .pretty import *
 from .utils import USER_AGENT, get_output_log
 
 __all__ = [
     'extract_authkey', 'get_authkey', 'set_authkey', 'get_banner_ids',
     'fetch_gacha_endpoint', 'get_banner_types', 'get_wish_history',
-    'get_gacha_items', 'get_banner_details', 'get_uid_from_authkey'
+    'get_gacha_items', 'get_banner_details', 'get_uid_from_authkey',
+    'validate_authkey'
 ]
 
 GENSHIN_LOG = get_output_log()
@@ -111,10 +113,10 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     if authkey is None:
         session.params['authkey'] = session.params['authkey'] or get_authkey()
     else:
-        kwargs['params']['authkey'] = authkey
+        kwargs.setdefault('params', {})['authkey'] = authkey
     method = kwargs.pop('method', 'get')
     url = urljoin(GACHA_INFO_URL, endpoint)
-
+    
     r = session.request(method, url, **kwargs)
     r.raise_for_status()
 
@@ -215,8 +217,33 @@ def get_uid_from_authkey(authkey: str = None) -> int:
     If an authkey is not passed in the function uses the currently set authkey.
     """
     # for safety we use all banners, probably overkill
-    histories = [get_wish_history(i, 1, authkey) for i in get_banner_types(authkey)]
-    pull = next(chain(*histories), None)
+    # they are sorted from most to least pulled on for speed
+    histories = [get_wish_history(i, 1, authkey) for i in (301, 200, 302, 100)]
+    pull = next(chain.from_iterable(histories), None)
     if pull is None: # very rare but possible
         raise Exception('User has never made a wish')
     return pull['uid']
+
+def validate_authkey(authkey: Any, previous_authkey: str = None) -> bool:
+    """Checks whether an authkey is valid by sending a request
+    
+    If a previous authkey is provided the function also checks if the
+    authkey belongs to the same person as the previous one.
+    """
+    if not isinstance(authkey, str) or len(authkey) != 1024:
+        return False # invalid format
+    
+    try:
+        base64.b64decode(authkey)
+    except:
+        return False # invalid base64 format
+    
+    if previous_authkey and authkey[:682] != previous_authkey[:682]:
+        return False
+    
+    try:
+        fetch_gacha_endpoint("getConfigList", authkey=authkey)
+    except AuthkeyError:
+        return False
+    
+    return True
