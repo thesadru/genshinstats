@@ -1,2 +1,2 @@
 requests
-browser-cookies3
+browser-cookie3

@@ -79,7 +79,11 @@ def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     If a specific browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
-    import browser_cookie3  # optional library
+    try:
+        import browser_cookie3  # optional library
+    except ImportError:
+        raise ImportError("functions 'set_cookie_auto' and 'get_browser_cookie` require \"browser-cookie3\". "
+                          "To use these function please install the dependency with \"pip install browser-cookie3\".")
     load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
     # For backwards compatibility we also get account_id and cookie_token
     # however we can't just get every cookie because there's sensitive information
