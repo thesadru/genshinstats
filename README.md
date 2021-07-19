@@ -185,7 +185,7 @@ You can also redeem gift codes mihoyo gives out during events such as livestream
 ```py
 gs.redeem_code('GENSHINGIFT')
 ```
-> `redeem_code()` requires a special form of authentication: an `account_id` and `cookie_token` cookies.
+> `redeem_code()` requires a special form of authentication: an `cookie_token` cookies.
 > You can get these by grabbing cookies from [the official genshin site](https://genshin.mihoyo.com/en/gift) instead of hoyolabs.
 
 ## change language
