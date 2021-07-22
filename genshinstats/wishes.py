@@ -7,7 +7,6 @@ import base64
 import heapq
 import os
 import re
-from functools import lru_cache
 from itertools import chain, islice
 from tempfile import gettempdir
 from typing import Any, Dict, Iterator, List, Optional
@@ -17,7 +16,7 @@ from requests import Session
 
 from .errors import AuthkeyError, MissingAuthKey, raise_for_error
 from .pretty import *
-from .utils import USER_AGENT, get_output_log
+from .utils import USER_AGENT, get_output_log, permanent_cache
 
 __all__ = [
     'extract_authkey', 'get_authkey', 'set_authkey', 'get_banner_ids',
@@ -91,7 +90,7 @@ def set_authkey(authkey: str = None) -> None:
         authkey = get_authkey(authkey)
     else:
         authkey = extract_authkey(authkey) or authkey
-    session.params['authkey'] = authkey
+    session.params['authkey'] = authkey # type: ignore
 
 def get_banner_ids(logfile: str = None) -> List[str]:
     """Gets all banner ids from a log file.
@@ -111,7 +110,7 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     Includes error handling and getting the authkey.
     """
     if authkey is None:
-        session.params['authkey'] = session.params['authkey'] or get_authkey()
+        session.params['authkey'] = session.params['authkey'] or get_authkey() # type: ignore
     else:
         kwargs.setdefault('params', {})['authkey'] = authkey
     method = kwargs.pop('method', 'get')
@@ -126,7 +125,7 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
 
     raise_for_error(data)
 
-@lru_cache()
+@permanent_cache('lang')
 def get_banner_types(authkey: str = None, lang: str = 'en') -> Dict[int, str]:
     """Gets ids for all banners and their names"""
     banners = fetch_gacha_endpoint(
@@ -139,7 +138,7 @@ def get_banner_types(authkey: str = None, lang: str = 'en') -> Dict[int, str]:
 def get_wish_history(
     banner_type: int = None, size: int = None, 
     authkey: str = None, end_id: int = 0, lang: str = 'en'
-) -> Iterator[dict]:
+) -> Iterator[Dict[str, Any]]:
     """Gets wish history.
     
     Note that pulls are yielded and not returned to account for pagination.
@@ -196,7 +195,7 @@ def get_gacha_items(lang: str = 'en-us') -> list:
     r.raise_for_status()
     return prettify_gacha_items(r.json())
 
-def get_banner_details(banner_id: str, lang: str = 'en-us') -> dict:
+def get_banner_details(banner_id: str, lang: str = 'en-us') -> Dict[str, Any]:
     """Gets details of a specific banner.
 
     This requires the banner's id.

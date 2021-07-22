@@ -163,7 +163,7 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     else:
         raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
 
-def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> dict:
+def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Gets basic user information and stats."""
     server = recognize_server(uid)
     data = fetch_endpoint(
@@ -196,7 +196,7 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
     )["avatars"]
     return prettify_characters(data)
 
-def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any] = None) -> dict:
+def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Gets spiral abyss runs of a user and details about them.
     
     Every season these stats refresh and you can get the previous stats with `previous`.
@@ -211,7 +211,7 @@ def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any]
     )
     return prettify_spiral_abyss(data)
 
-def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> dict:
+def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Fetches all data a user can has. Very slow.
     
     A helper function that gets all avalible data for a user and returns it as one dict.

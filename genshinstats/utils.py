@@ -1,12 +1,13 @@
 """Various utility functions for genshinstats."""
 import os.path
 import re
-from typing import Optional, Union
+import inspect
+from typing import Callable, Optional, TypeVar, Union
 
 from .errors import AccountNotFound
 
 __all__ = [
-    'USER_AGENT', 'recognize_server', 'is_game_uid', 'is_chinese', 'get_output_log'
+    'USER_AGENT', 'recognize_server', 'is_game_uid', 'is_chinese', 'get_output_log', 'permanent_cache'
 ]
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
@@ -42,3 +43,23 @@ def get_output_log() -> Optional[str]:
         if os.path.isfile(output_log):
             return output_log
     return None # no genshin installation
+
+T = TypeVar('T', bound=Callable)
+def permanent_cache(*params: str) -> Callable[[T], T]:
+    """Like lru_cache except permanent and only caches based on some parameters"""
+    cache = {}
+    
+    def wrapper(func):
+        sig = inspect.signature(func)
+        
+        def inner(*args, **kwargs):
+            bound = tuple(v for k,v in sig.bind(*args, **kwargs).arguments.items() if k in params)
+            if bound in cache:
+                return cache[bound]
+            r =  func(*args, **kwargs)
+            cache[bound] = r
+            return r
+        
+        inner.cache = cache
+        return inner
+    return wrapper # type: ignore

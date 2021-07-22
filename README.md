@@ -364,6 +364,12 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+# 1.4.4.3
+- Added electro traveler's element to the character prettifier
+- Annotated all unsubscripted dicts in the library as `Dict[str, Any]`
+- Fixed bug where getting banner types with different authkeys would not get the cached result
+# 1.4.4.2
+- Added a custom error message for set_cookie_auto
 ## 1.4.4.1
 - Added `validate_authkey`
 - Made `claim_daily_reward` no longer require a uid.

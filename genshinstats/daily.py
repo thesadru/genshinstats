@@ -49,7 +49,7 @@ def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us', cookie: Mapp
     
     return _monthly_rewards
 
-def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Iterator[dict]:
+def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Iterator[Dict[str, Any]]:
     """Gets all claimed awards for the currently logged-in user"""
     current_page = 1
     while True:
@@ -63,7 +63,7 @@ def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None)
             break
         current_page += 1
 
-def claim_daily_reward(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[dict]:
+def claim_daily_reward(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[Dict[str, Any]]:
     """Signs into hoyolab and claims the daily rewards.
     
     Chinese and overseas servers work a bit differently,

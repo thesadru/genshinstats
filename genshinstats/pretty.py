@@ -71,8 +71,9 @@ def prettify_characters(data):
         }.get(i["name"],None),
         "rarity": i["rarity"],
         "element": i["element"] if i["name"]!="Traveler" else {
-            71:"Anemo",
-            91:"Geo"
+            71: "Anemo",
+            91: "Geo",
+            101: "Electro"
         }[i["constellations"][0]["id"]], # traveler elements
         "level": i["level"],
         "ascension": ceil(i["level"]//10)-1,

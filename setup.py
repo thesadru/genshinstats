@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='genshinstats',
-    version='1.4.4.2',
+    version='1.4.4.3',
     author='thesadru',
     packages=['genshinstats'],
     description="A python library that can get the stats of Genshin Impact players using Mihoyo's API.",

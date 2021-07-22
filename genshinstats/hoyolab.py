@@ -3,11 +3,10 @@
 Can search users, get record cards, redeem codes...
 """
 import time
-from functools import lru_cache
 from typing import Any, Dict, List, Mapping, Optional
 
 from .genshinstats import fetch_endpoint
-from .utils import recognize_server
+from .utils import permanent_cache, recognize_server
 
 __all__ = [
     'get_langs', 'set_visibility', 'search', 'hoyolab_check_in', 
@@ -16,7 +15,7 @@ __all__ = [
 ]
 
 
-@lru_cache()
+@permanent_cache()
 def get_langs() -> Dict[str, str]:
     """Gets codes of all languages and their names"""
     data = fetch_endpoint(
@@ -59,7 +58,7 @@ def hoyolab_check_in(cookie: Mapping[str, Any] = None) -> None:
         json=dict(gids=2)
     )
 
-def get_game_accounts(chinese: bool = False, cookie: Mapping[str, Any] = None) -> List[dict]:
+def get_game_accounts(chinese: bool = False, cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
     """Gets all game accounts of the currently signed in player.
 
     Can get accounts both for overseas and china.
@@ -67,7 +66,7 @@ def get_game_accounts(chinese: bool = False, cookie: Mapping[str, Any] = None) -
     url = "https://api-takumi.mihoyo.com/" if chinese else "https://api-os-takumi.mihoyo.com/"
     return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie", cookie=cookie)['list']
 
-def get_record_card(hoyolab_uid: int, cookie: Mapping[str, Any] = None) -> Optional[dict]:
+def get_record_card(hoyolab_uid: int, cookie: Mapping[str, Any] = None) -> Optional[Dict[str, Any]]:
     """Gets a game record card of a user based on their hoyolab uid.
 
     A record card contains data regarding the stats of a user for their displayed server.
@@ -123,7 +122,7 @@ def redeem_code(code: str, uid: int = None, cookie: Mapping[str, Any] = None) ->
             if i: time.sleep(5) # there's a ratelimit of 1 request every 5 seconds
             redeem_code(code, account['game_uid'], cookie)
 
-def get_recommended_users(page_size: int = None) -> List[dict]:
+def get_recommended_users(page_size: int = None) -> List[Dict[str, Any]]:
     """Gets a list of recommended active users"""
     return fetch_endpoint(
         "community/user/wapi/recommendActive",
@@ -131,7 +130,7 @@ def get_recommended_users(page_size: int = None) -> List[dict]:
         params=dict(page_size=page_size or 0x10000, offset=0, gids=2)
     )['list']
 
-def get_hot_posts(forum_id: int = 1, size: int = 100, lang: str = 'en-us') -> List[dict]:
+def get_hot_posts(forum_id: int = 1, size: int = 100, lang: str = 'en-us') -> List[Dict[str, Any]]:
     """Fetches hot posts from the front page of hoyolabs
     
     Posts are split into different forums set by ids 1-5.
