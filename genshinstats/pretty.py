@@ -5,9 +5,9 @@ that were leftover from during development
 """
 import re
 from datetime import datetime
-from math import ceil
+from typing import Optional
 
-def _recognize_character_icon(url):
+def _recognize_character_icon(url: str) -> Optional[str]:
     """Recognizes a character's icon url and returns its name."""
     exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_.*_(\w+)(?:@\dx)?.png'
     match = re.fullmatch(exp,url)
@@ -34,6 +34,7 @@ def prettify_user_stats(data):
             "spiral_abyss": s["spiral_abyss"],
             "anemoculi": s["anemoculus_number"],
             "geoculi": s["geoculus_number"],
+            "electroculi": s["electroculus_number"],
             "common_chests": s["common_chest_number"],
             "exquisite_chests": s["exquisite_chest_number"],
             "precious_chests": s["precious_chest_number"],
@@ -76,10 +77,10 @@ def prettify_characters(data):
             101: "Electro"
         }[i["constellations"][0]["id"]], # traveler elements
         "level": i["level"],
-        "ascension": ceil(i["level"]//10)-1,
         "friendship": i["fetter"],
         "constellation": sum(c["is_actived"] for c in i["constellations"]),
-        "icon": i["image"],
+        "icon": i["icon"],
+        "image": i["image"],
         "id": i["id"],
         "weapon": {
             "name": i["weapon"]["name"],
@@ -125,7 +126,12 @@ def prettify_characters(data):
             "index": c["pos"],
             "icon": c["icon"],
             "id": c["id"],
-        } for c in i["constellations"]]
+        } for c in i["constellations"]],
+        "outfits":[{
+            "name": c["name"],
+            "icon": c["icon"],
+            "id": c["id"]
+        } for c in i["costumes"]],
     } for i in data]
 
 def prettify_spiral_abyss(data):

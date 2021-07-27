@@ -9,9 +9,16 @@ from .genshinstats import fetch_endpoint
 from .utils import permanent_cache, recognize_server
 
 __all__ = [
-    'get_langs', 'set_visibility', 'search', 'hoyolab_check_in', 
-    'get_game_accounts', 'get_record_card', 'get_uid_from_hoyolab_uid', 
-    'redeem_code', 'get_recommended_users', 'get_hot_posts'
+    "get_langs",
+    "set_visibility",
+    "search",
+    "hoyolab_check_in",
+    "get_game_accounts",
+    "get_record_card",
+    "get_uid_from_hoyolab_uid",
+    "redeem_code",
+    "get_recommended_users",
+    "get_hot_posts",
 ]
 
 
@@ -25,7 +32,7 @@ def get_langs() -> Dict[str, str]:
     )['langs']
     return {i['value']: i['name'] for i in data}
 
-def search(keyword: str, size: int = 20) -> list:
+def search(keyword: str, size: int = 20) -> List[Dict[str, Any]]:
     """Searches all users.
 
     Can return up to 20 results, based on size.

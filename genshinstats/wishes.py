@@ -19,10 +19,17 @@ from .pretty import *
 from .utils import USER_AGENT, get_output_log, permanent_cache
 
 __all__ = [
-    'extract_authkey', 'get_authkey', 'set_authkey', 'get_banner_ids',
-    'fetch_gacha_endpoint', 'get_banner_types', 'get_wish_history',
-    'get_gacha_items', 'get_banner_details', 'get_uid_from_authkey',
-    'validate_authkey'
+    "extract_authkey",
+    "get_authkey",
+    "set_authkey",
+    "get_banner_ids",
+    "fetch_gacha_endpoint",
+    "get_banner_types",
+    "get_wish_history",
+    "get_gacha_items",
+    "get_banner_details",
+    "get_uid_from_authkey",
+    "validate_authkey",
 ]
 
 GENSHIN_LOG = get_output_log()
@@ -187,7 +194,7 @@ def get_wish_history(
         end_id = data[-1]['id']
 
 
-def get_gacha_items(lang: str = 'en-us') -> list:
+def get_gacha_items(lang: str = 'en-us') -> List[Dict[str, Any]]:
     """Gets the list of characters and weapons that can be gotten from the gacha."""
     r = static_session.get(
         f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/{lang}.json"

@@ -2,16 +2,18 @@
 
 Automatically claims the next daily reward in the daily check-in rewards.
 """
-from typing import Any, Dict, Iterator, Mapping, Optional, Tuple
+from genshinstats.utils import permanent_cache
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple
 from urllib.parse import urljoin
 
 from .genshinstats import fetch_endpoint
-from .hoyolab import get_game_accounts
-from .utils import recognize_server
 
 __all__ = [
-    'fetch_daily_endpoint', 'get_daily_reward_info', 'get_claimed_rewards', 
-    'get_monthly_rewards', 'claim_daily_reward'
+    "fetch_daily_endpoint",
+    "get_daily_reward_info",
+    "get_claimed_rewards",
+    "get_monthly_rewards",
+    "claim_daily_reward",
 ]
 
 OS_URL = "https://hk4e-api-os.mihoyo.com/event/sol/" # overseas
@@ -36,18 +38,14 @@ def get_daily_reward_info(chinese: bool = False, cookie: Mapping[str, Any] = Non
     data = fetch_daily_endpoint("info", chinese, cookie=cookie)
     return data['is_sign'], data['total_sign_day']
 
-_monthly_rewards = None # homebrew cache, dangerous since it should only last 1 month but who cares
-def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> list:
+@permanent_cache('chinese', 'lang')
+def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
     """Gets a list of avalible rewards for the current month"""
-    global _monthly_rewards
-    if _monthly_rewards is None:
-        _monthly_rewards = fetch_daily_endpoint(
-            "home", chinese,
-            cookie=cookie,
-            params=dict(lang=lang)
-        )['awards']
-    
-    return _monthly_rewards
+    return fetch_daily_endpoint(
+        "home", chinese,
+        cookie=cookie,
+        params=dict(lang=lang)
+    )['awards']
 
 def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Iterator[Dict[str, Any]]:
     """Gets all claimed awards for the currently logged-in user"""

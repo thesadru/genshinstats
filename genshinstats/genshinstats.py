@@ -10,6 +10,7 @@ from http.cookies import SimpleCookie
 from typing import Any, Dict, List, Mapping, Union
 from urllib.parse import urljoin
 
+import requests
 from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
@@ -17,8 +18,16 @@ from .pretty import *
 from .utils import USER_AGENT, is_chinese, recognize_server
 
 __all__ = [
-    'set_cookie', 'set_cookies', 'get_browser_cookies', 'set_cookies_auto', 'set_cookie_auto',
-    'fetch_endpoint', 'get_user_stats', 'get_characters', 'get_spiral_abyss', 'get_all_user_data'
+    "set_cookie",
+    "set_cookies",
+    "get_browser_cookies",
+    "set_cookies_auto",
+    "set_cookie_auto",
+    "fetch_endpoint",
+    "get_user_stats",
+    "get_characters",
+    "get_spiral_abyss",
+    "get_all_user_data",
 ]
 
 session = Session()
@@ -118,7 +127,16 @@ def generate_ds_token(salt: str = DS_SALT) -> str:
 
 def _request(*args, **kwargs):
     """Fancy requests.request"""
-    r = session.request(*args, **kwargs)
+    # sometimes a random connection error can just occur, mihoyo being mihoyo
+    for _ in range(3):
+        try:
+            r = session.request(*args, **kwargs)
+            break
+        except requests.ConnectionError as e:
+            exc = e
+    else:
+        raise exc # type: ignore
+    
     r.raise_for_status()
     kwargs['cookies'].update(session.cookies)
     session.cookies.clear()
@@ -174,7 +192,7 @@ def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> Dict[str, Any]
     )
     return prettify_user_stats(data)
 
-def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> list:
+def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
     """Gets characters of a user.
     
     Characters contain info about their level, constellation, weapon, and artifacts.

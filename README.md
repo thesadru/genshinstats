@@ -364,6 +364,9 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+# 1.4.4.4
+- Added support for electroculi and outfits
+- Annotated all unsubscripted lists in the library as `List[Dict[str, Any]]`
 # 1.4.4.3
 - Added electro traveler's element to the character prettifier
 - Annotated all unsubscripted dicts in the library as `Dict[str, Any]`
