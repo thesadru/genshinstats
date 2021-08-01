@@ -364,6 +364,12 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+# 1.4.5
+- Added support for the serenita teapot
+    - This is not yet an official endpoint, therefore there's a large number of bugs. For example the comfort level is shared across all styles.
+- Made `get_game_accounts` be prettified
+    - This will most likely break a lot of scripts, I'm sorry in advance.
+- Added a `retry` decorator
 # 1.4.4.4
 - Added support for electroculi and outfits
 - Annotated all unsubscripted lists in the library as `List[Dict[str, Any]]`

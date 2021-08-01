@@ -5,22 +5,25 @@ that were leftover from during development
 """
 import re
 from datetime import datetime
-from typing import Optional
 
-def _recognize_character_icon(url: str) -> Optional[str]:
+def _recognize_character_icon(url: str) -> str: 
     """Recognizes a character's icon url and returns its name."""
     exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_.*_(\w+)(?:@\dx)?.png'
     match = re.fullmatch(exp,url)
-    if match is None:
-        return None
+    if match is None: 
+        raise ValueError(f"{url!r} is not a charcater icon or image url")
     character = match.group(1)
     if character.startswith("Player"):
         return "Traveler"
-    elif character == "Ambor":
+    elif character == "Ambor": 
         return "Amber"
-    elif character == "Qin":
+    elif character == "Qin": 
         return "Jean"
-    else:
+    elif character == "Hutao": 
+        return "Hu Tao"
+    elif character == "Kazuha":
+        return "Kadehara Kazuha"
+    else: 
         return character
 
 
@@ -51,19 +54,34 @@ def prettify_user_stats(data):
             "icon": i["image"],
             "id": i["id"],
         } for i in data["avatars"]],
+        "teapots": [{
+            "name": { # in chinese and idk what the names are
+                "翠黛峰": "Emerald Peak",
+                "清琼岛": "Cool Isle",
+            }.get(t["name"], "Floating Abode"),
+            "icon": t["icon"],
+            # these are currently shared accross all realm styles
+            "level": t["level"],
+            "comfort": t["comfort_num"], # yes I know this is called adeptal energy
+            "comfort_name": t["comfort_level_name"],
+            "comfort_icon": t["comfort_level_icon"],
+            "placed_items": t["item_num"],
+            "visitors": t["visit_num"] # currently not in use
+        } for t in data["homes"]],
         "explorations": [{
             "name": i["name"],
             "explored": round(i["exploration_percentage"]/10, 1),
-            "type":i["type"],
-            "level":i["level"],
+            "type": i["type"],
+            "level": i["level"],
             "icon": i["icon"],
+            "offerings": i["offerings"],
         } for i in data["world_explorations"]]
     }
 
 def prettify_characters(data):
     return [{
         "name": i["name"],
-        "alt_name":{
+        "alt_name": { # this exists just for traveler tbh
             "Traveler": "Aether" if "Boy" in i["icon"] else "Lumine",
             "Venti": "Barbatos",
             "Zhongli": "Morax",
@@ -71,11 +89,7 @@ def prettify_characters(data):
             "Tartaglia": "Childe",
         }.get(i["name"],None),
         "rarity": i["rarity"],
-        "element": i["element"] if i["name"]!="Traveler" else {
-            71: "Anemo",
-            91: "Geo",
-            101: "Electro"
-        }[i["constellations"][0]["id"]], # traveler elements
+        "element": i["element"],
         "level": i["level"],
         "friendship": i["fetter"],
         "constellation": sum(c["is_actived"] for c in i["constellations"]),
@@ -96,11 +110,11 @@ def prettify_characters(data):
         "artifacts": [{
             "name": a["name"],
             "pos_name": {
-                1:"flower",
-                2:"feather",
-                3:"hourglass",
-                4:"goblet",
-                5:"crown",
+                1: "flower",
+                2: "feather",
+                3: "hourglass",
+                4: "goblet",
+                5: "crown",
             }[a["pos"]],
             "full_pos_name": a["pos_name"],
             "pos": a["pos"],
@@ -110,8 +124,8 @@ def prettify_characters(data):
                 "name": a["set"]["name"],
                 "effect_type": ['none','single','classic'][len(a["set"]["affixes"])],
                 "effects": [{
-                    "pieces":e["activation_number"],
-                    "effect":e["effect"],
+                    "pieces": e["activation_number"],
+                    "effect": e["effect"],
                 } for e in a["set"]["affixes"]],
                 "set_id": int(re.search(r'UI_RelicIcon_(\d+)_\d',a["icon"]).group(1)), # type: ignore
                 "id": a["set"]["id"]
@@ -127,7 +141,7 @@ def prettify_characters(data):
             "icon": c["icon"],
             "id": c["id"],
         } for c in i["constellations"]],
-        "outfits":[{
+        "outfits": [{
             "name": c["name"],
             "icon": c["icon"],
             "id": c["id"]
@@ -137,10 +151,10 @@ def prettify_characters(data):
 def prettify_spiral_abyss(data):
     fchars = lambda d: [{
         "value": a["value"],
-        "name":_recognize_character_icon(a["avatar_icon"]),
-        "rarity":a["rarity"],
-        "icon":a["avatar_icon"],
-        "id":a["avatar_id"],
+        "name": _recognize_character_icon(a["avatar_icon"]),
+        "rarity": a["rarity"],
+        "icon": a["avatar_icon"],
+        "id": a["avatar_id"],
     } for a in d]
     todate = lambda x: datetime.fromtimestamp(int(x)).strftime("%Y-%m-%d")
     totime = lambda x: datetime.fromtimestamp(int(x)).isoformat(' ')
@@ -155,9 +169,9 @@ def prettify_spiral_abyss(data):
             "total_stars": data["total_star"],
         },
         "character_ranks": {
-            "most_uses": fchars(data["reveal_rank"]),
+            "most_played": fchars(data["reveal_rank"]),
             "most_kills": fchars(data["defeat_rank"]),
-            "strongest_hit": fchars(data["damage_rank"]),
+            "strongest_strike": fchars(data["damage_rank"]),
             "most_damage_taken": fchars(data["take_damage_rank"]),
             "most_bursts_used": fchars(data["normal_skill_rank"]),
             "most_skills_used": fchars(data["energy_skill_rank"]),
@@ -168,15 +182,15 @@ def prettify_spiral_abyss(data):
             "max_stars": f["max_star"],
             "start": totime(f["levels"][0]["battles"][0]["timestamp"]),
             "icon": f["icon"],
-            "chambers":[{
+            "chambers": [{
                 "chamber": l["index"],
                 "stars": l["star"],
                 "max_stars": l["max_star"],
-                "has_halves":len(l["battles"]) == 2,
-                "battles":[{
+                "has_halves": len(l["battles"]) == 2,
+                "battles": [{
                     "half": b["index"],
                     "timestamp": totime(b["timestamp"]),
-                    "characters":[{
+                    "characters": [{
                         "name": _recognize_character_icon(c["icon"]),
                         "rarity": c["rarity"],
                         "level": c["level"],
@@ -188,6 +202,18 @@ def prettify_spiral_abyss(data):
             } for l in f["levels"]]
         } for f in data["floors"]]
     }
+
+def prettify_game_accounts(data):
+    return [{
+        "uid": a["game_uid"],
+        "server": a["region_name"],
+        "level": a["level"],
+        "nickname": a["nickname"],
+        # idk what these are for:
+        "biz": a["game_biz"],
+        "is_chosen": a["is_chosen"], 
+        "is_official": a["is_official"],
+    } for a in data]
 
 def prettify_wish_history(data, banner_name = None):
     return [{
@@ -210,7 +236,7 @@ def prettify_gacha_items(data):
     } for i in data]
 
 def prettify_banner_details(data):
-    per = lambda p: None if p=='0%' else float(p[:-1].replace(',','.'))
+    per = lambda p: None if p=='0%' else float(p[: -1].replace(',','.'))
     fprobs = lambda l: [{
         "type": i["item_type"],
         "name": i["item_name"],
@@ -222,29 +248,29 @@ def prettify_banner_details(data):
         "type": i["item_type"],
         "name": i["item_name"],
         "element": {
-            "风":"Anemo",
-            "火":"Pyro",
-            "水":"Hydro",
-            "雷":"Electro",
-            "冰":"Cryo",
-            "岩":"Geo",
-            "？":"Dendro",
-            "":None
+            "风": "Anemo",
+            "火": "Pyro",
+            "水": "Hydro",
+            "雷": "Electro",
+            "冰": "Cryo",
+            "岩": "Geo",
+            "？": "Dendro",
+            "": None
         }[i["item_attr"]],
         "icon": i["item_img"],
     } for i in l] if l else []
     return {
         "banner_type_name": {
-            100:"Novice Wishes",
-            200:"Permanent Wish",
-            301:"Character Event Wish",
-            302:"Weapon Event Wish"
+            100: "Novice Wishes",
+            200: "Permanent Wish",
+            301: "Character Event Wish",
+            302: "Weapon Event Wish"
         }[int(data["gacha_type"])],
         "banner_type": int(data["gacha_type"]),
         "banner": re.sub(r'<.*?>','',data["title"]).strip(),
         "title": data["title"],
         "content": data["content"],
-        "date_range":data["date_range"],
+        "date_range": data["date_range"],
         "r5_up_prob": per(data["r5_up_prob"]), # probability for rate-up 5*
         "r4_up_prob": per(data["r4_up_prob"]), # probability for rate-up 4*
         "r5_prob": per(data["r5_prob"]), # probability for 5*

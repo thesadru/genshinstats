@@ -15,7 +15,7 @@ from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
 from .pretty import *
-from .utils import USER_AGENT, is_chinese, recognize_server
+from .utils import USER_AGENT, is_chinese, recognize_server, retry
 
 __all__ = [
     "set_cookie",
@@ -125,17 +125,11 @@ def generate_ds_token(salt: str = DS_SALT) -> str:
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest()  # hash and get hex
     return f'{t},{r},{h}'
 
-def _request(*args, **kwargs):
+# sometimes a random connection error can just occur, mihoyo being mihoyo
+@retry(3, requests.ConnectionError)
+def _request(*args: Any, **kwargs: Any) -> Any:
     """Fancy requests.request"""
-    # sometimes a random connection error can just occur, mihoyo being mihoyo
-    for _ in range(3):
-        try:
-            r = session.request(*args, **kwargs)
-            break
-        except requests.ConnectionError as e:
-            exc = e
-    else:
-        raise exc # type: ignore
+    r = session.request(*args, **kwargs)
     
     r.raise_for_status()
     kwargs['cookies'].update(session.cookies)

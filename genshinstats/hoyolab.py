@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from .genshinstats import fetch_endpoint
 from .utils import permanent_cache, recognize_server
+from .pretty import prettify_game_accounts
 
 __all__ = [
     "get_langs",
@@ -71,7 +72,8 @@ def get_game_accounts(chinese: bool = False, cookie: Mapping[str, Any] = None) -
     Can get accounts both for overseas and china.
     """
     url = "https://api-takumi.mihoyo.com/" if chinese else "https://api-os-takumi.mihoyo.com/"
-    return fetch_endpoint(url+"binding/api/getUserGameRolesByCookie", cookie=cookie)['list']
+    data = fetch_endpoint(url+"binding/api/getUserGameRolesByCookie", cookie=cookie)['list']
+    return prettify_game_accounts(data)
 
 def get_record_card(hoyolab_uid: int, cookie: Mapping[str, Any] = None) -> Optional[Dict[str, Any]]:
     """Gets a game record card of a user based on their hoyolab uid.
@@ -127,7 +129,7 @@ def redeem_code(code: str, uid: int = None, cookie: Mapping[str, Any] = None) ->
                     if account['level'] >= 10]
         for i, account in enumerate(accounts):
             if i: time.sleep(5) # there's a ratelimit of 1 request every 5 seconds
-            redeem_code(code, account['game_uid'], cookie)
+            redeem_code(code, account['uid'], cookie)
 
 def get_recommended_users(page_size: int = None) -> List[Dict[str, Any]]:
     """Gets a list of recommended active users"""

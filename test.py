@@ -88,6 +88,7 @@ class GenshinStatsTest(unittest.TestCase):
         hot_posts = gs.get_hot_posts(size=120)
         self.assertGreater(len(hot_posts), 100)
 
+    # wish history: 
     def test_banner_types(self):
         data['banner_types'] = gs.get_banner_types()
 
@@ -185,7 +186,6 @@ class AccountSpecificTests(unittest.TestCase):
         with self.assertRaises(gs.DataNotPublic):
             gs.get_user_stats(uid, cookie=test_cookie)
         gs.set_cookie(cookie)
-        print('TO TRUE!', cookie, gs.genshinstats.session.cookies.get_dict())
         gs.set_visibility(True)
     
 

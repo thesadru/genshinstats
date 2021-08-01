@@ -7,20 +7,20 @@ class GenshinStatsException(Exception):
     """Base Exception for all genshinstats errors."""
     retcode: int = 0
     orig_msg: str = ''
-    def __init__(self, msg: str):
+    def __init__(self, msg: str) -> None:
         self.msg = msg
     
-    def set_response(self, response: dict):
+    def set_response(self, response: dict) -> None:
         """Adds an optional response object to the error."""
         self.retcode = response['retcode']
         self.orig_msg = response['message']
         self.msg = self.msg.format(self.retcode, self.orig_msg)
 
     @property
-    def msg(self):
+    def msg(self) -> str:
         return self.args[0]
     @msg.setter
-    def msg(self, msg):
+    def msg(self, msg) -> None:
         self.args = (msg,)
 
 class TooManyRequests(GenshinStatsException):

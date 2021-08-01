@@ -4,7 +4,7 @@ import genshinstats as gs
 gs.set_cookie_auto()
 
 for account in gs.get_game_accounts():
-    print(f"{account['game_uid']} - {account['region_name']} - {account['nickname']} AR {account['level']}")
+    print(f"{account['uid']} - {account['server']} - {account['nickname']} AR {account['level']}")
 uid = int(input('Pick a uid: '))
 action = input('What would you like to view? [1. stats, 2. characters, 3. spiral abyss] ')
 

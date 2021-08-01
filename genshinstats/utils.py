@@ -2,7 +2,7 @@
 import os.path
 import re
 import inspect
-from typing import Callable, Optional, TypeVar, Union
+from typing import Callable, Iterable, Optional, Type, TypeVar, Union
 
 from .errors import AccountNotFound
 
@@ -49,6 +49,9 @@ def recognize_id(id: int) -> Optional[str]:
         return "contellation"
     elif 10 ** 17 < id < 10 ** 19:
         return "gacha_pull"
+    # not sure about these ones:
+    elif 1 <= id <= 4:
+        return "exploration" 
 
 def is_game_uid(uid: int) -> bool:
     """Recognizes whether the uid is a game uid."""
@@ -91,3 +94,20 @@ def permanent_cache(*params: str) -> Callable[[T], T]:
         return inner
 
     return wrapper # type: ignore
+
+def retry(tries: int = 3, exceptions: Union[Type[BaseException], Iterable[Type[BaseException]]] = Exception) -> Callable[[T], T]:
+    """A classic retry() decorator"""
+    def wrapper(func):
+        def inner(*args, **kwargs):
+            for _ in range(tries):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    exc = e
+            else:
+                raise Exception(f"Maximum tries ({tries}) exceeded: {exc}") from exc # type: ignore
+        
+        return inner
+    
+    return wrapper # type: ignore
+    
