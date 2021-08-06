@@ -6,8 +6,8 @@ import time
 from typing import Any, Dict, List, Mapping, Optional
 
 from .genshinstats import fetch_endpoint
-from .utils import permanent_cache, recognize_server
 from .pretty import prettify_game_accounts
+from .utils import deprecated, permanent_cache, recognize_server
 
 __all__ = [
     "get_langs",
@@ -54,6 +54,7 @@ def set_visibility(public: bool, cookie: Mapping[str, Any] = None) -> None:
         json=dict(is_public=public, game_id=2)
     )
 
+@deprecated()
 def hoyolab_check_in(cookie: Mapping[str, Any] = None) -> None:
     """Checks in the currently logged-in user to hoyolab.
 

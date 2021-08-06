@@ -1,7 +1,9 @@
 """Various utility functions for genshinstats."""
+import inspect
 import os.path
 import re
-import inspect
+import warnings
+from functools import wraps
 from typing import Callable, Iterable, Optional, Type, TypeVar, Union
 
 from .errors import AccountNotFound
@@ -16,6 +18,7 @@ __all__ = [
     "permanent_cache",
 ]
 
+T = TypeVar("T", bound=Callable)
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 
 def recognize_server(uid: int) -> str:
@@ -70,14 +73,14 @@ def get_output_log() -> Optional[str]:
             return output_log
     return None # no genshin installation
 
-T = TypeVar("T", bound=Callable)
 def permanent_cache(*params: str) -> Callable[[T], T]:
     """Like lru_cache except permanent and only caches based on some parameters"""
     cache = {}
 
     def wrapper(func):
         sig = inspect.signature(func)
-
+        
+        @wraps(func)
         def inner(*args, **kwargs):
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
@@ -98,6 +101,8 @@ def permanent_cache(*params: str) -> Callable[[T], T]:
 def retry(tries: int = 3, exceptions: Union[Type[BaseException], Iterable[Type[BaseException]]] = Exception) -> Callable[[T], T]:
     """A classic retry() decorator"""
     def wrapper(func):
+        
+        @wraps(func)
         def inner(*args, **kwargs):
             for _ in range(tries):
                 try:
@@ -109,5 +114,17 @@ def retry(tries: int = 3, exceptions: Union[Type[BaseException], Iterable[Type[B
         
         return inner
     
+    return wrapper # type: ignore
+
+def deprecated(message: str = "{} is deprecated and will be removed in future versions") -> Callable[[T], T]:
+    """Shows a warning when a function is attempted to be used"""
+    def wrapper(func):
+        
+        @wraps(func)
+        def inner(*args, **kwargs):
+            warnings.warn(message.format(func.__name__), PendingDeprecationWarning)
+            return func(*args, **kwargs)
+
+        return inner
     return wrapper # type: ignore
     

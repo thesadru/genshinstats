@@ -66,6 +66,8 @@ def raise_for_error(response: dict):
         -2001: CodeRedeemException('Redemption code has expired.'),
         -2021: CodeRedeemException('Cannot claim codes for account with adventure rank lower than 10.'),
         -1073: CodeRedeemException('Cannot claim code. Account has no game account bound to it.'),
+        -1071: NotLoggedIn('Login cookies from redeem_code() have not been provided or are incorrect. '
+                           'Make sure you use account_id and cookie_token cookies.'),
         # sign in
         -5003: SignInException('Already claimed daily reward today.'),
         2001:  SignInException('Already checked into hoyolab today.'),

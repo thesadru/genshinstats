@@ -92,7 +92,7 @@ gs.set_cookie_auto('chrome') # search specific browser
 Gets your wish history.
 For this you must first open the history/details page in genshin impact,
 you can find the page in the wish menu on the bottom left.
-The script is then able to get your authkey and 
+The script is then able to get your authkey by itself and fetch the data with it.
 ```py
 for i in gs.get_wish_history():
     print(f"{i['time']} - {i['name']} ({i['rarity']}* {i['type']})")
@@ -231,8 +231,11 @@ print(characters)
 ```
 
 ## using genshinstats asynchronously (for example with a discord bot)
+You have probably noticed that while you're fetching data with genshinstats or any other sync library for that matter that other async functions never run. 
+To solve this issue you must turn the synchronous function into an asynchronous one.
+
 To use any function asynchronously you can use the `asyncio.to_thread(func, *args, **kwargs)` function.
-If you're using python 3.8 or less you can use `loop.run_in_executor(None, func, *args)`. Check out the `asyncio` docs for more info.
+If you're using python 3.8 or less you can use `loop.run_in_executor(None, func, *args)`. Check out the [`asyncio`](https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor) docs for more info.
 ```py
 import asyncio
 import genshinstats as gs
@@ -364,20 +367,22 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
-# 1.4.5
+## 1.4.5.1
+- Made yanfei have the correct name in spiral abyss
+## 1.4.5
 - Added support for the serenita teapot
     - This is not yet an official endpoint, therefore there's a large number of bugs. For example the comfort level is shared across all styles.
 - Made `get_game_accounts` be prettified
     - This will most likely break a lot of scripts, I'm sorry in advance.
 - Added a `retry` decorator
-# 1.4.4.4
+## 1.4.4.4
 - Added support for electroculi and outfits
 - Annotated all unsubscripted lists in the library as `List[Dict[str, Any]]`
-# 1.4.4.3
+## 1.4.4.3
 - Added electro traveler's element to the character prettifier
 - Annotated all unsubscripted dicts in the library as `Dict[str, Any]`
 - Fixed bug where getting banner types with different authkeys would not get the cached result
-# 1.4.4.2
+## 1.4.4.2
 - Added a custom error message for set_cookie_auto
 ## 1.4.4.1
 - Added `validate_authkey`

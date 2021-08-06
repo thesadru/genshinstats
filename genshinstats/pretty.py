@@ -21,6 +21,8 @@ def _recognize_character_icon(url: str) -> str:
         return "Jean"
     elif character == "Hutao": 
         return "Hu Tao"
+    elif character == "Feiyan":
+        return "Yanfei"
     elif character == "Kazuha":
         return "Kadehara Kazuha"
     else: 
@@ -205,7 +207,7 @@ def prettify_spiral_abyss(data):
 
 def prettify_game_accounts(data):
     return [{
-        "uid": a["game_uid"],
+        "uid": int(a["game_uid"]),
         "server": a["region_name"],
         "level": a["level"],
         "nickname": a["nickname"],
