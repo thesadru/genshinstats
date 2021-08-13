@@ -7,6 +7,7 @@ import base64
 import heapq
 import os
 import re
+import sys
 from itertools import chain, islice
 from tempfile import gettempdir
 from typing import Any, Dict, Iterator, List, Optional
@@ -47,6 +48,8 @@ session.params = {
     "lang": "en",
     # authentications params
     "authkey": "",
+    # transaction params
+    "sign_type": "2",
 }
 static_session = Session()  # extra session for static resources
 
@@ -172,7 +175,8 @@ def get_wish_history(
     # we create banner_name outside prettify so we don't make extra requests
     banner_name = get_banner_types(authkey, lang)[banner_type]
     lang = _get_short_lang_code(lang)
-    page_size = 20  # max size per page is 20
+    page_size = 20 
+    size = size or sys.maxsize
     
     while True:
         data = fetch_gacha_endpoint(
@@ -183,13 +187,9 @@ def get_wish_history(
         data = prettify_wish_history(data, banner_name)
         yield from data
 
-        if len(data) < page_size:
-            return  # return if reached the end
-        if size is not None:
-            size -= page_size
-            page_size = min(size, 20)
-            if size <= 0:
-                return
+        size -= page_size
+        if len(data) < page_size or size <= 0:
+            break
 
         end_id = data[-1]['id']
 

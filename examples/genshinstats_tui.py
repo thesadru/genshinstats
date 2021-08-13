@@ -12,7 +12,6 @@ if action == '1':
     print(f'Getting stats for {uid}...\n')
     data = gs.get_user_stats(uid)
 
-    print(f"stats: ")
     for field, value in data['stats'].items():
         print(f"{field.replace('_',' ')}: {value}")
     print(f"\nexplorations: ")

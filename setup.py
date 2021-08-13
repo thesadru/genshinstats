@@ -2,12 +2,12 @@ from setuptools import setup
 
 setup(
     name="genshinstats",
-    version="1.4.5.1",
+    version="1.4.6",
     author="thesadru",
     packages=["genshinstats"],
     description="A python library that can get the stats of Genshin Impact players using Mihoyo's API.",
     keywords="api wrapper mihoyo genshin genshin-impact".split(),
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     url="https://github.com/thesadru/genshinstats",
     project_urls={
         "Documentation": "https://thesadru.github.io/pdoc/genshinstats/",

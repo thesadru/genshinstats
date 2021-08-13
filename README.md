@@ -5,6 +5,7 @@
 [![Last Commit](https://img.shields.io/github/last-commit/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/commits/master)
 [![Repo Size](https://img.shields.io/github/repo-size/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/graphs/code-frequency)
 [![License](https://img.shields.io/github/license/thesadru/genshinstats)](https://github.com/thesadru/genshinstats/blob/master/LICENSE)
+[![Discord](https://img.shields.io/badge/chat-discord-0d86d7)](https://discord.gg/sMkSKRPuCR)
 
 Genshinstats is an unofficial wrapper for the Genshin Impact api. It supports getting user stats, wish history and automatic claiming of daily check-in rewards.
 
@@ -146,7 +147,7 @@ gs.set_authkey('other_output_log.txt')
 ```
 > Since the authkey lasts only a day this is more like for exporting than for actual use.
 > 
-> For more info on how to get the authkey you can use the instructions on [paimon.moe](https://paimon.moe/wish), just click the "auto import" button.
+> When importing from platforms like android you must use the authkey manually. ([how can I get my authkey?](#how-can-I-get-my-authkey))
 ### daily rewards
 Automatically get daily sign in rewards for the currently logged-in user.
 ```py
@@ -161,6 +162,37 @@ You can also get a list of all rewards you have claimed so far
 for i in gs.get_claimed_rewards():
     print(i['cnt'], i['name'])
 ```
+### transaction logs
+Logs for artifact, weapon, resin, genesis crystol and primogem "transactions".
+You may view a history of everything you have gained in the last 3 months however you may not get the exact amount of any of these so it's generally meant for statistics of gain/loss.
+> These functions require the same authkey as wish history.
+
+All of these functions work the same:
+```
+get_primogem_log
+get_resin_log
+get_crystal_log
+get_artifact_log
+get_weapon_log
+```
+
+```py
+for i in gs.get_primogem_log(size=40):
+    print(f"{i['time']} - {i['reason']}: {i['amount']} primogems")
+```
+
+Since you the api itself doesn't provide the current amount of resin genshinstats provides a way to calculate it yourself. 
+First it requires a reference to how much primogems you had at a specific time and then it calculates how much you should have currently.
+```py
+from datetime import datetime
+
+# calculating the current amount of resin based on the fact you had 60 resin on the September 28th 2021 12:00 UTC
+print(gs.current_resin(datetime(2021, 9, 28, 12, 00), 60))
+```
+> Since mihoyo can take up to an hour to update their public database of logs this will only work as long as you haven't used any resin in the last hour
+
+> If you do not know how much resin you had at any point you can very roughly approximate it with `gs.approximate_current_resin()`
+
 ### hoyolab
 Miscalenious stuff for mihoyo's hoyolab. Has searching, auto check-in and code redemption.
 ```py
@@ -283,6 +315,41 @@ Mihoyo allows users to get data for only up to 30 other users per day, to circum
 ```py
 gs.set_cookies({'ltuid': 1, 'ltoken': 'token...'}, {'ltuid': 2, 'ltoken': 'other token...'})
 ```
+> Creating alt accounts by hand is a lengthy and painful process so you can use one of the countless automated account creators like [genshin account creator](https://github.com/thesadru/genshin-account-creator)
+
+## How can I get my authkey?
+To get your authkey manually from other platforms you can use any of these approaches:
+
+- PC
+    1. Open Paimon menu [ESC]
+    2. Click Feedback
+    3. Wait for it to load and a browser page should open
+    4. Copy the link
+- Android
+    1. Open Paimon menu
+    2. Click Feedback
+    3. Wait for it to load and a feedback page should open
+    4. Turn off your Wi-Fi and data connection
+    5. Press refresh on top right corner
+    6. The page should display an error and show you some text with black font
+    7. Hold the text and press select all, then copy that text (don't copy only some  portion of the text)
+- IOS
+    1. Open Paimon menu
+    2. Click Feedback
+    3. Wait for it to load and a feedback page should open
+    4. Press In-game issue
+    5. Press Co-Op Mode
+    6. There is a link on the bottom of the reply; press that
+    7. A browser should open up
+    8. Copy the link
+- PS
+    1. Open Genshin Impact on your PlayStation
+    2. Open the event mail that contains the QR Code
+    3. Scan the QR Code with your phone
+    4. Copy the link
+    > You can only use this if you have an in-game mail with QR Code to open the web event
+
+> this is largerly copied from [paimon.moe](https://paimon.moe/wish)
 
 ## Why do I keep getting `DataNotPublic` errors even though I'm trying to view my own account stats and didn't set anything to private?
 The `DataNotPublic` is raised when a user has not made their data public, because the account visibility is set to private by default.
@@ -367,6 +434,12 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.6
+- Added several new log related endpoints
+    - get_primogem_log, get_resin_log, get_crystal_log
+    - get_artifact_log, get_weapon_log
+- Made tests cleaner (now requires pytest)
+- Added an explanation how to get your authkey on other platforms
 ## 1.4.5.1
 - Made yanfei have the correct name in spiral abyss
 ## 1.4.5

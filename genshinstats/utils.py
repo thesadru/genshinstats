@@ -4,7 +4,7 @@ import os.path
 import re
 import warnings
 from functools import wraps
-from typing import Callable, Iterable, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar, Union
 
 from .errors import AccountNotFound
 
@@ -18,7 +18,8 @@ __all__ = [
     "permanent_cache",
 ]
 
-T = TypeVar("T", bound=Callable)
+T = TypeVar("T")
+
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 
 def recognize_server(uid: int) -> str:
@@ -51,10 +52,12 @@ def recognize_id(id: int) -> Optional[str]:
     elif 100 < id < 1000:
         return "contellation"
     elif 10 ** 17 < id < 10 ** 19:
-        return "gacha_pull"
+        return "transaction"
     # not sure about these ones:
     elif 1 <= id <= 4:
         return "exploration" 
+    else:
+        return None
 
 def is_game_uid(uid: int) -> bool:
     """Recognizes whether the uid is a game uid."""
@@ -75,7 +78,7 @@ def get_output_log() -> Optional[str]:
 
 def permanent_cache(*params: str) -> Callable[[T], T]:
     """Like lru_cache except permanent and only caches based on some parameters"""
-    cache = {}
+    cache: Dict[Any, Any] = {}
 
     def wrapper(func):
         sig = inspect.signature(func)
@@ -127,4 +130,3 @@ def deprecated(message: str = "{} is deprecated and will be removed in future ve
 
         return inner
     return wrapper # type: ignore
-    

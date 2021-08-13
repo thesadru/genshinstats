@@ -1,0 +1,42 @@
+name: Create pdoc docs
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pdoc3
+        pip install -r requirements.txt
+    - name: Generate docs
+      run: |
+        pdoc genshinstats --force --html \
+          -o "./output/pdoc/" \
+          -c "git_link_template='https://github.com/thesadru/genshinstats/blob/master/{path}#L{start_line}-L{end_line}'" \
+          -c "lunr_search={'fuzziness': 1, 'index_docstrings': True}"
+    - name: Push to github pages
+      uses: cpina/github-action-push-to-another-repository@main
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      with:
+        source-directory: 'output'
+        destination-github-username: 'thesadru'
+        destination-repository-name: 'thesadru.github.io'
+        user-email: thesadru@gmail.com
+        target-branch: master
+        commit-message: updated pdoc
+
+  

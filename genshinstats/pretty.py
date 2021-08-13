@@ -6,30 +6,27 @@ that were leftover from during development
 import re
 from datetime import datetime
 
+character_icons = {
+    "PlayerGirl": "Traveler",
+    "PlayerBoy": "Traveler",
+    "Ambor": "Amber",
+    "Qin": "Jean",
+    "Hutao": "Hu Tao",
+    "Feiyan": "Yanfei",
+    "Kazuha": "Kadehara Kazuha"
+}
+
 def _recognize_character_icon(url: str) -> str: 
     """Recognizes a character's icon url and returns its name."""
     exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_.*_(\w+)(?:@\dx)?.png'
     match = re.fullmatch(exp,url)
     if match is None: 
-        raise ValueError(f"{url!r} is not a charcater icon or image url")
+        raise ValueError(f"{url!r} is not a character icon or image url")
     character = match.group(1)
-    if character.startswith("Player"):
-        return "Traveler"
-    elif character == "Ambor": 
-        return "Amber"
-    elif character == "Qin": 
-        return "Jean"
-    elif character == "Hutao": 
-        return "Hu Tao"
-    elif character == "Feiyan":
-        return "Yanfei"
-    elif character == "Kazuha":
-        return "Kadehara Kazuha"
-    else: 
-        return character
+    return character_icons.get(character) or character
 
 
-def prettify_user_stats(data):
+def prettify_stats(data):
     s = data["stats"]
     return {
         "stats": {
@@ -83,13 +80,6 @@ def prettify_user_stats(data):
 def prettify_characters(data):
     return [{
         "name": i["name"],
-        "alt_name": { # this exists just for traveler tbh
-            "Traveler": "Aether" if "Boy" in i["icon"] else "Lumine",
-            "Venti": "Barbatos",
-            "Zhongli": "Morax",
-            "Albedo": "Kreideprinz",
-            "Tartaglia": "Childe",
-        }.get(i["name"],None),
         "rarity": i["rarity"],
         "element": i["element"],
         "level": i["level"],
@@ -98,6 +88,7 @@ def prettify_characters(data):
         "icon": i["icon"],
         "image": i["image"],
         "id": i["id"],
+        **({"traveler_name": "Aether" if "Boy" in i["icon"] else "Lumine"} if "Player" in i["icon"] else {}),
         "weapon": {
             "name": i["weapon"]["name"],
             "rarity": i["weapon"]["rarity"],
@@ -129,7 +120,7 @@ def prettify_characters(data):
                     "pieces": e["activation_number"],
                     "effect": e["effect"],
                 } for e in a["set"]["affixes"]],
-                "set_id": int(re.search(r'UI_RelicIcon_(\d+)_\d',a["icon"]).group(1)), # type: ignore
+                "set_id": int(re.search(r'UI_RelicIcon_(\d+)_\d+',a["icon"]).group(1)), # type: ignore
                 "id": a["set"]["id"]
             },
             "icon": a["icon"],
@@ -150,7 +141,7 @@ def prettify_characters(data):
         } for c in i["costumes"]],
     } for i in data]
 
-def prettify_spiral_abyss(data):
+def prettify_abyss(data):
     fchars = lambda d: [{
         "value": a["value"],
         "name": _recognize_character_icon(a["avatar_icon"]),
@@ -290,3 +281,27 @@ def prettify_banner_details(data):
             data["r5_prob_list"]+data["r4_prob_list"]+data["r3_prob_list"],
             key=lambda x: x["order_value"]))
     }
+
+def prettify_trans(data, reasons={}):
+    if data and "name" in data[0]:
+        # transaction item
+        return [{
+            "time": i["time"],
+            "name": i["name"],
+            "rarity": int(i["rank"]),
+            "amount": int(i["add_num"]),
+            "reason": reasons.get(int(i["reason"]), ""),
+            "reason_id": int(i["reason"]),
+            "uid": int(i["uid"]),
+            "id": int(i["id"]),
+        } for i in data]
+    else:
+        # transaction
+        return [{
+            "time": i["time"],
+            "amount": int(i["add_num"]),
+            "reason": reasons.get(int(i["reason"]), ""),
+            "reason_id": int(i["reason"]),
+            "uid": int(i["uid"]),
+            "id": int(i["id"]),
+        } for i in data]

@@ -14,7 +14,7 @@ import requests
 from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
-from .pretty import *
+from .pretty import prettify_abyss, prettify_characters, prettify_stats
 from .utils import USER_AGENT, is_chinese, recognize_server, retry
 
 __all__ = [
@@ -184,7 +184,7 @@ def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> Dict[str, Any]
         cookie=cookie,
         params=dict(server=server, role_id=uid)
     )
-    return prettify_user_stats(data)
+    return prettify_stats(data)
 
 def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
     """Gets characters of a user.
@@ -221,7 +221,7 @@ def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any]
         cookie=cookie,
         params=dict(server=server, role_id=uid, schedule_type=schedule_type)
     )
-    return prettify_spiral_abyss(data)
+    return prettify_abyss(data)
 
 def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Fetches all data a user can has. Very slow.
