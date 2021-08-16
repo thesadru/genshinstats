@@ -60,6 +60,7 @@ def raise_for_error(response: dict):
         -1:    AccountNotFound('Could not find user; uid may not be valid.'),
         -10002:AccountNotFound('Cannot get rewards info. Account has no game account binded to it.'),
         -108:  GenshinStatsException('Language is not valid.'),
+        10103: NotLoggedIn('Cookies are correct but do not have a hoyolab account bound to them.'),
         # code redemption
         -2003: CodeRedeemException('Invalid redemption code'),
         -2017: CodeRedeemException('Redemption code has been claimed already.'),

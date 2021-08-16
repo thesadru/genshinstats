@@ -13,7 +13,7 @@ def test_transactions():
 
 def test_current_resin():
     try:
-        resin = gs.current_resin(datetime(2021, 8, 12), 160)
+        resin = gs.current_resin(datetime(2021, 8, 14), 160)
     except ValueError:
         warnings.warn("current_resin has failed - this might have been "
                       "because an entry is wrong so only a warn is given.")

@@ -434,6 +434,8 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.6.1
+- Added an error for when you don't have a hoyolab account created.
 ## 1.4.6
 - Added several new log related endpoints
     - get_primogem_log, get_resin_log, get_crystal_log

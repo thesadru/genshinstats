@@ -58,7 +58,7 @@ def _get_transactions(
         data = fetch_transaction_endpoint(
             endpoint, 
             authkey=authkey, 
-            params=dict(size=page_size, end_id=end_id)
+            params=dict(size=min(page_size, size), end_id=end_id)
         )["list"]
         data = prettify_trans(data, _get_reasons(lang))
         yield from data

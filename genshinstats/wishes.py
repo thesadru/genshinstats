@@ -182,7 +182,7 @@ def get_wish_history(
         data = fetch_gacha_endpoint(
             "getGachaLog",
             authkey=authkey,
-            params=dict(gacha_type=banner_type, size=page_size, end_id=end_id, lang=lang)
+            params=dict(gacha_type=banner_type, size=min(page_size, size), end_id=end_id, lang=lang)
         )['list']
         data = prettify_wish_history(data, banner_name)
         yield from data
