@@ -17,7 +17,8 @@ from requests import Session
 
 from .errors import AuthkeyError, MissingAuthKey, raise_for_error
 from .pretty import *
-from .utils import USER_AGENT, get_output_log, permanent_cache
+from .utils import USER_AGENT, get_logfile
+from .caching import permanent_cache
 
 __all__ = [
     "extract_authkey",
@@ -33,7 +34,7 @@ __all__ = [
     "validate_authkey",
 ]
 
-GENSHIN_LOG = get_output_log()
+GENSHIN_LOG = get_logfile()
 GACHA_INFO_URL = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(), 'genshinstats_authkey.txt')
 
@@ -124,6 +125,7 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     else:
         kwargs.setdefault('params', {})['authkey'] = authkey
     method = kwargs.pop('method', 'get')
+    print(f"{method.upper()} {endpoint} | {kwargs}")
     url = urljoin(GACHA_INFO_URL, endpoint)
     
     r = session.request(method, url, **kwargs)

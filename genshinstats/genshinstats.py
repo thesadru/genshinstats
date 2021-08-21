@@ -195,6 +195,7 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
     If character_ids are provided then only characters with those ids are returned.
     """
     if character_ids is None:
+        print(get_user_stats)
         character_ids = [i['id'] for i in get_user_stats(uid)['characters']]
     
     server = recognize_server(uid)

@@ -14,8 +14,7 @@ __all__ = [
     "recognize_id",
     "is_game_uid",
     "is_chinese",
-    "get_output_log",
-    "permanent_cache",
+    "get_logfile",
 ]
 
 T = TypeVar("T")
@@ -67,39 +66,14 @@ def is_chinese(x: Union[int, str]) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(("cn", "1", "5"))
 
-def get_output_log() -> Optional[str]:
-    """Find and return the Genshin Impact output log. None if not found."""
+def get_logfile() -> Optional[str]:
+    """Find and return the Genshin Impact logfile. None if not found."""
     mihoyo_dir = os.path.expanduser("~/AppData/LocalLow/miHoYo/")
     for name in ["Genshin Impact", "原神", "YuanShen"]:
         output_log = os.path.join(mihoyo_dir, name, "output_log.txt")
         if os.path.isfile(output_log):
             return output_log
     return None # no genshin installation
-
-def permanent_cache(*params: str) -> Callable[[T], T]:
-    """Like lru_cache except permanent and only caches based on some parameters"""
-    cache: Dict[Any, Any] = {}
-
-    def wrapper(func):
-        sig = inspect.signature(func)
-        
-        @wraps(func)
-        def inner(*args, **kwargs):
-            bound = sig.bind(*args, **kwargs)
-            bound.apply_defaults()
-            # since the amount of arguments is constant we can just save the values
-            key = tuple(v for k, v in bound.arguments.items() if k in params)
-
-            if key in cache:
-                return cache[key]
-            r = func(*args, **kwargs)
-            cache[key] = r
-            return r
-
-        inner.cache = cache
-        return inner
-
-    return wrapper # type: ignore
 
 def retry(tries: int = 3, exceptions: Union[Type[BaseException], Iterable[Type[BaseException]]] = Exception) -> Callable[[T], T]:
     """A classic retry() decorator"""

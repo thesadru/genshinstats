@@ -1,11 +1,16 @@
+"""Logs for currency "transactions".
+
+Logs for artifact, weapon, resin, genesis crystol and primogem "transactions".
+You may view a history of everything you have gained in the last 3 months.
+"""
 import math
 import sys
 from datetime import datetime
 from typing import Any, Dict, Iterator, List, Optional
 from urllib.parse import urljoin
 
+from .caching import permanent_cache
 from .pretty import prettify_trans
-from .utils import permanent_cache
 from .wishes import fetch_gacha_endpoint, static_session
 
 __all__ = [
@@ -70,37 +75,37 @@ def _get_transactions(
         end_id = data[-1]["id"]
 
 
-def get_primogem_log(size: int = None, authkey: str = None, lang: str = 'en-us') -> Iterator[Dict[str, Any]]:
+def get_primogem_log(size: int = None, authkey: str = None, lang: str = 'en-us', end_id: int = 0) -> Iterator[Dict[str, Any]]:
     """Gets all transactions of primogems
 
     This means stuff like getting primogems from rewards and explorations or making wishes.
     Records go only 3 months back.
     """
-    return _get_transactions("getPrimogemLog", size, authkey, lang)
+    return _get_transactions("getPrimogemLog", size, authkey, lang, end_id)
 
-def get_crystal_log(size: int = None, authkey: str = None, lang: str = 'en-us') -> Iterator[Dict[str, Any]]:
+def get_crystal_log(size: int = None, authkey: str = None, lang: str = 'en-us', end_id: int = 0) -> Iterator[Dict[str, Any]]:
     """Get all transactions of genesis crystals
 
     Records go only 3 months back.
     """
-    return _get_transactions("getCrystalLog", size, authkey, lang)
+    return _get_transactions("getCrystalLog", size, authkey, lang, end_id)
 
-def get_resin_log(size: int = None, authkey: str = None, lang: str = 'en-us') -> Iterator[Dict[str, Any]]:
+def get_resin_log(size: int = None, authkey: str = None, lang: str = 'en-us', end_id: int = 0) -> Iterator[Dict[str, Any]]:
     """Gets all usage of resin
 
     This means using them in ley lines, domains, crafting and weekly bosses.
     Records go only 3 months back.
     """
-    return _get_transactions("getResinLog", size, authkey, lang)
+    return _get_transactions("getResinLog", size, authkey, lang, end_id)
 
-def get_artifact_log(size: int = None, authkey: str = None, lang: str = 'en-us') -> Iterator[Dict[str, Any]]:
+def get_artifact_log(size: int = None, authkey: str = None, lang: str = 'en-us', end_id: int = 0) -> Iterator[Dict[str, Any]]:
     """Get the log of all artifacts gotten or destroyed in the last 3 months"""
-    return _get_transactions("getArtifactLog", size, authkey, lang)
+    return _get_transactions("getArtifactLog", size, authkey, lang, end_id)
 
 
-def get_weapon_log(size: int = None, authkey: str = None, lang: str = 'en-us') -> Iterator[Dict[str, Any]]:
+def get_weapon_log(size: int = None, authkey: str = None, lang: str = 'en-us', end_id: int = 0) -> Iterator[Dict[str, Any]]:
     """Get the log of all weapons gotten or destroyed in the last 3 months"""
-    return _get_transactions("getWeaponLog", size, authkey, lang)
+    return _get_transactions("getWeaponLog", size, authkey, lang, end_id)
 
 
 def current_resin(last_resin_time: datetime, last_resin_amount: float, current_time: datetime = None, authkey: str = None):

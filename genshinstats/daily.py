@@ -2,10 +2,10 @@
 
 Automatically claims the next daily reward in the daily check-in rewards.
 """
-from genshinstats.utils import permanent_cache
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple
 from urllib.parse import urljoin
 
+from .caching import permanent_cache
 from .genshinstats import fetch_endpoint
 
 __all__ = [

@@ -161,6 +161,11 @@ You can also get a list of all rewards you have claimed so far
 ```py
 for i in gs.get_claimed_rewards():
     print(i['cnt'], i['name'])
+# 20 Primogem
+# 5000 Mora
+# 3 Fine Enhancement Ore
+# 3 Adventurer's Experience
+# 8000 Mora
 ```
 ### transaction logs
 Logs for artifact, weapon, resin, genesis crystol and primogem "transactions".
@@ -179,6 +184,18 @@ get_weapon_log
 ```py
 for i in gs.get_primogem_log(size=40):
     print(f"{i['time']} - {i['reason']}: {i['amount']} primogems")
+# 2021-08-14 19:43:12 - Achievement reward: 5 primogems
+# 2021-08-13 18:32:58 - Daily Commission reward: 20 primogems
+# 2021-08-13 18:22:00 - Daily Commission reward: 10 primogems
+# 2021-08-13 18:19:05 - Daily Commission reward: 10 primogems
+# 2021-08-13 17:48:09 - Shop purchase: -1600 primogems
+```
+```py
+total = 0
+for i in gs.get_primogem_log():
+    total += i['amount']
+    print(f"Since {i['time']} you have gained {total} primogems   ", end='\r')
+# Since 2021-01-02 20:35:16 you have gained 5197 primogems
 ```
 
 Since you the api itself doesn't provide the current amount of resin genshinstats provides a way to calculate it yourself. 
@@ -219,6 +236,44 @@ gs.redeem_code('GENSHINGIFT')
 ```
 > `redeem_code()` requires a special form of authentication: an `account_id` and `cookie_token` cookies.
 > You can get these by grabbing cookies from [the official genshin site](https://genshin.mihoyo.com/en/gift) instead of hoyolabs.
+
+### caching
+Caching is currently not native to genshinstats however there's a builtin way to install a cache into every function.
+
+This will cache everything install a cache into every* function in genshinstats.
+```py
+cache = {}
+gs.install_cache(cache)
+```
+
+The same cache reference is used accross all functions allowing you to see the entire cache and possibly even clear it.
+```py
+cache = {}
+gs.install_cache(cache)
+
+gs.get_characters(710785423)
+print(cache.keys())
+# dict_keys([('get_user_stats', 710785423), ('get_characters', 710785423, None, 'en-us')])
+```
+
+You're highly encouraged to use preexisting cache objects from libraries such as `cachetools` to allow for more functionality
+```py
+from cachetools import Cache
+cache = Cache(100) # only store maximum of 100 objects in the cache
+gs.install_cache(cache)
+```
+
+However the majority of these approaches have a fatal flaw: if they are not periodically cleared then old data might get stuck in them. It's therefore recommended to keep a ttl cache or automatically clear the cache yourself.
+```py
+from cachetools import TTLCache
+cache = TTLCache(1024, 3600) # max 1024 objects with max livespan of 1 hour
+gs.install_cache(cache)
+```
+
+> \*Not every function *can* be cached, some are dependent on cookies and some do not cleanly integrate with preexisting caches.
+
+> The `install_cache` function requires a `MutableMapping[Tuple[Any, ...], Any]` and only uses `__geitem__`, `__setitem__` and `__contains__`. You may and are encouraged to create your own cache objects.
+> In case you're considering storing your data in json files or similar it's encouraged to hash your keys before storing them as tuples as keys are generally not supported in other formats.
 
 ## change language
 Some api endpoints support changing languages, you can see them listed here:
@@ -390,10 +445,6 @@ This is because the wish history is split into pages which must be requested one
 
 If you absolutely need a list you can just explicitely cast the generator to a list with `list(get_wish_history())` however that might take a few seconds fetch.
 
-## Can I get data like mora or primogems with this api?
-No, all data is hosted on a single server in hongkong, so mihoyo doesn't bother with adding data that changes often like mora, primogems, items, artifact rolls, etc. Talents are also currently unavalible.
-All the data you can get should be already implemented. If you see an endpoint that is useful and hasn't been implemented yet please open an issue or contact me directly.
-
 ## How does `set_cookie_auto()` work? Can my data be stolen with it?
 `set_cookie_auto()` searches your browsers for possible cookies used to login into your genshin accounts and then uses those, so there's no need to use `set_cookies()`.
 When getting said cookies, they are filtered so only ones for mihoyo are ever pulled out. They will only ever be used as authentication and will never be sent anywhere else.
@@ -434,6 +485,8 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.7
+- Added `install_cache` for installing a cache into the entire library
 ## 1.4.6.1
 - Added an error for when you don't have a hoyolab account created.
 ## 1.4.6
