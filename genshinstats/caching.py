@@ -77,9 +77,7 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
     sig = inspect.signature(func)
 
     def wrapper(*args, **kwargs):
-        # create key (transaction id, *arguments)
-        # transaction ids are always unique no matter the function so this is safe
-        # for heads (end_id=0) we either don't store them or store them as the function name
+        # create key (func name, end id, *arguments)
         bound = sig.bind(*args, **kwargs)
         bound.apply_defaults()
         arguments = bound.arguments
@@ -93,38 +91,32 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
         if "banner_type" in arguments and arguments["banner_type"] is None:
             return func(*args, **kwargs)
 
+        def make_key(end_id: int) -> Tuple[Any, ...]:
+            return (func.__name__,end_id,) + partial_key
+
         def helper(end_id: int):
-            # in case we're using strict mode its fastest to just get the items at the start
-            if end_id == 0 and strict:
-                key = (func.__name__,) + partial_key
+            while True:
+                # yield new items from the cache
+                key = make_key(end_id)
                 while key in cache:
                     yield cache[key]
-                    key = (cache[key]['id'],) + partial_key
-            
-            while True:
+                    end_id = cache[key]["id"]
+                    key = make_key(end_id)
+
                 # look ahead and add new items to the cache
                 # since the size limit is always 20 we use that to make only a single request
                 new = list(func(size=20, authkey=authkey, end_id=end_id, **arguments))
                 if len(new) == 0:
                     break
-                
-                # we have to special-case end_id=0 since it's a bad idea to store the head by default
-                if end_id != 0:
-                    cache[(end_id,) + partial_key] = new[0]
-                else:
+                # the head may not want to be cached so it must be handled separately
+                if end_id != 0 or strict:
+                    cache[make_key(end_id)] = new[0]
+                if end_id == 0:
                     yield new[0]
                     end_id = new[0]["id"]
-                    if strict:
-                        cache[(func.__name__,) + partial_key] = new[0]
 
                 for p, n in zip(new, new[1:]):
-                    cache[(p["id"],) + partial_key] = n
-
-                # yield new items
-                key = (end_id,) + partial_key
-                while key in cache:
-                    yield cache[key]
-                    key = (cache[key]['id'],) + partial_key
+                    cache[make_key(p["id"])] = n
 
         return islice(helper(end_id), size)
 
@@ -138,6 +130,8 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
 
     If strict mode is on then the first item of the paginator will no longer be requested every time.
     That can however cause a variety of problems and it's therefore recommend to use it only with TTL caches.
+
+    Please do note that hundreds of accesses may be made per call so your cache shouldn't be doing heavy computations during accesses.
     """
     functions: List[Callable] = [
         # genshinstats
@@ -184,11 +178,12 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
             orig_func = getattr(module, func.__name__)
             if (
                 os.path.split(orig_func.__globals__["__file__"])[0]
-                != os.path.split(func.__globals__["__file__"])[0] # type: ignore
+                != os.path.split(func.__globals__["__file__"])[0]  # type: ignore
             ):
                 continue
 
             setattr(module, func.__name__, func)
+
 
 def uninstall_cache() -> None:
     """Uninstalls the cache from all functions"""
@@ -198,7 +193,7 @@ def uninstall_cache() -> None:
             members = inspect.getmembers(module)
         except ModuleNotFoundError:
             continue
-    
+
         for name, func in members:
             if hasattr(func, "__cache__"):
                 setattr(module, name, getattr(func, "__original__", func))
