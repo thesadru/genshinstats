@@ -7,6 +7,7 @@ All endpoints require to be logged in with either a cookie or an authkey, read t
 
 https://github.com/thesadru/genshinstats
 """
+from .caching import *
 from .daily import *
 from .errors import *
 from .genshinstats import *

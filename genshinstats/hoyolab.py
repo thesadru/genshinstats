@@ -5,9 +5,10 @@ Can search users, get record cards, redeem codes...
 import time
 from typing import Any, Dict, List, Mapping, Optional
 
+from .caching import permanent_cache
 from .genshinstats import fetch_endpoint
 from .pretty import prettify_game_accounts
-from .utils import deprecated, permanent_cache, recognize_server
+from .utils import deprecated, recognize_server
 
 __all__ = [
     "get_langs",
