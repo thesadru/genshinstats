@@ -4,11 +4,11 @@ import os
 import sys
 from functools import update_wrapper
 from itertools import islice
-from typing import Any, Callable, Dict, MutableMapping, Tuple, TypeVar
+from typing import Any, Callable, Dict, List, MutableMapping, Tuple, TypeVar
 
 import genshinstats as gs
 
-__all__ = ["permanent_cache", "install_cache"]
+__all__ = ["permanent_cache", "install_cache", "uninstall_cache"]
 
 C = TypeVar("C", bound=Callable[..., Any])
 
@@ -41,7 +41,7 @@ def permanent_cache(*params: str) -> Callable[[C], C]:
 def cache_func(func: C, cache: MutableMapping[Tuple[Any, ...], Any]) -> C:
     """Caches a normal function"""
     # prevent possible repeated cachings
-    if getattr(func, "__cached__", False):
+    if hasattr(func, "__cache__"):
         return func
 
     sig = inspect.signature(func)
@@ -60,6 +60,8 @@ def cache_func(func: C, cache: MutableMapping[Tuple[Any, ...], Any]) -> C:
         cache[key] = r
         return r
 
+    setattr(wrapper, "__cache__", cache)
+    setattr(wrapper, "__original__", func)
     return update_wrapper(wrapper, func)  # type: ignore
 
 
@@ -69,7 +71,7 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
     Respects size and authkey.
     If strict mode is on then the first item of the paginator will no longer be requested every time.
     """
-    if getattr(func, "__cached__", False):
+    if hasattr(func, "__cache__"):
         return func
 
     sig = inspect.signature(func)
@@ -125,6 +127,8 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
 
         return islice(helper(end_id or 0), size)
 
+    setattr(wrapper, "__cache__", cache)
+    setattr(wrapper, "__original__", func)
     return update_wrapper(wrapper, func)  # type: ignore
 
 
@@ -134,7 +138,7 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
     If strict mode is on then the first item of the paginator will no longer be requested every time.
     That can however cause a variety of problems and it's therefore recommend to use it only with TTL caches.
     """
-    functions = [
+    functions: List[Callable] = [
         # genshinstats
         gs.get_user_stats,
         gs.get_characters,
@@ -147,7 +151,7 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
         gs.get_record_card,
         gs.get_recommended_users,
     ]
-    paginators = [
+    paginators: List[Callable] = [
         # wishes
         gs.get_wish_history,
         # transactions
@@ -157,7 +161,7 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
         gs.get_resin_log,
         gs.get_weapon_log,
     ]
-    invalid = [
+    invalid: List[Callable] = [
         # normal generator
         gs.get_claimed_rewards,
         # cookie dependent
@@ -172,7 +176,6 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
         wrapped.append(cache_paginator(func, cache, strict=strict))
 
     for func in wrapped:
-        func.__cached__ = True
         # ensure we only replace actual functions from the genshinstats directory
         for module in sys.modules.values():
             if not hasattr(module, func.__name__):
@@ -180,8 +183,21 @@ def install_cache(cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = Fa
             orig_func = getattr(module, func.__name__)
             if (
                 os.path.split(orig_func.__globals__["__file__"])[0]
-                != os.path.split(func.__globals__["__file__"])[0]
+                != os.path.split(func.__globals__["__file__"])[0] # type: ignore
             ):
                 continue
 
             setattr(module, func.__name__, func)
+
+def uninstall_cache() -> None:
+    """Uninstalls the cache from all functions"""
+    modules = sys.modules.copy()
+    for module in modules.values():
+        try:
+            members = inspect.getmembers(module)
+        except ModuleNotFoundError:
+            continue
+    
+        for name, func in members:
+            if hasattr(func, "__cache__"):
+                setattr(module, name, getattr(func, "__original__", func))
