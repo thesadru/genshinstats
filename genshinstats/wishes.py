@@ -125,7 +125,6 @@ def fetch_gacha_endpoint(endpoint: str, authkey: str = None, **kwargs) -> Dict[s
     else:
         kwargs.setdefault('params', {})['authkey'] = authkey
     method = kwargs.pop('method', 'get')
-    print(f"{method.upper()} {endpoint} | {kwargs}")
     url = urljoin(GACHA_INFO_URL, endpoint)
     
     r = session.request(method, url, **kwargs)

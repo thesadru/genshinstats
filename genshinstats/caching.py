@@ -78,13 +78,14 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
 
     def wrapper(*args, **kwargs):
         # create key (transaction id, *arguments)
-        # transaction ids are always unique no matter the function
+        # transaction ids are always unique no matter the function so this is safe
+        # for heads (end_id=0) we either don't store them or store them as the function name
         bound = sig.bind(*args, **kwargs)
         bound.apply_defaults()
         arguments = bound.arguments
 
         # remove arguments that might cause problems
-        size, authkey, end_id = [arguments.pop(k, None) for k in ("size", "authkey", "end_id")]
+        size, authkey, end_id = [arguments.pop(k) for k in ("size", "authkey", "end_id")]
         partial_key = tuple(arguments.values())
 
         # special recursive case must be ignored
@@ -93,39 +94,39 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
             return func(*args, **kwargs)
 
         def helper(end_id: int):
-            """Helper iterator"""
+            # in case we're using strict mode its fastest to just get the items at the start
+            if end_id == 0 and strict:
+                key = (func.__name__,) + partial_key
+                while key in cache:
+                    yield cache[key]
+                    key = (cache[key]['id'],) + partial_key
+            
             while True:
                 # look ahead and add new items to the cache
                 # since the size limit is always 20 we use that to make only a single request
                 new = list(func(size=20, authkey=authkey, end_id=end_id, **arguments))
                 if len(new) == 0:
-                    break  # default case for size=None
-
+                    break
+                
+                # we have to special-case end_id=0 since it's a bad idea to store the head by default
                 if end_id != 0:
                     cache[(end_id,) + partial_key] = new[0]
-                elif strict:
-                    cache[(func.__name__,) + partial_key] = new[0]
+                else:
+                    yield new[0]
+                    end_id = new[0]["id"]
+                    if strict:
+                        cache[(func.__name__,) + partial_key] = new[0]
 
                 for p, n in zip(new, new[1:]):
                     cache[(p["id"],) + partial_key] = n
 
                 # yield new items
-                while True:
-                    if end_id == 0:
-                        yield new[0]
-                        end_id = new[0]["id"]
-                        if strict:
-                            cache[(func.__name__,) + partial_key] = new[0]
-
-                    key = (end_id,) + partial_key
-                    if key not in cache:
-                        break
-
+                key = (end_id,) + partial_key
+                while key in cache:
                     yield cache[key]
+                    key = (cache[key]['id'],) + partial_key
 
-                    end_id = cache[key]["id"]
-
-        return islice(helper(end_id or 0), size)
+        return islice(helper(end_id), size)
 
     setattr(wrapper, "__cache__", cache)
     setattr(wrapper, "__original__", func)

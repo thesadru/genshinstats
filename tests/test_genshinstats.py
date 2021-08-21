@@ -1,6 +1,7 @@
 import os
 import genshinstats as gs
 
+gs.install_cache({})
 gs.set_cookie(ltuid=os.environ['GS_LTUID'], ltoken=os.environ['GS_LTOKEN'])
 
 uid = 710785423
