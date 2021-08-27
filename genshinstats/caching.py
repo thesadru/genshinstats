@@ -29,7 +29,8 @@ def permanent_cache(*params: str) -> Callable[[C], C]:
             if key in cache:
                 return cache[key]
             r = func(*args, **kwargs)
-            cache[key] = r
+            if r is not None:
+                cache[key] = r
             return r
 
         inner.cache = cache

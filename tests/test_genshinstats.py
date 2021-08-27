@@ -1,10 +1,14 @@
 import os
-import genshinstats as gs
 
-gs.set_cookie(ltuid=os.environ['GS_LTUID'], ltoken=os.environ['GS_LTOKEN'])
+import genshinstats as gs
+import pytest
 
 uid = 710785423
 hoyolab_uid = 8366222
+
+@pytest.fixture(scope='module', autouse=True)
+def set_cookie():
+    gs.set_cookie(ltuid=os.environ['GS_LTUID'], ltoken=os.environ['GS_LTOKEN'])
 
 def test_recognize_server():
     assert gs.recognize_server(uid) == 'os_euro'

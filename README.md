@@ -485,6 +485,9 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.8
+- Fixed support for chinese accounts
+- Made sure that None returns do not get cached
 ## 1.4.7
 - Added `install_cache` for installing a cache into the entire library
 ## 1.4.6.1

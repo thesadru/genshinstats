@@ -6,9 +6,11 @@ from datetime import datetime
 import genshinstats as gs
 import pytest
 
-gs.set_cookie_auto()
-
 uid = 710785423
+
+@pytest.fixture(scope='module', autouse=True)
+def set_cookie():
+    gs.set_cookie_auto()
 
 def test_game_accounts():
     accounts = gs.get_game_accounts()

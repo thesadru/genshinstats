@@ -2,6 +2,7 @@ import warnings
 from datetime import datetime
 
 import genshinstats as gs
+import pytest
 
 
 def test_transactions():
@@ -12,6 +13,7 @@ def test_transactions():
     list(gs.get_weapon_log(size=20))
 
 def test_current_resin():
+    pytest.skip("current_resin is too unstable")
     try:
         resin = gs.current_resin(datetime(2021, 8, 14), 160)
     except ValueError:
