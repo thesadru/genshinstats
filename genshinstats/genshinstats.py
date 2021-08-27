@@ -45,12 +45,13 @@ session.headers.update({
 cookies: List[RequestsCookieJar] = [] # a list of all avalible cookies
 
 DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
+CN_DS_SALT = "14bmu1mz0yuljprsfgpvjh3ju2ni468r"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
 def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> None:
     """Logs-in using a cookie.
-    
+
     Usage:
     >>> set_cookie(ltuid=..., ltoken=...)
     >>> set_cookie(account_id=..., cookie_token=...)
@@ -59,32 +60,32 @@ def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> N
     """
     if bool(cookie) == bool(kwargs):
         raise ValueError("Cannot use both positional and keyword arguments at once")
-    
+
     set_cookies(cookie or kwargs)
 
 def set_cookies(*args: Union[Mapping[str, Any], str], clear: bool = True) -> None:
     """Sets multiple cookies at once to cycle between. Takes same arguments as set_cookie.
-    
+
     Unlike set_cookie, this function allows for multiple cookies to be used at once.
     This is so far the only way to circumvent the rate limit.
-    
+
     If clear is set to False the previously set cookies won't be cleared.
     """
     if clear:
         cookies.clear()
-    
+
     for cookie in args:
         if isinstance(cookie, Mapping):
             cookie = {k: str(v) for k, v in cookie.items()} # SimpleCookie needs a string
         cookie = SimpleCookie(cookie)
-        
+
         jar = RequestsCookieJar()
         jar.update(cookie)
         cookies.append(jar)
 
 def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
-    
+
     If a specific browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
@@ -98,19 +99,19 @@ def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     # however we can't just get every cookie because there's sensitive information
     allowed_cookies = {'ltuid', 'ltoken', 'account_id', 'cookie_token'}
     return {
-        c.name: c.value 
-        for domain in ('mihoyo', 'hoyolab') 
-        for c in load(domain_name=domain) 
+        c.name: c.value
+        for domain in ('mihoyo', 'hoyolab')
+        for c in load(domain_name=domain)
         if c.name in allowed_cookies and c.value is not None
     }
 
 def set_cookie_auto(browser: str = None) -> None:
     """Like set_cookie, but gets the cookies by itself from your browser.
-    
+
     Requires the module browser-cookie3
     Be aware that this process can take up to 10 seconds.
     To speed it up you may select a browser.
-    
+
     If a specific browser is set, gets data from that browser only.
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
@@ -130,7 +131,7 @@ def generate_ds_token(salt: str = DS_SALT) -> str:
 def _request(*args: Any, **kwargs: Any) -> Any:
     """Fancy requests.request"""
     r = session.request(*args, **kwargs)
-    
+
     r.raise_for_status()
     kwargs['cookies'].update(session.cookies)
     session.cookies.clear()
@@ -145,30 +146,38 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     Takes in an endpoint url which is joined with the base url.
     A request is then sent and returns a parsed response.
     Includes error handling and ds token renewal.
-    
-    Can specifically use the chinese base url and request data for chinese users, 
+
+    Can specifically use the chinese base url and request data for chinese users,
     but that requires being logged in as that user.
-    
+
     Supports handling ratelimits if multiple cookies are set with `set_cookies`
     """
     # parse the arguments for requests.request
-    session.headers['ds'] = generate_ds_token()
     method = kwargs.pop('method', 'get')
-    url = urljoin(CN_TAKUMI_URL if chinese else OS_BBS_URL, endpoint)
-    
+    if chinese:
+        kwargs.setdefault('headers', {}).update({
+            "ds": generate_ds_token(CN_DS_SALT),
+            "x-rpc-app_version": "2.7.0",
+            "x-rpc-client_type": "5",
+        })
+        url = urljoin(CN_TAKUMI_URL, endpoint)
+    else:
+        session.headers['ds'] = generate_ds_token()
+        url = urljoin(OS_BBS_URL, endpoint)
+
     if cookie is not None:
         cookie = {k: str(v) for k, v in cookie.items()}
         return _request(method, url, cookies=cookie, **kwargs)
     elif len(cookies) == 0:
         raise NotLoggedIn('Login cookies have not been provided')
-    
+
     for cookie in cookies.copy():
         try:
             return _request(method, url, cookies=cookie, **kwargs)
         except TooManyRequests:
             # move the ratelimited cookie to the end to let the ratelimit wear off
             cookies.append(cookies.pop(0))
-    
+
     # if we're here it means we used up all our cookies so we must handle that
     if len(cookies) == 1:
         raise TooManyRequests("Cannnot get data for more than 30 accounts per day.")
@@ -188,15 +197,15 @@ def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> Dict[str, Any]
 
 def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
     """Gets characters of a user.
-    
+
     Characters contain info about their level, constellation, weapon, and artifacts.
     Talents are not included.
-    
+
     If character_ids are provided then only characters with those ids are returned.
     """
     if character_ids is None:
         character_ids = [i['id'] for i in get_user_stats(uid)['characters']]
-    
+
     server = recognize_server(uid)
     data = fetch_endpoint(
         "game_record/genshin/api/character",
@@ -210,7 +219,7 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
 
 def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Gets spiral abyss runs of a user and details about them.
-    
+
     Every season these stats refresh and you can get the previous stats with `previous`.
     """
     server = recognize_server(uid)
@@ -225,7 +234,7 @@ def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any]
 
 def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Fetches all data a user can has. Very slow.
-    
+
     A helper function that gets all avalible data for a user and returns it as one dict.
     However that makes it fairly slow so it's not recommended to use it outside caching.
     """
