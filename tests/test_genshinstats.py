@@ -2,6 +2,14 @@ import os
 
 import genshinstats as gs
 import pytest
+import urllib3
+
+# unless anyone knows how to inject certificates into a github workflow this is required
+try:
+    gs.search('a')
+except urllib3.exceptions.SSLError:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    gs.genshinstats.session.verify = False
 
 uid = 710785423
 hoyolab_uid = 8366222
@@ -31,15 +39,10 @@ def test_is_game_uid():
     assert not gs.is_game_uid(8366222)
 
 def test_is_chinese():
-    assert gs.is_chinese('cn_gf01')
-    assert gs.is_chinese('cn_qd01')
-    assert not gs.is_chinese('os_usa')
-    assert not gs.is_chinese('os_asia')
-    
-    assert gs.is_chinese('123456789')
-    assert gs.is_chinese(567890123)
-    assert not gs.is_chinese('678901234')
-    assert not gs.is_chinese(890123456)
+    for i in ('cn_gf01', 'cn_qd01', '123456789', 567890123):
+        assert gs.is_chinese(i)
+    for i in ('os_usa', 'os_asia', '678901234', 890123456):
+        assert not gs.is_chinese(i)
 
 def test_search():
     users = gs.search('sadru')

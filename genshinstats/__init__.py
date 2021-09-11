@@ -12,6 +12,7 @@ from .daily import *
 from .errors import *
 from .genshinstats import *
 from .hoyolab import *
+from .map import *
 from .transactions import *
 from .utils import *
 from .wishes import *

@@ -107,7 +107,7 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
                 # look ahead and add new items to the cache
                 # since the size limit is always 20 we use that to make only a single request
                 new = list(func(size=20, authkey=authkey, end_id=end_id, **arguments))
-                if len(new) == 0:
+                if not new:
                     break
                 # the head may not want to be cached so it must be handled separately
                 if end_id != 0 or strict:

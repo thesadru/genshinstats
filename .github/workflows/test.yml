@@ -32,7 +32,7 @@ jobs:
         CN_LTUID: ${{ secrets.CN_LTUID }}
         CN_LTOKEN: ${{ secrets.CN_LTOKEN }}
       run: |
-        python -m pytest --ignore=tests/local
+        python -m pytest --ignore=tests/local --disable-warnings
     - name: Lint with mypy
       run: |
         mypy --install-types --non-interactive --ignore-missing-imports --no-warn-no-return genshinstats/

@@ -2,7 +2,7 @@
 
 Automatically claims the next daily reward in the daily check-in rewards.
 """
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, NamedTuple, Optional
 from urllib.parse import urljoin
 
 from .caching import permanent_cache
@@ -21,6 +21,10 @@ OS_ACT_ID = "e202102251931481"
 CN_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/" # chinese
 CN_ACT_ID = "e202009291139501"
 
+class DailyRewardInfo(NamedTuple):
+    signed_in: bool
+    claimed_rewards: int
+
 def fetch_daily_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict[str, Any]:
     """Fetch an enpoint for daily rewards"""
     url,act_id = (CN_URL,CN_ACT_ID) if chinese else (OS_URL,OS_ACT_ID)
@@ -30,13 +34,13 @@ def fetch_daily_endpoint(endpoint: str, chinese: bool = False, **kwargs) -> Dict
     return fetch_endpoint(url, **kwargs)
 
 
-def get_daily_reward_info(chinese: bool = False, cookie: Mapping[str, Any] = None) -> Tuple[bool, int]:
+def get_daily_reward_info(chinese: bool = False, cookie: Mapping[str, Any] = None) -> DailyRewardInfo:
     """Fetches daily award info for the currently logged-in user.
     
     Returns a tuple - whether the user is logged in, how many total rewards the user has claimed so far
     """
     data = fetch_daily_endpoint("info", chinese, cookie=cookie)
-    return data['is_sign'], data['total_sign_day']
+    return DailyRewardInfo(data['is_sign'], data['total_sign_day'])
 
 @permanent_cache('chinese', 'lang')
 def get_monthly_rewards(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:

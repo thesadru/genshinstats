@@ -468,12 +468,16 @@ Getting the user's username and adventure rank is possible only with their hoyol
 
 # project layout
 ```
-genshinstats.py    user stats and characters
-hoyolab.py         user hoyolab community info
-wishes.py          wish history
-daily.py           automatic daily reward claiming
-utils.py           various utility functions
-errors.py          errors used by genshinstats
+caching.py          caching utilities
+daily.py            automatic daily reward claiming
+errors.py           errors used by genshinstats
+genshinstats.py     user stats and characters
+hoyolab.py          user hoyolab community info
+map.py              genshin webstatic map
+pretty.py           formatting of api responses
+transactions.py     transaction logs
+utils.py            various utility functions
+wishes.py           wish history
 ```
 
 # about this project
@@ -485,13 +489,16 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.9
+- Added support for the genshin map
+- Made `daily_reward_info` return a namedtuple
 ## 1.4.8
 - Fixed support for chinese accounts
 - Made sure that None returns do not get cached
 ## 1.4.7
 - Added `install_cache` for installing a cache into the entire library
 ## 1.4.6.1
-- Added an error for when you don't have a hoyolab account created.
+- Added an error for when you don't have a hoyolab account created
 ## 1.4.6
 - Added several new log related endpoints
     - get_primogem_log, get_resin_log, get_crystal_log

@@ -7,7 +7,7 @@ import random
 import string
 import time
 from http.cookies import SimpleCookie
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Mapping, MutableMapping, Union
 from urllib.parse import urljoin
 
 import requests
@@ -33,8 +33,8 @@ __all__ = [
 session = Session()
 session.headers.update({
     # required headers
-    "x-rpc-app_version": "1.5.0",  # overseas api uses 1.x.x, chinese api uses 2.x.x
-    "x-rpc-client_type": "4",
+    "x-rpc-app_version": "", 
+    "x-rpc-client_type": "",
     "x-rpc-language": "en-us",
     # authentications headers
     "ds": "",
@@ -44,7 +44,7 @@ session.headers.update({
 
 cookies: List[RequestsCookieJar] = [] # a list of all avalible cookies
 
-DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
+OS_DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 CN_DS_SALT = "14bmu1mz0yuljprsfgpvjh3ju2ni468r"
 OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
@@ -119,7 +119,7 @@ def set_cookie_auto(browser: str = None) -> None:
 set_cookies_auto = set_cookie_auto # alias
 
 
-def generate_ds_token(salt: str = DS_SALT) -> str:
+def generate_ds_token(salt: str) -> str:
     """Creates a new ds token for authentication."""
     t = int(time.time())  # current seconds
     r = ''.join(random.choices(string.ascii_letters, k=6))  # 6 random chars
@@ -131,7 +131,7 @@ def generate_ds_token(salt: str = DS_SALT) -> str:
 def _request(*args: Any, **kwargs: Any) -> Any:
     """Fancy requests.request"""
     r = session.request(*args, **kwargs)
-
+    
     r.raise_for_status()
     kwargs['cookies'].update(session.cookies)
     session.cookies.clear()
@@ -153,20 +153,26 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     Supports handling ratelimits if multiple cookies are set with `set_cookies`
     """
     # parse the arguments for requests.request
+    kwargs.setdefault('headers', {})
     method = kwargs.pop('method', 'get')
     if chinese:
-        kwargs.setdefault('headers', {}).update({
+        kwargs['headers'].update({
             "ds": generate_ds_token(CN_DS_SALT),
             "x-rpc-app_version": "2.7.0",
             "x-rpc-client_type": "5",
         })
         url = urljoin(CN_TAKUMI_URL, endpoint)
     else:
-        session.headers['ds'] = generate_ds_token()
+        kwargs['headers'].update({
+            "ds": generate_ds_token(OS_DS_SALT),
+            "x-rpc-app_version": "1.5.0", 
+            "x-rpc-client_type": "4",
+        })
         url = urljoin(OS_BBS_URL, endpoint)
 
     if cookie is not None:
-        cookie = {k: str(v) for k, v in cookie.items()}
+        if not isinstance(cookie, MutableMapping) or not all(isinstance(v, str) for v in cookie.values()):
+            cookie = {k: str(v) for k, v in cookie.items()}
         return _request(method, url, cookies=cookie, **kwargs)
     elif len(cookies) == 0:
         raise NotLoggedIn('Login cookies have not been provided')

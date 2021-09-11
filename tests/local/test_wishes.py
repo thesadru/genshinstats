@@ -27,9 +27,11 @@ def test_uid_from_authkey():
 def test_langs(uid: int = 710785423):
     langs = gs.get_langs()
     lang = 'de-de'
-    
+
     characters = gs.get_characters(uid, lang=lang)
-    assert characters[-1]["name"] == "Reisende" # german for traveler
+    for char in characters:
+        if 'Player' in char['icon']:
+            assert char["name"] == "Reisende"
     
     banner_types = gs.get_banner_types(lang=lang)
     assert banner_types[200] == "Standardgebet"

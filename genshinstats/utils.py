@@ -4,7 +4,7 @@ import os.path
 import re
 import warnings
 from functools import wraps
-from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar, Union
+from typing import Callable, Iterable, Optional, Type, TypeVar, Union
 
 from .errors import AccountNotFound
 
@@ -24,13 +24,13 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 def recognize_server(uid: int) -> str:
     """Recognizes which server a UID is from."""
     server = {
-        1:'cn_gf01',
-        5:'cn_qd01',
-        6:'os_usa',
-        7:'os_euro',
-        8:'os_asia',
-        9:'os_cht',
-    }.get(int(str(uid)[0])) # first digit
+        '1':'cn_gf01',
+        '5':'cn_qd01',
+        '6':'os_usa',
+        '7':'os_euro',
+        '8':'os_asia',
+        '9':'os_cht',
+    }.get(str(uid)[0])
     if server:
         return server
     else:
@@ -49,7 +49,7 @@ def recognize_id(id: int) -> Optional[str]:
     elif 10000 < id < 50000:
         return "weapon"
     elif 100 < id < 1000:
-        return "contellation"
+        return "constellation"
     elif 10 ** 17 < id < 10 ** 19:
         return "transaction"
     # not sure about these ones:

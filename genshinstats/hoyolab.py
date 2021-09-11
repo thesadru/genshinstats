@@ -12,8 +12,8 @@ from .utils import deprecated, recognize_server
 
 __all__ = [
     "get_langs",
-    "set_visibility",
     "search",
+    "set_visibility",
     "hoyolab_check_in",
     "get_game_accounts",
     "get_record_card",
