@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
     strategy:
@@ -34,7 +34,7 @@ jobs:
         python -m pytest --ignore=tests/local --disable-warnings
   
   deploy:
-
+    needs: test
     runs-on: ubuntu-latest
 
     steps:

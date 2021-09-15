@@ -489,12 +489,15 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.9.2
+- Made sure that None returns do not get cached
+## 1.4.9.1
+- Minor mypy fixes
 ## 1.4.9
 - Added support for the genshin map
 - Made `daily_reward_info` return a namedtuple
 ## 1.4.8
 - Fixed support for chinese accounts
-- Made sure that None returns do not get cached
 ## 1.4.7
 - Added `install_cache` for installing a cache into the entire library
 ## 1.4.6.1

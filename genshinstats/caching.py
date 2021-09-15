@@ -58,7 +58,8 @@ def cache_func(func: C, cache: MutableMapping[Tuple[Any, ...], Any]) -> C:
             return cache[key]
 
         r = func(*args, **kwargs)
-        cache[key] = r
+        if r is not None:
+            cache[key] = r
         return r
 
     setattr(wrapper, "__cache__", cache)
