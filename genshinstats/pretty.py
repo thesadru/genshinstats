@@ -28,6 +28,7 @@ def _recognize_character_icon(url: str) -> str:
 
 def prettify_stats(data):
     s = data["stats"]
+    h = data["homes"][0] if data["homes"] else None
     return {
         "stats": {
             "achievements": s["achievement_number"],
@@ -46,27 +47,26 @@ def prettify_stats(data):
         },
         "characters": [{
             "name": i["name"],
-            "rarity": i["rarity"],
+            "rarity": i["rarity"] if i["rarity"] < 100 else i["rarity"] - 100, # aloy has 105 stars
             "element": i["element"],
             "level": i["level"],
             "friendship": i["fetter"],
             "icon": i["image"],
             "id": i["id"],
         } for i in data["avatars"]],
-        "teapots": [{
-            "name": { # in chinese and idk what the names are
-                "翠黛峰": "Emerald Peak",
-                "清琼岛": "Cool Isle",
-            }.get(t["name"], "Floating Abode"),
-            "icon": t["icon"],
-            # these are currently shared accross all realm styles
-            "level": t["level"],
-            "comfort": t["comfort_num"], # yes I know this is called adeptal energy
-            "comfort_name": t["comfort_level_name"],
-            "comfort_icon": t["comfort_level_icon"],
-            "placed_items": t["item_num"],
-            "visitors": t["visit_num"] # currently not in use
-        } for t in data["homes"]],
+        "teapot": {
+            # only unique data between realms are names and icons
+            "realms": [{
+                "name": s["name"],
+                "icon": s["icon"]
+            } for s in data["homes"]],
+            "level": h["level"],
+            "comfort": h["comfort_num"],
+            "comfort_name": h["comfort_level_name"],
+            "comfort_icon": h["comfort_level_icon"],
+            "items": h["item_num"],
+            "visitors": h["visit_num"] # currently not in use
+        } if h else None,
         "explorations": [{
             "name": i["name"],
             "explored": round(i["exploration_percentage"]/10, 1),
@@ -80,7 +80,7 @@ def prettify_stats(data):
 def prettify_characters(data):
     return [{
         "name": i["name"],
-        "rarity": i["rarity"],
+        "rarity": i["rarity"] if i["rarity"] < 100 else i["rarity"] - 100, # aloy has 105 stars
         "element": i["element"],
         "level": i["level"],
         "friendship": i["fetter"],
@@ -88,6 +88,7 @@ def prettify_characters(data):
         "icon": i["icon"],
         "image": i["image"],
         "id": i["id"],
+        "collab": i["rarity"] >= 100,
         **({"traveler_name": "Aether" if "Boy" in i["icon"] else "Lumine"} if "Player" in i["icon"] else {}),
         "weapon": {
             "name": i["weapon"]["name"],
@@ -145,7 +146,7 @@ def prettify_abyss(data):
     fchars = lambda d: [{
         "value": a["value"],
         "name": _recognize_character_icon(a["avatar_icon"]),
-        "rarity": a["rarity"],
+        "rarity": a["rarity"] if a["rarity"] < 100 else a["rarity"] - 100, # aloy has 105 stars
         "icon": a["avatar_icon"],
         "id": a["avatar_id"],
     } for a in d]
@@ -185,7 +186,7 @@ def prettify_abyss(data):
                     "timestamp": totime(b["timestamp"]),
                     "characters": [{
                         "name": _recognize_character_icon(c["icon"]),
-                        "rarity": c["rarity"],
+                        "rarity": c["rarity"] if c["rarity"] < 100 else c["rarity"] - 100, # aloy has 105 stars
                         "level": c["level"],
                         "icon": c["icon"],
                         "id": c["id"],

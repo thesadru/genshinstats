@@ -489,6 +489,9 @@ This project can be freely downloaded and distributed.
 Crediting is appreciated.
 
 # CHANGELOG
+## 1.4.9.3
+- Teapot now prettifies data properly
+- Aloy no longer has 105 stars
 ## 1.4.9.2
 - Made sure that None returns do not get cached
 ## 1.4.9.1
