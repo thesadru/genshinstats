@@ -480,15 +480,9 @@ utils.py            various utility functions
 wishes.py           wish history
 ```
 
-# about this project
-## contribution
-All contributions are welcome as long as it's in a form of a clean PR.
-Currently, I am looking for literally anyone who has a chinese genshin account to help me make this project work for all chinese endpoints (right now it's mostly guesswork).
-## crediting
-This project can be freely downloaded and distributed.
-Crediting is appreciated.
-
 # CHANGELOG
+## 1.4.9.4
+- Made Ei and Sara have correct names in the abyss
 ## 1.4.9.3
 - Teapot now prettifies data properly
 - Aloy no longer has 105 stars

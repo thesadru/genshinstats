@@ -13,7 +13,9 @@ character_icons = {
     "Qin": "Jean",
     "Hutao": "Hu Tao",
     "Feiyan": "Yanfei",
-    "Kazuha": "Kadehara Kazuha"
+    "Kazuha": "Kadehara Kazuha",
+    "Sara": "Kujou Sara",
+    "Shougun": "Raiden Shogun",
 }
 
 def _recognize_character_icon(url: str) -> str: 
