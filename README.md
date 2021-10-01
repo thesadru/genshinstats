@@ -481,6 +481,9 @@ wishes.py           wish history
 ```
 
 # CHANGELOG
+## 1.4.10
+- Added an `equipment` kwarg to `get_user_stats`
+- Added support for activities
 ## 1.4.9.4
 - Made Ei and Sara have correct names in the abyss
 ## 1.4.9.3

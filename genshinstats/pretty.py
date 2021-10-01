@@ -199,6 +199,35 @@ def prettify_abyss(data):
         } for f in data["floors"]]
     }
 
+def prettify_activities(data):
+    activities = data['activities'][0]
+    return {
+        'hyakunin': [{
+            "id": r['challenge_id'],
+            "name": r['challenge_name'],
+            "difficulty": r["difficulty"],
+            "medal_icon": r["heraldry_icon"],
+            "score": r["max_score"],
+            "multiplier": r["score_multiple"],
+            "lineups": [{
+                "characters": [{
+                    "name": _recognize_character_icon(c["icon"]),
+                    "rarity": c["rarity"] if c["rarity"] < 100 else c["rarity"] - 100, # aloy has 105 stars
+                    "level": c["level"],
+                    "icon": c["icon"],
+                    "id": c["id"],
+                    "trial": c["is_trail_avatar"],
+                } for c in l["avatars"]],
+                "skills": [{
+                    "name": s["name"],
+                    "desc": s["desc"],
+                    "icon": s["icon"],
+                    "id": s["id"]
+                } for s in l["skills"]]
+            } for l in r["lineups"]]
+        } for r in activities['sumo']['records']]
+    }
+
 def prettify_game_accounts(data):
     return [{
         "uid": int(a["game_uid"]),

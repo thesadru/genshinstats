@@ -32,7 +32,9 @@ def test_spiral_abyss():
         gs.get_spiral_abyss(uid),
         gs.get_spiral_abyss(uid, previous=True)
     ]
-    
+
+def test_activities():
+    activities = gs.get_activities(uid)
 
 def test_is_game_uid():
     assert gs.is_game_uid(710785423)

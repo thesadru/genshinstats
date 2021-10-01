@@ -14,7 +14,7 @@ import requests
 from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
-from .pretty import prettify_abyss, prettify_characters, prettify_stats
+from .pretty import prettify_abyss, prettify_characters, prettify_stats, prettify_activities
 from .utils import USER_AGENT, is_chinese, recognize_server, retry
 
 __all__ = [
@@ -27,6 +27,7 @@ __all__ = [
     "get_user_stats",
     "get_characters",
     "get_spiral_abyss",
+    "get_activities",
     "get_all_user_data",
 ]
 
@@ -190,16 +191,23 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     else:
         raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
 
-def get_user_stats(uid: int, cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
-    """Gets basic user information and stats."""
+def get_user_stats(uid: int, equipment: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+    """Gets basic user information and stats.
+    
+    If equipment is True an additional request will be made to get the character equipment
+    """
     server = recognize_server(uid)
     data = fetch_endpoint(
         "game_record/genshin/api/index",
         chinese=is_chinese(uid),
         cookie=cookie,
-        params=dict(server=server, role_id=uid)
+        params=dict(server=server, role_id=uid),
+        headers={'x-rpc-language': lang},
     )
-    return prettify_stats(data)
+    data = prettify_stats(data)
+    if equipment:
+        data['characters'] = get_characters(uid, [i['id'] for i in data['characters']], lang, cookie)
+    return data
 
 def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
     """Gets characters of a user.
@@ -238,13 +246,27 @@ def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any]
     )
     return prettify_abyss(data)
 
+def get_activities(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+    """Gets the activities of the user
+    
+    As of this time only Hyakunin Ikki is availible.
+    """
+    server = recognize_server(uid)
+    data = fetch_endpoint(
+        "game_record/genshin/api/activities",
+        chinese=is_chinese(uid),
+        cookie=cookie,
+        params=dict(server=server, role_id=uid),
+        headers={'x-rpc-language': lang},
+    )
+    return prettify_activities(data)
+
 def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Fetches all data a user can has. Very slow.
 
     A helper function that gets all avalible data for a user and returns it as one dict.
     However that makes it fairly slow so it's not recommended to use it outside caching.
     """
-    data = get_user_stats(uid, cookie)
-    data['characters'] = get_characters(uid, [i['id'] for i in data['characters']], lang, cookie)
+    data = get_user_stats(uid, equipment=True, lang=lang, cookie=cookie)
     data['spiral_abyss'] = [get_spiral_abyss(uid, previous, cookie) for previous in [False, True]]
     return data
