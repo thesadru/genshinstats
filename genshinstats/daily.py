@@ -7,6 +7,8 @@ from urllib.parse import urljoin
 
 from .caching import permanent_cache
 from .genshinstats import fetch_endpoint
+from .hoyolab import get_game_accounts
+from .utils import recognize_server
 
 __all__ = [
     "fetch_daily_endpoint",
@@ -65,7 +67,7 @@ def get_claimed_rewards(chinese: bool = False, cookie: Mapping[str, Any] = None)
             break
         current_page += 1
 
-def claim_daily_reward(chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[Dict[str, Any]]:
+def claim_daily_reward(uid: int = None, chinese: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Optional[Dict[str, Any]]:
     """Signs into hoyolab and claims the daily rewards.
     
     Chinese and overseas servers work a bit differently,
@@ -79,11 +81,24 @@ def claim_daily_reward(chinese: bool = False, lang: str = 'en-us', cookie: Mappi
     if signed_in:
         return None
     
+    params = {}
+    
+    if chinese:
+        if uid is None:
+            accounts = get_game_accounts(chinese=True, cookie=cookie)
+            params["game_uid"] = accounts[0]["game_uid"]
+            params["region"] = accounts[0]["region"]
+        else:
+            params["game_uid"] = uid
+            params["region"] = recognize_server(uid)
+    
+    params["lang"] = lang
+    
     fetch_daily_endpoint(
         "sign", chinese,
         cookie=cookie,
         method="POST",
-        params=dict(lang=lang)
+        params=params
     )
     rewards = get_monthly_rewards(chinese, lang, cookie)
     return rewards[claimed_rewards]
