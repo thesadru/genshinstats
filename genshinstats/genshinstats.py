@@ -262,10 +262,10 @@ def get_activities(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = No
     )
     return prettify_activities(data)
 
-def get_daily_notes(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
-    """Gets the activities of the user
-
-    As of this time only Hyakunin Ikki is availible.
+def get_notes(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+    """Gets the real-time notes of the user
+    
+    Contains current resin, expeditions, daily commissions and similar.
     """
     server = recognize_server(uid)
     data = fetch_endpoint(
