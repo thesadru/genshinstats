@@ -231,18 +231,18 @@ def prettify_activities(data):
 def prettify_notes(data):
     return {
         "resin": data["current_resin"],
-        "seconds_until_resin_limit": data["resin_recovery_time"],
+        "until_resin_limit": data["resin_recovery_time"],
         "max_resin": data["max_resin"],
-        "commissions": data["total_task_num"],
-        "commissions_completed": data["finished_task_num"],
-        "commissions_reward_claimed": data["is_extra_task_reward_received"],
-        "max_weekly_boss_discounts": data["resin_discount_num_limit"],
-        "weekly_boss_remaining_discounts": data["remain_resin_discount_num"],
-        "expeditions": data["current_expedition_num"],
-        "expeditions_characters": [{"icon": exp["avatar_side_icon"],
-                                    "remaining_time": exp["remained_time"],
-                                    "status": exp["status"]}
-                                    for exp in data["expeditions"]],
+        "total_commissions": data["total_task_num"],
+        "completed_commissions": data["finished_task_num"],
+        "claimed_commission_reward": data["is_extra_task_reward_received"],
+        "max_boss_discounts": data["resin_discount_num_limit"],
+        "remaining_boss_discounts": data["remain_resin_discount_num"],
+        "expeditions": [{
+            "icon": exp["avatar_side_icon"],
+            "remaining_time": exp["remained_time"],
+            "status": exp["status"]
+        } for exp in data["expeditions"]],
         "max_expeditions": data["max_expedition_num"]
     }
 
