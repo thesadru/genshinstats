@@ -80,6 +80,12 @@ for field, value in stats.items():
 # total_stars: 19
 ```
 
+```py
+notes = gs.get_notes(uid)
+print(f"Current resin: {notes['resin']}/{notes['max_resin']}")
+print(f"Expenditions: {len(notes['expeditions'])}/{notes['max_expeditions']}")
+```
+
 It's possible to set the cookies with a header
 ```py
 gs.set_cookie("ltoken=cnF7TiZqHAAvYqgCBoSPx5EjwezOh1ZHoqSHf7dT; ltuid=119480035")
@@ -483,6 +489,8 @@ wishes.py           wish history
 ```
 
 # CHANGELOG
+## 1.4.11
+- Added `get_notes`
 ## 1.4.10
 - Added an `equipment` kwarg to `get_user_stats`
 - Added support for activities
