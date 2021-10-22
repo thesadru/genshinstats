@@ -14,7 +14,7 @@ import requests
 from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
-from .pretty import prettify_abyss, prettify_characters, prettify_stats, prettify_activities
+from .pretty import prettify_abyss, prettify_characters, prettify_stats, prettify_activities, prettify_notes
 from .utils import USER_AGENT, is_chinese, recognize_server, retry
 
 __all__ = [
@@ -27,6 +27,7 @@ __all__ = [
     "get_user_stats",
     "get_characters",
     "get_spiral_abyss",
+    "get_daily_notes",
     "get_activities",
     "get_all_user_data",
 ]
@@ -34,7 +35,7 @@ __all__ = [
 session = Session()
 session.headers.update({
     # required headers
-    "x-rpc-app_version": "", 
+    "x-rpc-app_version": "",
     "x-rpc-client_type": "",
     "x-rpc-language": "en-us",
     # authentications headers
@@ -47,7 +48,7 @@ cookies: List[RequestsCookieJar] = [] # a list of all avalible cookies
 
 OS_DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 CN_DS_SALT = "14bmu1mz0yuljprsfgpvjh3ju2ni468r"
-OS_BBS_URL = "https://bbs-api-os.hoyolab.com/"  # overseas
+OS_BBS_URL = "https://api-os-takumi.mihoyo.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
 def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> None:
@@ -132,7 +133,7 @@ def generate_ds_token(salt: str) -> str:
 def _request(*args: Any, **kwargs: Any) -> Any:
     """Fancy requests.request"""
     r = session.request(*args, **kwargs)
-    
+
     r.raise_for_status()
     kwargs['cookies'].update(session.cookies)
     session.cookies.clear()
@@ -166,7 +167,7 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     else:
         kwargs['headers'].update({
             "ds": generate_ds_token(OS_DS_SALT),
-            "x-rpc-app_version": "1.5.0", 
+            "x-rpc-app_version": "1.5.0",
             "x-rpc-client_type": "4",
         })
         url = urljoin(OS_BBS_URL, endpoint)
@@ -193,7 +194,7 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
 
 def get_user_stats(uid: int, equipment: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Gets basic user information and stats.
-    
+
     If equipment is True an additional request will be made to get the character equipment
     """
     server = recognize_server(uid)
@@ -248,7 +249,7 @@ def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any]
 
 def get_activities(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Gets the activities of the user
-    
+
     As of this time only Hyakunin Ikki is availible.
     """
     server = recognize_server(uid)
@@ -260,6 +261,21 @@ def get_activities(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = No
         headers={'x-rpc-language': lang},
     )
     return prettify_activities(data)
+
+def get_daily_notes(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+    """Gets the activities of the user
+
+    As of this time only Hyakunin Ikki is availible.
+    """
+    server = recognize_server(uid)
+    data = fetch_endpoint(
+        "game_record/genshin/api/dailyNote",
+        chinese=is_chinese(uid),
+        cookie=cookie,
+        params=dict(server=server, role_id=uid),
+        headers={'x-rpc-language': lang},
+    )
+    return prettify_notes(data)
 
 def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Fetches all data a user can has. Very slow.
