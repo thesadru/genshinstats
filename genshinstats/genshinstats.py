@@ -27,7 +27,7 @@ __all__ = [
     "get_user_stats",
     "get_characters",
     "get_spiral_abyss",
-    "get_daily_notes",
+    "get_notes",
     "get_activities",
     "get_all_user_data",
 ]
