@@ -18,11 +18,11 @@ character_icons = {
     "Shougun": "Raiden Shogun",
 }
 
-def _recognize_character_icon(url: str) -> str: 
+def _recognize_character_icon(url: str) -> str:
     """Recognizes a character's icon url and returns its name."""
     exp = r'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_.*_(\w+)(?:@\dx)?.png'
     match = re.fullmatch(exp,url)
-    if match is None: 
+    if match is None:
         raise ValueError(f"{url!r} is not a character icon or image url")
     character = match.group(1)
     return character_icons.get(character) or character
@@ -228,6 +228,24 @@ def prettify_activities(data):
         } for r in activities['sumo']['records']]
     }
 
+def prettify_notes(data):
+    return {
+        "resin": data["current_resin"],
+        "until_resin_limit": data["resin_recovery_time"],
+        "max_resin": data["max_resin"],
+        "total_commissions": data["total_task_num"],
+        "completed_commissions": data["finished_task_num"],
+        "claimed_commission_reward": data["is_extra_task_reward_received"],
+        "max_boss_discounts": data["resin_discount_num_limit"],
+        "remaining_boss_discounts": data["remain_resin_discount_num"],
+        "expeditions": [{
+            "icon": exp["avatar_side_icon"],
+            "remaining_time": exp["remained_time"],
+            "status": exp["status"]
+        } for exp in data["expeditions"]],
+        "max_expeditions": data["max_expedition_num"]
+    }
+
 def prettify_game_accounts(data):
     return [{
         "uid": int(a["game_uid"]),
@@ -236,7 +254,7 @@ def prettify_game_accounts(data):
         "nickname": a["nickname"],
         # idk what these are for:
         "biz": a["game_biz"],
-        "is_chosen": a["is_chosen"], 
+        "is_chosen": a["is_chosen"],
         "is_official": a["is_official"],
     } for a in data]
 
