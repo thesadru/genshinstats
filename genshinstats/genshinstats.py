@@ -3,6 +3,7 @@
 Can fetch data for a user's stats like stats, characters, spiral abyss runs...
 """
 import hashlib
+import json
 import random
 import string
 import time
@@ -14,7 +15,13 @@ import requests
 from requests.sessions import RequestsCookieJar, Session
 
 from .errors import NotLoggedIn, TooManyRequests, raise_for_error
-from .pretty import prettify_abyss, prettify_characters, prettify_stats, prettify_activities, prettify_notes
+from .pretty import (
+    prettify_abyss,
+    prettify_activities,
+    prettify_characters,
+    prettify_notes,
+    prettify_stats,
+)
 from .utils import USER_AGENT, is_chinese, recognize_server, retry
 
 __all__ = [
@@ -33,23 +40,26 @@ __all__ = [
 ]
 
 session = Session()
-session.headers.update({
-    # required headers
-    "x-rpc-app_version": "",
-    "x-rpc-client_type": "",
-    "x-rpc-language": "en-us",
-    # authentications headers
-    "ds": "",
-    # recommended headers
-    "user-agent": USER_AGENT
-})
+session.headers.update(
+    {
+        # required headers
+        "x-rpc-app_version": "",
+        "x-rpc-client_type": "",
+        "x-rpc-language": "en-us",
+        # authentications headers
+        "ds": "",
+        # recommended headers
+        "user-agent": USER_AGENT,
+    }
+)
 
-cookies: List[RequestsCookieJar] = [] # a list of all avalible cookies
+cookies: List[RequestsCookieJar] = []  # a list of all avalible cookies
 
 OS_DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 CN_DS_SALT = "14bmu1mz0yuljprsfgpvjh3ju2ni468r"
 OS_BBS_URL = "https://api-os-takumi.mihoyo.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
+
 
 def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> None:
     """Logs-in using a cookie.
@@ -65,6 +75,7 @@ def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> N
 
     set_cookies(cookie or kwargs)
 
+
 def set_cookies(*args: Union[Mapping[str, Any], str], clear: bool = True) -> None:
     """Sets multiple cookies at once to cycle between. Takes same arguments as set_cookie.
 
@@ -78,12 +89,13 @@ def set_cookies(*args: Union[Mapping[str, Any], str], clear: bool = True) -> Non
 
     for cookie in args:
         if isinstance(cookie, Mapping):
-            cookie = {k: str(v) for k, v in cookie.items()} # SimpleCookie needs a string
+            cookie = {k: str(v) for k, v in cookie.items()}  # SimpleCookie needs a string
         cookie = SimpleCookie(cookie)
 
         jar = RequestsCookieJar()
         jar.update(cookie)
         cookies.append(jar)
+
 
 def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     """Gets cookies from your browser for later storing.
@@ -94,18 +106,21 @@ def get_browser_cookies(browser: str = None) -> Dict[str, str]:
     try:
         import browser_cookie3  # optional library
     except ImportError:
-        raise ImportError("functions 'set_cookie_auto' and 'get_browser_cookie` require \"browser-cookie3\". "
-                          "To use these function please install the dependency with \"pip install browser-cookie3\".")
+        raise ImportError(
+            "functions 'set_cookie_auto' and 'get_browser_cookie` require \"browser-cookie3\". "
+            'To use these function please install the dependency with "pip install browser-cookie3".'
+        )
     load = getattr(browser_cookie3, browser.lower()) if browser else browser_cookie3.load
     # For backwards compatibility we also get account_id and cookie_token
     # however we can't just get every cookie because there's sensitive information
-    allowed_cookies = {'ltuid', 'ltoken', 'account_id', 'cookie_token'}
+    allowed_cookies = {"ltuid", "ltoken", "account_id", "cookie_token"}
     return {
         c.name: c.value
-        for domain in ('mihoyo', 'hoyolab')
+        for domain in ("mihoyo", "hoyolab")
         for c in load(domain_name=domain)
         if c.name in allowed_cookies and c.value is not None
     }
+
 
 def set_cookie_auto(browser: str = None) -> None:
     """Like set_cookie, but gets the cookies by itself from your browser.
@@ -118,15 +133,29 @@ def set_cookie_auto(browser: str = None) -> None:
     Avalible browsers: chrome, chromium, opera, edge, firefox
     """
     set_cookies(get_browser_cookies(browser), clear=True)
-set_cookies_auto = set_cookie_auto # alias
 
 
-def generate_ds_token(salt: str) -> str:
-    """Creates a new ds token for authentication."""
+set_cookies_auto = set_cookie_auto  # alias
+
+
+def generate_ds(salt: str) -> str:
+    """Creates a new ds for authentication."""
     t = int(time.time())  # current seconds
-    r = ''.join(random.choices(string.ascii_letters, k=6))  # 6 random chars
+    r = "".join(random.choices(string.ascii_letters, k=6))  # 6 random chars
     h = hashlib.md5(f"salt={salt}&t={t}&r={r}".encode()).hexdigest()  # hash and get hex
-    return f'{t},{r},{h}'
+    return f"{t},{r},{h}"
+
+
+def generate_cn_ds(salt: str, body: Any = None, query: Mapping[str, Any] = None) -> str:
+    """Creates a new chinese ds for authentication."""
+    t = int(time.time())
+    r = random.randint(100001, 200000)
+    b = json.dumps(body) if body else ""
+    q = "&".join(f"{k}={v}" for k, v in sorted(query.items())) if query else ""
+
+    h = hashlib.md5(f"salt={salt}&t={t}&r={r}&b={b}&q={q}".encode()).hexdigest()
+    return f"{t},{r},{h}"
+
 
 # sometimes a random connection error can just occur, mihoyo being mihoyo
 @retry(3, requests.ConnectionError)
@@ -135,14 +164,17 @@ def _request(*args: Any, **kwargs: Any) -> Any:
     r = session.request(*args, **kwargs)
 
     r.raise_for_status()
-    kwargs['cookies'].update(session.cookies)
+    kwargs["cookies"].update(session.cookies)
     session.cookies.clear()
     data = r.json()
-    if data['retcode'] == 0:
-        return data['data']
+    if data["retcode"] == 0:
+        return data["data"]
     raise_for_error(data)
 
-def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, Any] = None, **kwargs) -> Dict[str, Any]:
+
+def fetch_endpoint(
+    endpoint: str, chinese: bool = False, cookie: Mapping[str, Any] = None, **kwargs
+) -> Dict[str, Any]:
     """Fetch an enpoint from the API.
 
     Takes in an endpoint url which is joined with the base url.
@@ -155,29 +187,35 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     Supports handling ratelimits if multiple cookies are set with `set_cookies`
     """
     # parse the arguments for requests.request
-    kwargs.setdefault('headers', {})
-    method = kwargs.pop('method', 'get')
+    kwargs.setdefault("headers", {})
+    method = kwargs.pop("method", "get")
     if chinese:
-        kwargs['headers'].update({
-            "ds": generate_ds_token(CN_DS_SALT),
-            "x-rpc-app_version": "2.7.0",
-            "x-rpc-client_type": "5",
-        })
+        kwargs["headers"].update(
+            {
+                "ds": generate_cn_ds(CN_DS_SALT, kwargs.get("json"), kwargs.get("params")),
+                "x-rpc-app_version": "2.11.1",
+                "x-rpc-client_type": "5",
+            }
+        )
         url = urljoin(CN_TAKUMI_URL, endpoint)
     else:
-        kwargs['headers'].update({
-            "ds": generate_ds_token(OS_DS_SALT),
-            "x-rpc-app_version": "1.5.0",
-            "x-rpc-client_type": "4",
-        })
+        kwargs["headers"].update(
+            {
+                "ds": generate_ds(OS_DS_SALT),
+                "x-rpc-app_version": "1.5.0",
+                "x-rpc-client_type": "4",
+            }
+        )
         url = urljoin(OS_BBS_URL, endpoint)
 
     if cookie is not None:
-        if not isinstance(cookie, MutableMapping) or not all(isinstance(v, str) for v in cookie.values()):
+        if not isinstance(cookie, MutableMapping) or not all(
+            isinstance(v, str) for v in cookie.values()
+        ):
             cookie = {k: str(v) for k, v in cookie.items()}
         return _request(method, url, cookies=cookie, **kwargs)
     elif len(cookies) == 0:
-        raise NotLoggedIn('Login cookies have not been provided')
+        raise NotLoggedIn("Login cookies have not been provided")
 
     for cookie in cookies.copy():
         try:
@@ -192,7 +230,10 @@ def fetch_endpoint(endpoint: str, chinese: bool = False, cookie: Mapping[str, An
     else:
         raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
 
-def get_user_stats(uid: int, equipment: bool = False, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+
+def get_user_stats(
+    uid: int, equipment: bool = False, lang: str = "en-us", cookie: Mapping[str, Any] = None
+) -> Dict[str, Any]:
     """Gets basic user information and stats.
 
     If equipment is True an additional request will be made to get the character equipment
@@ -203,14 +244,19 @@ def get_user_stats(uid: int, equipment: bool = False, lang: str = 'en-us', cooki
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid),
-        headers={'x-rpc-language': lang},
+        headers={"x-rpc-language": lang},
     )
     data = prettify_stats(data)
     if equipment:
-        data['characters'] = get_characters(uid, [i['id'] for i in data['characters']], lang, cookie)
+        data["characters"] = get_characters(
+            uid, [i["id"] for i in data["characters"]], lang, cookie
+        )
     return data
 
-def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
+
+def get_characters(
+    uid: int, character_ids: List[int] = None, lang: str = "en-us", cookie: Mapping[str, Any] = None
+) -> List[Dict[str, Any]]:
     """Gets characters of a user.
 
     Characters contain info about their level, constellation, weapon, and artifacts.
@@ -219,20 +265,25 @@ def get_characters(uid: int, character_ids: List[int] = None, lang: str = 'en-us
     If character_ids are provided then only characters with those ids are returned.
     """
     if character_ids is None:
-        character_ids = [i['id'] for i in get_user_stats(uid)['characters']]
+        character_ids = [i["id"] for i in get_user_stats(uid)["characters"]]
 
     server = recognize_server(uid)
     data = fetch_endpoint(
         "game_record/genshin/api/character",
         chinese=is_chinese(uid),
         cookie=cookie,
-        method='POST',
-        json=dict(character_ids=character_ids, role_id=uid, server=server),  # POST uses the body instead
-        headers={'x-rpc-language': lang},
+        method="POST",
+        json=dict(
+            character_ids=character_ids, role_id=uid, server=server
+        ),  # POST uses the body instead
+        headers={"x-rpc-language": lang},
     )["avatars"]
     return prettify_characters(data)
 
-def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+
+def get_spiral_abyss(
+    uid: int, previous: bool = False, cookie: Mapping[str, Any] = None
+) -> Dict[str, Any]:
     """Gets spiral abyss runs of a user and details about them.
 
     Every season these stats refresh and you can get the previous stats with `previous`.
@@ -243,11 +294,14 @@ def get_spiral_abyss(uid: int, previous: bool = False, cookie: Mapping[str, Any]
         "game_record/genshin/api/spiralAbyss",
         chinese=is_chinese(uid),
         cookie=cookie,
-        params=dict(server=server, role_id=uid, schedule_type=schedule_type)
+        params=dict(server=server, role_id=uid, schedule_type=schedule_type),
     )
     return prettify_abyss(data)
 
-def get_activities(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+
+def get_activities(
+    uid: int, lang: str = "en-us", cookie: Mapping[str, Any] = None
+) -> Dict[str, Any]:
     """Gets the activities of the user
 
     As of this time only Hyakunin Ikki is availible.
@@ -258,13 +312,14 @@ def get_activities(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = No
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid),
-        headers={'x-rpc-language': lang},
+        headers={"x-rpc-language": lang},
     )
     return prettify_activities(data)
 
-def get_notes(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+
+def get_notes(uid: int, lang: str = "en-us", cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
     """Gets the real-time notes of the user
-    
+
     Contains current resin, expeditions, daily commissions and similar.
     """
     server = recognize_server(uid)
@@ -273,16 +328,19 @@ def get_notes(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid),
-        headers={'x-rpc-language': lang},
+        headers={"x-rpc-language": lang},
     )
     return prettify_notes(data)
 
-def get_all_user_data(uid: int, lang: str = 'en-us', cookie: Mapping[str, Any] = None) -> Dict[str, Any]:
+
+def get_all_user_data(
+    uid: int, lang: str = "en-us", cookie: Mapping[str, Any] = None
+) -> Dict[str, Any]:
     """Fetches all data a user can has. Very slow.
 
     A helper function that gets all avalible data for a user and returns it as one dict.
     However that makes it fairly slow so it's not recommended to use it outside caching.
     """
     data = get_user_stats(uid, equipment=True, lang=lang, cookie=cookie)
-    data['spiral_abyss'] = [get_spiral_abyss(uid, previous, cookie) for previous in [False, True]]
+    data["spiral_abyss"] = [get_spiral_abyss(uid, previous, cookie) for previous in [False, True]]
     return data

@@ -21,20 +21,22 @@ T = TypeVar("T")
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
 
+
 def recognize_server(uid: int) -> str:
     """Recognizes which server a UID is from."""
     server = {
-        '1':'cn_gf01',
-        '5':'cn_qd01',
-        '6':'os_usa',
-        '7':'os_euro',
-        '8':'os_asia',
-        '9':'os_cht',
+        "1": "cn_gf01",
+        "5": "cn_qd01",
+        "6": "os_usa",
+        "7": "os_euro",
+        "8": "os_asia",
+        "9": "os_cht",
     }.get(str(uid)[0])
     if server:
         return server
     else:
         raise AccountNotFound(f"UID {uid} isn't associated with any server")
+
 
 def recognize_id(id: int) -> Optional[str]:
     """Attempts to recognize what item type an id is"""
@@ -54,17 +56,20 @@ def recognize_id(id: int) -> Optional[str]:
         return "transaction"
     # not sure about these ones:
     elif 1 <= id <= 4:
-        return "exploration" 
+        return "exploration"
     else:
         return None
+
 
 def is_game_uid(uid: int) -> bool:
     """Recognizes whether the uid is a game uid."""
     return bool(re.fullmatch(r"[6789]\d{8}", str(uid)))
 
+
 def is_chinese(x: Union[int, str]) -> bool:
     """Recognizes whether the server/uid is chinese."""
     return str(x).startswith(("cn", "1", "5"))
+
 
 def get_logfile() -> Optional[str]:
     """Find and return the Genshin Impact logfile. None if not found."""
@@ -73,12 +78,16 @@ def get_logfile() -> Optional[str]:
         output_log = os.path.join(mihoyo_dir, name, "output_log.txt")
         if os.path.isfile(output_log):
             return output_log
-    return None # no genshin installation
+    return None  # no genshin installation
 
-def retry(tries: int = 3, exceptions: Union[Type[BaseException], Iterable[Type[BaseException]]] = Exception) -> Callable[[T], T]:
+
+def retry(
+    tries: int = 3,
+    exceptions: Union[Type[BaseException], Iterable[Type[BaseException]]] = Exception,
+) -> Callable[[T], T]:
     """A classic retry() decorator"""
+
     def wrapper(func):
-        
         @wraps(func)
         def inner(*args, **kwargs):
             for _ in range(tries):
@@ -87,20 +96,24 @@ def retry(tries: int = 3, exceptions: Union[Type[BaseException], Iterable[Type[B
                 except exceptions as e:
                     exc = e
             else:
-                raise Exception(f"Maximum tries ({tries}) exceeded: {exc}") from exc # type: ignore
-        
-        return inner
-    
-    return wrapper # type: ignore
+                raise Exception(f"Maximum tries ({tries}) exceeded: {exc}") from exc  # type: ignore
 
-def deprecated(message: str = "{} is deprecated and will be removed in future versions") -> Callable[[T], T]:
+        return inner
+
+    return wrapper  # type: ignore
+
+
+def deprecated(
+    message: str = "{} is deprecated and will be removed in future versions",
+) -> Callable[[T], T]:
     """Shows a warning when a function is attempted to be used"""
+
     def wrapper(func):
-        
         @wraps(func)
         def inner(*args, **kwargs):
             warnings.warn(message.format(func.__name__), PendingDeprecationWarning)
             return func(*args, **kwargs)
 
         return inner
-    return wrapper # type: ignore
+
+    return wrapper  # type: ignore

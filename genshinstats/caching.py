@@ -67,7 +67,9 @@ def cache_func(func: C, cache: MutableMapping[Tuple[Any, ...], Any]) -> C:
     return update_wrapper(wrapper, func)  # type: ignore
 
 
-def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = False) -> C:
+def cache_paginator(
+    func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict: bool = False
+) -> C:
     """Caches an id generator such as wish history
 
     Respects size and authkey.
@@ -94,7 +96,10 @@ def cache_paginator(func: C, cache: MutableMapping[Tuple[Any, ...], Any], strict
             return func(*args, **kwargs)
 
         def make_key(end_id: int) -> Tuple[Any, ...]:
-            return (func.__name__,end_id,) + partial_key
+            return (
+                func.__name__,
+                end_id,
+            ) + partial_key
 
         def helper(end_id: int):
             while True:

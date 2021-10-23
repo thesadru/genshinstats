@@ -41,26 +41,33 @@ def get_map_image() -> str:
     data = fetch_map_endpoint("info")["info"]["detail"]
     return json.loads(data)["slices"][0][0]["url"]
 
+
 @permanent_cache()
 def get_map_icons() -> Dict[int, str]:
     """Get all icons for the map"""
     data = fetch_map_endpoint("spot_kind/get_icon_list")["icons"]
     return {i["id"]: i["url"] for i in data}
 
+
 @permanent_cache()
 def get_map_labels() -> List[Dict[str, Any]]:
     """Get labels and label categories"""
     return fetch_map_endpoint("label/tree")["tree"]
 
+
 def get_map_locations() -> List[Dict[str, Any]]:
     """Get all locations on the map"""
     return fetch_map_endpoint("map_anchor/list")["list"]
+
 
 def get_map_points() -> List[Dict[str, Any]]:
     """Get points on the map"""
     return fetch_map_endpoint("point/list")["point_list"]
 
-def get_map_tile(x: int, y: int, width: int, height: int, resolution: int = 1, image: str = None) -> str:
+
+def get_map_tile(
+    x: int, y: int, width: int, height: int, resolution: int = 1, image: str = None
+) -> str:
     """Gets a map tile at a position
 
     You may set an x, y, width and height of the resulting image
@@ -71,4 +78,7 @@ def get_map_tile(x: int, y: int, width: int, height: int, resolution: int = 1, i
     You should pick values from 100, 50, 25 and 12.5
     """
     image = image or get_map_image()
-    return image + f"?x-oss-process=image/resize,p_{round(resolution)}/crop,x_{x},y_{y},w_{width},h_{height}"
+    return (
+        image
+        + f"?x-oss-process=image/resize,p_{round(resolution)}/crop,x_{x},y_{y},w_{width},h_{height}"
+    )
