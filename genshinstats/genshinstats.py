@@ -56,7 +56,7 @@ session.headers.update(
 cookies: List[RequestsCookieJar] = []  # a list of all avalible cookies
 
 OS_DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
-CN_DS_SALT = "14bmu1mz0yuljprsfgpvjh3ju2ni468r"
+CN_DS_SALT = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"
 OS_BBS_URL = "https://api-os-takumi.mihoyo.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
 
