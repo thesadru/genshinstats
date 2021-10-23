@@ -57,8 +57,10 @@ cookies: List[RequestsCookieJar] = []  # a list of all avalible cookies
 
 OS_DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 CN_DS_SALT = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"
-OS_BBS_URL = "https://api-os-takumi.mihoyo.com/"  # overseas
+OS_TAKUMI_URL = "https://api-os-takumi.mihoyo.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
+OS_GAME_RECORD_URL = "https://api-os-takumi.mihoyo.com/game_record/"
+CN_GAME_RECORD_URL = "https://api-takumi.mihoyo.com/game_record/app/"
 
 
 def set_cookie(cookie: Union[Mapping[str, Any], str] = None, **kwargs: Any) -> None:
@@ -206,7 +208,7 @@ def fetch_endpoint(
                 "x-rpc-client_type": "4",
             }
         )
-        url = urljoin(OS_BBS_URL, endpoint)
+        url = urljoin(OS_TAKUMI_URL, endpoint)
 
     if cookie is not None:
         if not isinstance(cookie, MutableMapping) or not all(
@@ -231,6 +233,15 @@ def fetch_endpoint(
         raise TooManyRequests("All cookies have hit their request limit of 30 accounts per day.")
 
 
+def fetch_game_record_endpoint(
+    endpoint: str, chinese: bool = False, cookie: Mapping[str, Any] = None, **kwargs
+):
+    """A short-hand for fetching data for the game record"""
+    base_url = CN_GAME_RECORD_URL if chinese else OS_GAME_RECORD_URL
+    url = urljoin(base_url, endpoint)
+    return fetch_endpoint(url, chinese, cookie, **kwargs)
+
+
 def get_user_stats(
     uid: int, equipment: bool = False, lang: str = "en-us", cookie: Mapping[str, Any] = None
 ) -> Dict[str, Any]:
@@ -239,8 +250,8 @@ def get_user_stats(
     If equipment is True an additional request will be made to get the character equipment
     """
     server = recognize_server(uid)
-    data = fetch_endpoint(
-        "game_record/genshin/api/index",
+    data = fetch_game_record_endpoint(
+        "genshin/api/index",
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid),
@@ -268,8 +279,8 @@ def get_characters(
         character_ids = [i["id"] for i in get_user_stats(uid)["characters"]]
 
     server = recognize_server(uid)
-    data = fetch_endpoint(
-        "game_record/genshin/api/character",
+    data = fetch_game_record_endpoint(
+        "genshin/api/character",
         chinese=is_chinese(uid),
         cookie=cookie,
         method="POST",
@@ -290,8 +301,8 @@ def get_spiral_abyss(
     """
     server = recognize_server(uid)
     schedule_type = 2 if previous else 1
-    data = fetch_endpoint(
-        "game_record/genshin/api/spiralAbyss",
+    data = fetch_game_record_endpoint(
+        "genshin/api/spiralAbyss",
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid, schedule_type=schedule_type),
@@ -307,8 +318,8 @@ def get_activities(
     As of this time only Hyakunin Ikki is availible.
     """
     server = recognize_server(uid)
-    data = fetch_endpoint(
-        "game_record/genshin/api/activities",
+    data = fetch_game_record_endpoint(
+        "genshin/api/activities",
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid),
@@ -323,8 +334,8 @@ def get_notes(uid: int, lang: str = "en-us", cookie: Mapping[str, Any] = None) -
     Contains current resin, expeditions, daily commissions and similar.
     """
     server = recognize_server(uid)
-    data = fetch_endpoint(
-        "game_record/genshin/api/dailyNote",
+    data = fetch_game_record_endpoint(
+        "genshin/api/dailyNote",
         chinese=is_chinese(uid),
         cookie=cookie,
         params=dict(server=server, role_id=uid),
