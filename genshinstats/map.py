@@ -25,10 +25,10 @@ __all__ = [
 def fetch_map_endpoint(endpoint: str, **kwargs) -> Dict[str, Any]:
     """Fetch an enpoint from mihoyo's webstatic map api.
 
-    Only currently liyue is supported.
+    Currently only liyue is supported.
 
     Takes in an endpoint url which is joined with the base url.
-    A request is then sent and returns a parsed response.
+    A request is then sent which returns a parsed response.
     """
     kwargs.setdefault("params", {}).update({"map_id": 2, "app_sn": "ys_obc", "lang": "en-us"})
     url = urljoin(OS_MAP_URL, endpoint)
