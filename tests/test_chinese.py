@@ -28,12 +28,6 @@ def test_spiral_abyss():
     abyss = [gs.get_spiral_abyss(uid), gs.get_spiral_abyss(uid, previous=True)]
 
 
-def test_search():
-    users = gs.search("西风", chinese=True)
-    assert len(users) >= 2
-    assert any(int(user["uid"]) == 75276539 for user in users)
-
-
 def test_record_card():
     card = gs.get_record_card(5861124, chinese=True)
     assert card is not None

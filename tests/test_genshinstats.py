@@ -52,12 +52,6 @@ def test_is_chinese():
         assert not gs.is_chinese(i)
 
 
-def test_search():
-    users = gs.search("sadru")
-    assert len(users) >= 2
-    assert any(int(user["uid"]) == hoyolab_uid for user in users)
-
-
 def test_record_card():
     card = gs.get_record_card(hoyolab_uid)
     assert card is not None
