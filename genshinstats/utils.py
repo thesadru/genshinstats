@@ -26,6 +26,7 @@ def recognize_server(uid: int) -> str:
     """Recognizes which server a UID is from."""
     server = {
         "1": "cn_gf01",
+        "2": "cn_gf01",
         "5": "cn_qd01",
         "6": "os_usa",
         "7": "os_euro",
