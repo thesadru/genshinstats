@@ -6,7 +6,7 @@ gs.set_cookie_auto()
 
 while True:
     reward = gs.claim_daily_reward()
-    if reward is not None:
+    if reward:
         print(f"Claimed daily reward - {reward['cnt']}x {reward['name']}")
     else:
         print("Could not claim daily reward")
