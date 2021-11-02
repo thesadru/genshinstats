@@ -16,6 +16,7 @@ character_icons = {
     "Kazuha": "Kadehara Kazuha",
     "Sara": "Kujou Sara",
     "Shougun": "Raiden Shogun",
+    "Tohma": "Thoma",
 }
 
 
@@ -51,7 +52,9 @@ def prettify_stats(data):
         "characters": [
             {
                 "name": i["name"],
-                "rarity": i["rarity"] if i["rarity"] < 100 else i["rarity"] - 100,  # aloy has 105 stars
+                "rarity": i["rarity"]
+                if i["rarity"] < 100
+                else i["rarity"] - 100,  # aloy has 105 stars
                 "element": i["element"],
                 "level": i["level"],
                 "friendship": i["fetter"],
@@ -99,7 +102,11 @@ def prettify_characters(data):
             "image": i["image"],
             "id": i["id"],
             "collab": i["rarity"] >= 100,
-            **({"traveler_name": "Aether" if "Boy" in i["icon"] else "Lumine"} if "Player" in i["icon"] else {}),
+            **(
+                {"traveler_name": "Aether" if "Boy" in i["icon"] else "Lumine"}
+                if "Player" in i["icon"]
+                else {}
+            ),
             "weapon": {
                 "name": i["weapon"]["name"],
                 "rarity": i["weapon"]["rarity"],
@@ -154,7 +161,9 @@ def prettify_characters(data):
                 }
                 for c in i["constellations"]
             ],
-            "outfits": [{"name": c["name"], "icon": c["icon"], "id": c["id"]} for c in i["costumes"]],
+            "outfits": [
+                {"name": c["name"], "icon": c["icon"], "id": c["id"]} for c in i["costumes"]
+            ],
         }
         for i in data
     ]
@@ -233,7 +242,11 @@ def prettify_abyss(data):
 
 
 def prettify_activities(data):
-    activities = {k: v if v.get("exists_data") else {"records": []} for activity in data["activities"] for k, v in activity.items()}
+    activities = {
+        k: v if v.get("exists_data") else {"records": []}
+        for activity in data["activities"]
+        for k, v in activity.items()
+    }
     return {
         "hyakunin": [
             {
@@ -248,7 +261,9 @@ def prettify_activities(data):
                         "characters": [
                             {
                                 "name": _recognize_character_icon(c["icon"]),
-                                "rarity": c["rarity"] if c["rarity"] < 100 else c["rarity"] - 100,  # aloy has 105 stars
+                                "rarity": c["rarity"]
+                                if c["rarity"] < 100
+                                else c["rarity"] - 100,  # aloy has 105 stars
                                 "level": c["level"],
                                 "icon": c["icon"],
                                 "id": c["id"],
@@ -266,34 +281,7 @@ def prettify_activities(data):
             }
             for r in activities["sumo"]["records"]
         ],
-        "labyrinth": [{
-            "id": r["challenge_id"],
-            "name": r["challenge_name"],
-            "passed": r["is_passed"],
-            "level": r["settled_level"],
-            
-            "main_characters": [{
-                "name": _recognize_character_icon(c["icon"]),
-                "id": c["id"],
-                "icon": c["icon"],
-                "level": c["level"],
-                "rarity": c["rarity"] if c["rarity"] < 100 else c["rarity"] - 100,  # aloy has 105 stars
-            } for c in r["main_avatars"]],
-            "support_characters": [{
-                "name": _recognize_character_icon(c["icon"]),
-                "id": c["id"],
-                "icon": c["icon"],
-                "level": c["level"],
-                "rarity": c["rarity"] if c["rarity"] < 100 else c["rarity"] - 100,  # aloy has 105 stars
-            } for c in r["support_avatars"]],
-            "runes": [{
-                "id": n["id"],
-                "icon": n["icon"],
-                "name": n["name"],
-                "desc": n["desc"],
-                "element": n["element"]
-            } for n in r["runes"]]
-        } for r in activities["rogue"]["records"]],
+        "labyrinth": None,
     }
 
 
@@ -357,7 +345,9 @@ def prettify_gacha_items(data):
             "name": i["name"],
             "type": i["item_type"],
             "rarity": int(i["rank_type"]),
-            "id": 10000000 + int(i["item_id"]) - 1000 if len(i["item_id"]) == 4 else int(i["item_id"]),
+            "id": 10000000 + int(i["item_id"]) - 1000
+            if len(i["item_id"]) == 4
+            else int(i["item_id"]),
         }
         for i in data
     ]
@@ -421,8 +411,12 @@ def prettify_banner_details(data):
         "r5_guarantee_prob": per(data["r5_baodi_prob"]),  # probability for 5* incl. guarantee
         "r4_guarantee_prob": per(data["r4_baodi_prob"]),  # probability for 4* incl. guarantee
         "r3_guarantee_prob": per(data["r3_baodi_prob"]),  # probability for 3* incl. guarantee
-        "r5_up_items": fitems(data["r5_up_items"]),  # list of 5* rate-up items that you can get from banner
-        "r4_up_items": fitems(data["r4_up_items"]),  # list of 4* rate-up items that you can get from banner
+        "r5_up_items": fitems(
+            data["r5_up_items"]
+        ),  # list of 5* rate-up items that you can get from banner
+        "r4_up_items": fitems(
+            data["r4_up_items"]
+        ),  # list of 4* rate-up items that you can get from banner
         "r5_items": fprobs(data["r5_prob_list"]),  # list 5* of items that you can get from banner
         "r4_items": fprobs(data["r4_prob_list"]),  # list 4* of items that you can get from banner
         "r3_items": fprobs(data["r3_prob_list"]),  # list 3* of items that you can get from banner

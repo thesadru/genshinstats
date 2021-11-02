@@ -59,7 +59,7 @@ OS_DS_SALT = "6cqshh5dhw73bzxn20oexa9k516chk7s"
 CN_DS_SALT = "xV8v4Qu54lUKrEYFZkJhB8cuOh9Asafs"
 OS_TAKUMI_URL = "https://api-os-takumi.mihoyo.com/"  # overseas
 CN_TAKUMI_URL = "https://api-takumi.mihoyo.com/"  # chinese
-OS_GAME_RECORD_URL = "https://api-os-takumi.mihoyo.com/game_record/"
+OS_GAME_RECORD_URL = "https://bbs-api-os.mihoyo.com/game_record/"
 CN_GAME_RECORD_URL = "https://api-takumi.mihoyo.com/game_record/app/"
 
 

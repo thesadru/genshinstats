@@ -19,12 +19,6 @@ def test_game_accounts():
     assert uid in [account["uid"] for account in accounts]
 
 
-def test_check_in():
-    # SignInException is the only ones allowed
-    with contextlib.suppress(gs.SignInException), pytest.deprecated_call():
-        gs.hoyolab_check_in()
-
-
 def test_redeem_code():
     pytest.skip("Redeem takes too long")
 
