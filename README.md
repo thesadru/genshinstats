@@ -489,6 +489,9 @@ wishes.py           wish history
 ```
 
 # CHANGELOG
+## 1.4.11.1
+- Fix various chinese endpoints
+- Update domain to account for hoyolab server migration
 ## 1.4.11
 - Added `get_notes`
 ## 1.4.10
