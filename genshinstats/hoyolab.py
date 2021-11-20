@@ -6,7 +6,7 @@ import time
 from typing import Any, Dict, List, Mapping, Optional
 
 from .caching import permanent_cache
-from .genshinstats import fetch_endpoint
+from .genshinstats import fetch_endpoint, fetch_game_record_endpoint
 from .pretty import prettify_game_accounts
 from .utils import deprecated, recognize_server
 
@@ -94,8 +94,8 @@ def get_record_card(
 
     You can get a hoyolab id with `search`.
     """
-    cards = fetch_endpoint(
-        "game_record/card/wapi/getGameRecordCard",
+    cards = fetch_game_record_endpoint(
+        "card/wapi/getGameRecordCard",
         chinese=chinese,
         cookie=cookie,
         params=dict(uid=hoyolab_uid, gids=2),

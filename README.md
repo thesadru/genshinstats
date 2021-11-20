@@ -489,6 +489,8 @@ wishes.py           wish history
 ```
 
 # CHANGELOG
+## 1.4.11.2
+- Make the record card return proper values for new accounts
 ## 1.4.11.1
 - Fix various chinese endpoints
 - Update domain to account for hoyolab server migration
