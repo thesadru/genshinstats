@@ -205,7 +205,6 @@ def prettify_abyss(data):
                 "floor": f["index"],
                 "stars": f["star"],
                 "max_stars": f["max_star"],
-                "start": totime(f["levels"][0]["battles"][0]["timestamp"]),
                 "icon": f["icon"],
                 "chambers": [
                     {
