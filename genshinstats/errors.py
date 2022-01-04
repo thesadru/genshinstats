@@ -90,6 +90,7 @@ def raise_for_error(response: dict):
         -2003: CodeRedeemException("Invalid redemption code"),
         -2007: CodeRedeemException("You have already used a redemption code of the same kind."),
         -2017: CodeRedeemException("Redemption code has been claimed already."),
+        -2018: CodeRedeemException("This Redemption Code is already in use"),
         -2001: CodeRedeemException("Redemption code has expired."),
         -2021: CodeRedeemException(
             "Cannot claim codes for account with adventure rank lower than 10."
