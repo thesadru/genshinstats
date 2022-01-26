@@ -303,6 +303,9 @@ def prettify_notes(data):
             for exp in data["expeditions"]
         ],
         "max_expeditions": data["max_expedition_num"],
+        "realm_currency": data["current_home_coin"],
+        "max_realm_currency": data["max_home_coin"],
+        "until_realm_currency_limit": data["home_coin_recovery_time"],
     }
 
 
