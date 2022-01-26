@@ -83,7 +83,8 @@ for field, value in stats.items():
 ```py
 notes = gs.get_notes(uid)
 print(f"Current resin: {notes['resin']}/{notes['max_resin']}")
-print(f"Expenditions: {len(notes['expeditions'])}/{notes['max_expeditions']}")
+print(f"Current realm currency: {notes['realm_currency']}/{notes['max_realm_currency']}")
+print(f"Expeditions: {len(notes['expeditions'])}/{notes['max_expeditions']}")
 ```
 
 It's possible to set the cookies with a header
@@ -489,6 +490,8 @@ wishes.py           wish history
 ```
 
 # CHANGELOG
+## 1.4.11.3
+- Added support for realm currency counter in `get_notes`
 ## 1.4.11.2
 - Make the record card return proper values for new accounts
 ## 1.4.11.1
