@@ -100,7 +100,7 @@ gs.set_cookie_auto('chrome') # search specific browser
 ## submodules
 ### wishes
 Gets your wish history.
-For this you must first open the history/details page in genshin impact,
+For this you **have to open first the history/details page** in genshin impact,
 you can find the page in the wish menu on the bottom left.
 The script is then able to get your authkey by itself and fetch the data with it.
 ```py
@@ -206,18 +206,6 @@ for i in gs.get_primogem_log():
     print(f"Since {i['time']} you have gained {total} primogems   ", end='\r')
 # Since 2021-01-02 20:35:16 you have gained 5197 primogems
 ```
-
-Since you the api itself doesn't provide the current amount of resin genshinstats provides a way to calculate it yourself. 
-First it requires a reference to how much primogems you had at a specific time and then it calculates how much you should have currently.
-```py
-from datetime import datetime
-
-# calculating the current amount of resin based on the fact you had 60 resin on the September 28th 2021 12:00 UTC
-print(gs.current_resin(datetime(2021, 9, 28, 12, 00), 60))
-```
-> Since mihoyo can take up to an hour to update their public database of logs this will only work as long as you haven't used any resin in the last hour
-
-> If you do not know how much resin you had at any point you can very roughly approximate it with `gs.approximate_current_resin()`
 
 ### hoyolab
 Miscalenious stuff for mihoyo's hoyolab. Has searching, auto check-in and code redemption.
@@ -366,7 +354,7 @@ cookies = gs.get_browser_cookies()
 print(cookies)
 # {'ltuid': '93827185', 'ltoken': 'aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh'}
 ```
-You can then use these cookies in your actual code or save them as enviroment variables
+You can then use these cookies in your actual code or save them as environment variables
 ```py
 gs.set_cookie(ltuid=93827185, ltoken='aH0cEGX458eJjGoC2z0iiDHL7UGMz09ad0a9udwh')
 ```
@@ -423,24 +411,31 @@ To solve this error You must go to [hoyolab.com](https://www.hoyolab.com/genshin
 Every endpoint in mihoyo's api requires authentication, this is in the form of a cookie and an authkey.
 User stats use a cookie and wish history uses an authkey.
 
-The cookie is bound to the user and as far as I know can only be reset by changing your password, so remember to never give your cookie to anyone. For extra safety you may want to create an alt account, so your real account is never in any danger. This token will allow you to view public stats of all users and private stats of yourself.
+The cookie is bound to the user and as far as I know, it can only be reset by changing your password. Safety wise, these cookies only give an access to your own statistics and allow few actions (claim daily reward) so it isn't dangerous by itself, but you should still keep it safe, as Mihoyo's API could include more sensitive features in the future. For extra safety you may want to create an alt account, so your real account is never in any danger. This alt token will allow you to view public stats of all users and private stats of yourself.
 
 The authkey is a temporary token to access your wish history. It's unique for every user and is reset after 24 hours. It cannot be used to view the history of anyone else. It is fine to share this key with anyone you want, the only "private" data they will have access to is the wish history.
 
 Tip for developers: the first 682 characters (85 bytes) of the authkey are always the same for each user. You can use this to easily indentify if an authkey belongs to the same user as another authkey.
 
+Element | Access level | Sensitivity
+|--|--|--|
+`UID` | Read access to your Battle Chronicle's public data | Safe
+`ltuid` + `ltoken` | Read access to your full Battle Chronicle (characters, abyss clears, ...) + few actions possible (claim daily reward) | Quite safe
+`authkey` | 24h access to your wish history, top-up history and other logs... | Safe
+`account_id` + `cookie_token` | Full Battle Chronicle + can be connected as you on most mihoyo.com websites | Don't share those
+
 ## How can I claim daily rewards for other users.
 When making projects that claim daily rewards for other users you can pass in a `cookie` parameter - `claim_daily_rewards(cookie={'ltuid': ..., 'ltoken': ...})`.
 This will avoid having to set global cookies so you can use it with threading.
 
-This cookie parameter is avalible for the majority of other accounts.
+This cookie parameter is available for the majority of other accounts.
 
 ## Is it possible that my account can be stolen when I login with the cookie?
-I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. If you give your cookie to someone it is indeed possible to get into your account but that doesn't yet mean they can do anything with it. The most probable thing a hacker would do is just do a password request, but since version `1.3` they will need to confirm this request with an email. That means they would need to know what your email is and have a way to get into it, which I doubt they can. Since version `1.5` there is also 2FA which will make it completely impossible to steal your account.
+I would like to be completely clear in this aspect, I do no have any way to access the cookies you use to login. Having your cookie won't give an access to your account, except for `cookie_token` and `account_id` which allow a partial access (web events and mihoyo's website) but not your personal data / reset password. Plus, since version `1.5` there is also 2FA which makes it completely impossible to steal your account.
 
-They can of course access your data like email, phone number and real name, however those are censored so unless they already have an idea what those could be that data is useless to them. (For example the email may be `thesadru@gmail.com` but it'll only show up as `th****ru@gmail.com`)
+No personal data is accessible except your hoyolab nickname and email (partially censored, for example `thesadru@gmail.com` would only show up as `th****ru@gmail.com`).
 
-TL;DR unless you have also given your password away your account cannnot be stolen.
+TL;DR unless you have also given your password away your account cannot be stolen.
 
 ## How do I get the wish history of other players?
 To get the wish history of other players you must get their authkey and pass it as a keyword into `get_wish_history`. That will make the function return their wish history instead of yours, it will also avoid the error when you try to run your project on a machine that doesn't have genshin installed.
