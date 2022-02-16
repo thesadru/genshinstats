@@ -27,7 +27,7 @@ __all__ = [
 @permanent_cache()
 def get_langs() -> Dict[str, str]:
     """Gets codes of all languages and their names"""
-    data = fetch_endpoint("community/misc/wapi/langs", cookie={}, params=dict(gids=2))["langs"]
+    data = fetch_endpoint("https://api-os-takumi.mihoyo.com/community/misc/wapi/langs", cookie={}, params=dict(gids=2))["langs"]
     return {i["value"]: i["name"] for i in data}
 
 
@@ -169,7 +169,7 @@ def get_hot_posts(forum_id: int = 1, size: int = 100, lang: str = "en-us") -> Li
     # that's around 2 ^ 15 posts so we limit the amount to 2 ^ 14
     # the user shouldn't be getting that many posts in the first place
     return fetch_endpoint(
-        "community/post/api/forumHotPostFullList",
+        "https://api-os-takumi.mihoyo.com/community/post/api/forumHotPostFullList",
         cookie={},
         params=dict(forum_id=forum_id, page_size=min(size, 0x4000), lang=lang),
     )["posts"]

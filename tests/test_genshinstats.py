@@ -6,6 +6,7 @@ import urllib3
 
 # unless anyone knows how to inject certificates into a github workflow this is required
 try:
+    gs.get_langs()
     gs.search("a")
 except urllib3.exceptions.SSLError:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
