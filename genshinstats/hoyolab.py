@@ -64,7 +64,9 @@ def hoyolab_check_in(chinese: bool = False, cookie: Mapping[str, Any] = None) ->
     This function will not claim daily rewards!!!
     """
     url = (
-        "https://bbs-api.mihoyo.com/" if chinese else "https://api-os-takumi.hoyoverse.com/community/"
+        "https://bbs-api.mihoyo.com/"
+        if chinese
+        else "https://api-os-takumi.hoyoverse.com/community/"
     )
     fetch_endpoint(
         url + "apihub/api/signIn", chinese=chinese, cookie=cookie, method="POST", json=dict(gids=2)

@@ -26,13 +26,14 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=130 --statistics --ignore=E302
     - name: Test with pytest
+      if: github.event_name == 'push'
       env: 
         GS_LTUID: ${{ secrets.GS_LTUID }}
         GS_LTOKEN: ${{ secrets.GS_LTOKEN }}
         CN_LTUID: ${{ secrets.CN_LTUID }}
         CN_LTOKEN: ${{ secrets.CN_LTOKEN }}
       run: |
-        python -m pytest --ignore=tests/local --disable-warnings
+        python -m pytest --disable-warnings -k "not chinese and not local"
     - name: Lint with mypy
       run: |
         mypy --install-types --non-interactive --ignore-missing-imports --no-warn-no-return genshinstats/
