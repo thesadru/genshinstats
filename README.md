@@ -9,7 +9,7 @@
 
 Genshinstats is an unofficial wrapper for the Genshin Impact api. It supports getting user stats, wish history and automatic claiming of daily check-in rewards.
 
-If you want to use this library asynchronously or are simply looking for a better experience check out [`genshin.py`](https://thesadru.github.io/genshin.py/)
+**If you want to use this library asynchronously or are simply looking for a better experience check out [`genshin.py`](https://thesadru.github.io/genshin.py/)**
 
 ## how to install
 using [pip](https://pypi.org/project/genshinstats/)
