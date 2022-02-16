@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 from .caching import permanent_cache
 from .genshinstats import fetch_endpoint
 
-OS_MAP_URL = "https://api-os-takumi-static.mihoyo.com/common/map_user/ys_obc/v1/map/"
+OS_MAP_URL = "https://api-os-takumi-static.hoyoverse.com/common/map_user/ys_obc/v1/map/"
 
 __all__ = [
     "fetch_map_endpoint",

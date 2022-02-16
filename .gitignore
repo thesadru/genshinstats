@@ -2,3 +2,4 @@ __pycache__
 test.json
 endpoints
 commit.sh
+.idea/

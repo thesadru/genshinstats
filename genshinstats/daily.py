@@ -18,7 +18,7 @@ __all__ = [
     "claim_daily_reward",
 ]
 
-OS_URL = "https://hk4e-api-os.mihoyo.com/event/sol/"  # overseas
+OS_URL = "https://hk4e-api-os.hoyoverse.com/event/sol/"  # overseas
 OS_ACT_ID = "e202102251931481"
 CN_URL = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/"  # chinese
 CN_ACT_ID = "e202009291139501"

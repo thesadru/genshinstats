@@ -35,7 +35,7 @@ __all__ = [
 ]
 
 GENSHIN_LOG = get_logfile()
-GACHA_INFO_URL = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/"
+GACHA_INFO_URL = "https://hk4e-api-os.hoyoverse.com/event/gacha_info/api/"
 AUTHKEY_FILE = os.path.join(gettempdir(), "genshinstats_authkey.txt")
 
 session = Session()
@@ -216,7 +216,7 @@ def get_wish_history(
 def get_gacha_items(lang: str = "en-us") -> List[Dict[str, Any]]:
     """Gets the list of characters and weapons that can be gotten from the gacha."""
     r = static_session.get(
-        f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/items/{lang}.json"
+        f"https://webstatic-sea.hoyoverse.com/hk4e/gacha_info/os_asia/items/{lang}.json"
     )
     r.raise_for_status()
     return prettify_gacha_items(r.json())
@@ -232,7 +232,7 @@ def get_banner_details(banner_id: str, lang: str = "en-us") -> Dict[str, Any]:
     The newbie gacha has no json resource tied to it so you can't get info about it.
     """
     r = static_session.get(
-        f"https://webstatic-sea.mihoyo.com/hk4e/gacha_info/os_asia/{banner_id}/{lang}.json"
+        f"https://webstatic-sea.hoyoverse.com/hk4e/gacha_info/os_asia/{banner_id}/{lang}.json"
     )
     r.raise_for_status()
     return prettify_banner_details(r.json())
