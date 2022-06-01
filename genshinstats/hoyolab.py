@@ -135,7 +135,7 @@ def redeem_code(code: str, uid: int = None, cookie: Mapping[str, Any] = None) ->
     """
     if uid is not None:
         fetch_endpoint(
-            "https://hk4e-api-os.mihoyo.com/common/apicdkey/api/webExchangeCdkey",
+            "https://sg-hk4e-api.hoyoverse.com/common/apicdkey/api/webExchangeCdkey",
             cookie=cookie,
             params=dict(
                 uid=uid, region=recognize_server(uid), cdkey=code, game_biz="hk4e_global", lang="en"
