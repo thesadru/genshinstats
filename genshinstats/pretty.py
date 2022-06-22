@@ -46,6 +46,7 @@ def prettify_stats(data):
             "exquisite_chests": s["exquisite_chest_number"],
             "precious_chests": s["precious_chest_number"],
             "luxurious_chests": s["luxurious_chest_number"],
+            "remarkable_chests": s["magic_chest_number"],
             "unlocked_waypoints": s["way_point_number"],
             "unlocked_domains": s["domain_number"],
         },
