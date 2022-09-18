@@ -69,6 +69,10 @@ class MissingAuthKey(AuthkeyError):
     """No gacha authkey was found."""
 
 
+class CookieUidMismatch(NotLoggedIn):
+    """Cookie doesn't match UID."""
+
+
 def raise_for_error(response: dict):
     """Raises a custom genshinstats error from a response."""
     # every error uses a different response code and message,
@@ -86,6 +90,7 @@ def raise_for_error(response: dict):
         ),
         -108: GenshinStatsException("Language is not valid."),
         10103: NotLoggedIn("Cookies are correct but do not have a hoyolab account bound to them."),
+        10104: CookieUidMismatch("Wrong cookie for the given UID"),
         # code redemption
         -2003: CodeRedeemException("Invalid redemption code"),
         -2007: CodeRedeemException("You have already used a redemption code of the same kind."),

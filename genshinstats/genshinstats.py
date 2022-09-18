@@ -14,7 +14,7 @@ from urllib.parse import urljoin
 import requests
 from requests.sessions import RequestsCookieJar, Session
 
-from .errors import NotLoggedIn, TooManyRequests, raise_for_error
+from .errors import NotLoggedIn, TooManyRequests, raise_for_error, CookieUidMismatch
 from .pretty import (
     prettify_abyss,
     prettify_activities,
@@ -225,6 +225,9 @@ def fetch_endpoint(
         except TooManyRequests:
             # move the ratelimited cookie to the end to let the ratelimit wear off
             cookies.append(cookies.pop(0))
+        except CookieUidMismatch:
+            # move on to next cookie
+            pass
 
     # if we're here it means we used up all our cookies so we must handle that
     if len(cookies) == 1:
